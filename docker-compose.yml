@@ -1,0 +1,59 @@
+# backend/docker-compose.yml
+services:
+  postgres_auth_db:
+    image: postgres:15-alpine
+    container_name: auth_postgres
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - aureum_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h ${POSTGRES_USER} -U ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+# auth service
+  auth_service:
+    build: ./AuthService
+    container_name: aureum_auth_service
+    env_file:
+      - .env
+    environment: 
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DB}
+      - SECRET_KEY=${SECRET_KEY}
+    ports:
+      - "8001:8001"
+    command: >
+      sh -c "
+        until pg_isready -h postgres_auth_db -U ${POSTGRES_USER} -d ${POSTGRES_DB}; do
+          echo 'Esperando a PostgreSQL...';
+          sleep 2;
+        done;
+        echo 'Base de datos lista. Ejecutando migraciones...';
+        alembic upgrade head;
+        echo 'Migraciones completadas. Iniciando servidor...';
+        uvicorn app.main:app --host 0.0.0.0 --port 8001"
+    depends_on:
+      - postgres_auth_db
+    networks:
+      - aureum_network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+volumes:
+  postgres_data:
+
+networks:
+  aureum_network:
+    driver: bridge
