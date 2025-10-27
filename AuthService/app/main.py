@@ -27,3 +27,13 @@ def login(
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
+
+@app.post("/register", response_model=schemas.User)
+def register(
+    user_data: schemas.UserRegister,
+    auth_controller: AuthController = Depends(get_auth_controller)
+):
+    try:
+        return auth_controller.register_user(user_data)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
