@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app import schemas, security
 from app.database import get_db
-from app.repositories import user_repository
+from app.repositories import user_repository, profile_repository
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
@@ -45,6 +45,23 @@ class AuthController:
         if not user:
             raise ValueError("User not found")
         return user
+    
+    def register_user(self, user_data: schemas.UserRegister) -> schemas.User:
+        if user_repository.get_user_by_email(self.db, user_data.email_address):
+            raise ValueError("Email already registered")
+        if user_repository.get_user_by_username(self.db, user_data.username):
+            raise ValueError("Username already taken")
+        if len(user_data.password) < 8:
+            raise ValueError("Password must be at least 8 characters long")
+
+        # Crear usuario
+        new_user = user_repository.create_user(self.db, user_data)
+
+        # Crear perfil (si se enviaron datos)
+        if user_data.profile:
+            profile_repository.create_profile(self.db, new_user.id, user_data.profile)
+
+        return new_user
     
 def get_auth_controller(db: Session = Depends(get_db)):
     return AuthController(db)

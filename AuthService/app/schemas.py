@@ -31,3 +31,24 @@ class Token(BaseModel):
 # Schema for the data embedded inside the JWT token
 class TokenData(BaseModel):
     user_id: int | None = None
+
+# Perfil base
+class ProfileBase(BaseModel):
+    first_name: str | None = None
+    last_name: str | None = None
+    profile_pic_url: str | None = None
+    profile_bio: str | None = None
+    birthday: str | None = None
+    organization: str | None = None
+
+# Perfil completo
+class Profile(ProfileBase):
+    id: int
+    user_id: int
+
+    class Config:
+        from_attributes = True
+
+# Extender el esquema de creación de usuario
+class UserRegister(UserCreate):
+    profile: ProfileBase | None = None
