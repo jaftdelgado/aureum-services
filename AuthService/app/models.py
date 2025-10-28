@@ -24,17 +24,3 @@ class User(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     role = relationship("Role", back_populates="users")
-
-class Profile(Base):
-    __tablename__ = "profiles"
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, unique=True)
-    first_name = Column(String(32))
-    last_name = Column(String(48))
-    profile_pic_url = Column(String(100))
-    profile_bio = Column(String(128))
-    birthday = Column(DateTime)
-    organization = Column(String(48))
-
-    user = relationship("User", backref="profile", uselist=False)

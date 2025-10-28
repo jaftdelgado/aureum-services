@@ -30,10 +30,10 @@ def health_check():
 
 @app.post("/register", response_model=schemas.User)
 def register(
-    user_data: schemas.UserRegister,
+    user_data: schemas.UserCreate,
     auth_controller: AuthController = Depends(get_auth_controller)
 ):
     try:
         return auth_controller.register_user(user_data)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

@@ -1,5 +1,6 @@
 from enum import Enum
 from pydantic import BaseModel, EmailStr, Field
+from typing import Optional
 
 # Base schema for shared attributes
 class UserBase(BaseModel):
@@ -10,10 +11,6 @@ class UserBase(BaseModel):
 
 class UserLogin(BaseModel):
     identifier: str
-    password: str = Field(format="password")
-
-# Schema for creating a user (registration). Includes password.
-class UserCreate(UserBase):
     password: str = Field(format="password")
 
 # Schema for what we return to the client.
@@ -32,23 +29,16 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     user_id: int | None = None
 
-# Perfil base
-class ProfileBase(BaseModel):
-    first_name: str | None = None
-    last_name: str | None = None
-    profile_pic_url: str | None = None
-    profile_bio: str | None = None
-    birthday: str | None = None
-    organization: str | None = None
+class UserCreate(BaseModel):
+    email: EmailStr
+    username: str
+    password: str
+    role_id: int
 
-# Perfil completo
-class Profile(ProfileBase):
-    id: int
-    user_id: int
+    # --- Campos nuevos ---
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
 
     class Config:
+        # Esto es opcional, pero bueno si usas orm_mode en otros lados
         from_attributes = True
-
-# Extender el esquema de creación de usuario
-class UserRegister(UserCreate):
-    profile: ProfileBase | None = None
