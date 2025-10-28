@@ -51,8 +51,71 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+
+  db_usuarios:
+    image: postgres:15-alpine
+    container_name: usuarios_postgres
+    env_file:
+      - .env
+    environment:
+      # Usa las NUEVAS variables de entorno
+      - POSTGRES_USER=${USUARIOS_DB_USER}
+      - POSTGRES_PASSWORD=${USUARIOS_DB_PASSWORD}
+      - POSTGRES_DB=${USUARIOS_DB_NAME}
+    volumes:
+      - postgres_usuarios_data:/var/lib/postgresql/data # Nuevo volumen
+    networks:
+      - aureum_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${USUARIOS_DB_USER} -d ${USUARIOS_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # --- NUEVO Servicio de Usuarios (Perfiles) ---
+  user_service:
+    build: ./UserService # Apunta a tu nueva carpeta de servicio
+    container_name: aureum_user_service
+    env_file:
+      - .env
+    environment: 
+      - USUARIOS_DB_USER=${USUARIOS_DB_USER}
+      - USUARIOS_DB_PASSWORD=${USUARIOS_DB_PASSWORD}
+      - USUARIOS_DB_NAME=${USUARIOS_DB_NAME}
+      - USUARIOS_DB_HOST=db_usuarios
+      # También añadí el puerto, que tu database.py lee
+      - POSTGRES_PORT=5432
+    ports:
+      - "8002:8001" # <-- Puerto 8002 en Host, 8001 en Container
+    volumes:
+      - ./UserService:/app
+      
+    command: >
+      sh -c "
+        until pg_isready -h db_usuarios -U ${USUARIOS_DB_USER} -d ${USUARIOS_DB_NAME}; do
+          echo 'UserService: Esperando a db_usuarios...';
+          sleep 2;
+        done;
+        echo 'UserService: Base de datos lista. Ejecutando migraciones...';
+        alembic upgrade head;
+        echo 'UserService: Migraciones completadas. Iniciando servidor...';
+        uvicorn app.main:app --host 0.0.0.0 --port 8001"
+    depends_on:
+      db_usuarios:
+        condition: service_healthy
+    networks:
+      - aureum_network
+    healthcheck:
+      # Apunta al puerto interno 8001
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
 volumes:
   postgres_data:
+  postgres_usuarios_data:
 
 networks:
   aureum_network:

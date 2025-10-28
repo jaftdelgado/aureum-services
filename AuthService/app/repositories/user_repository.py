@@ -20,7 +20,7 @@ def create_user(db: Session, user: schemas.UserCreate):
         user.role_id = 2 
     hashed_password = get_password_hash(user.password)
     db_user = models.User(
-        email_address=user.email_address,
+        email_address=user.email,
         hashed_password=hashed_password,
         username=user.username,
         role_id=user.role_id
