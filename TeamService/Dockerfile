@@ -1,32 +1,20 @@
-# Build stage
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
 WORKDIR /app
 
-# Copia el proyecto y la solución
-COPY *.sln ./
-COPY *.csproj ./
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-# Restore paquetes
-RUN dotnet restore
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copia todo el código fuente
-COPY . ./
+COPY app ./app
 
-# Publica
-RUN dotnet publish -c Release -o out
+EXPOSE 8000
 
-# Runtime stage
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
-WORKDIR /app
-COPY --from=build /app/out ./
-
-EXPOSE 5000
-EXPOSE 5001
-
-ENV DOTNET_RUNNING_IN_CONTAINER=true
-ENV DOTNET_USE_POLLING_FILE_WATCHER=0
-ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
-ENV ASPNETCORE_URLS=https://+:5001;http://+:5000
-ENV ASPNETCORE_ENVIRONMENT=Production
-
-ENTRYPOINT ["dotnet", "TeamService.dll"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

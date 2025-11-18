@@ -1,0 +1,27 @@
+# Entornos virtuales
+venv/
+.env/
+.env.local
+__pycache__/
+*.pyc
+
+# Configuración de editor
+.vscode/
+.idea/
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Cachés y build
+*.log
+dist/
+build/
+
+# Docker
+Dockerfile*
+docker-compose*
