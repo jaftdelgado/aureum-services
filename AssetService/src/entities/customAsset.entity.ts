@@ -13,6 +13,14 @@ export class CustomAsset {
   @PrimaryGeneratedColumn({ name: 'customassetid' })
   customAssetId: number;
 
+  @Column({
+    name: 'publicid',
+    type: 'uuid',
+    unique: true,
+    default: () => 'uuid_generate_v4()',
+  })
+  publicId: string;
+
   @Column({ name: 'teamid', type: 'int' })
   teamId: number;
 

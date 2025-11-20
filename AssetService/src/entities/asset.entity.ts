@@ -13,6 +13,14 @@ export class Asset {
   @PrimaryGeneratedColumn({ name: 'assetid' })
   assetId: number;
 
+  @Column({
+    name: 'publicid',
+    type: 'uuid',
+    unique: true,
+    default: () => 'uuid_generate_v4()',
+  })
+  publicId: string;
+
   @Column({ name: 'assetsymbol', type: 'varchar', length: 12, unique: true })
   assetSymbol: string;
 

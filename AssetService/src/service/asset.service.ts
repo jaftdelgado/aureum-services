@@ -15,35 +15,45 @@ export class AssetService {
     private readonly categoryRepository: Repository<AssetCategory>,
   ) {}
 
+  // GET all
   findAll(): Promise<Asset[]> {
     return this.assetRepository.find({
       relations: ['category'],
     });
   }
 
-  async findOne(id: number): Promise<Asset> {
+  // GET by publicId
+  async findOneByPublicId(publicId: string): Promise<Asset> {
     const asset = await this.assetRepository.findOne({
-      where: { assetId: id },
+      where: { publicId },
       relations: ['category'],
     });
+
     if (!asset) {
-      throw new NotFoundException(`El activo con ID ${id} no existe`);
+      throw new NotFoundException(
+        `El activo con publicId ${publicId} no existe`,
+      );
     }
+
     return asset;
   }
 
+  // POST create
   async create(dto: CreateAssetDto): Promise<Asset> {
     const asset = this.assetRepository.create(dto);
 
+    // Si viene categoryId, validamos que exista
     if (dto.categoryId) {
       const category = await this.categoryRepository.findOneBy({
         categoryId: dto.categoryId,
       });
+
       if (!category) {
         throw new NotFoundException(
           `La categoría con ID ${dto.categoryId} no existe`,
         );
       }
+
       asset.category = category;
     }
 
