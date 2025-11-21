@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package trading;
+
+service LeccionesService {
+ 
+  rpc DescargarVideo (VideoRequest) returns (stream VideoChunk);
+}
+
+message VideoRequest {
+  string id_leccion = 1;
+}
+
+message VideoChunk {
+  bytes contenido = 1; 
+}
