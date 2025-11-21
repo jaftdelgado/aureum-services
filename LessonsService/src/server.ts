@@ -32,7 +32,7 @@ const descargarVideo = async (call: any) => {
 
         
         if (!videoInfo) {
-            console.error("❌ El ID no existe en la Base de Datos");
+            console.error(" El ID no existe en la Base de Datos");
             call.emit('error', { 
                 code: grpc.status.NOT_FOUND, 
                 details: "ID de video no encontrado en MongoDB" 
@@ -40,14 +40,14 @@ const descargarVideo = async (call: any) => {
             return;
         }
 
-        console.log(`✅ Encontrado en BD: "${videoInfo.descripcion}"`);
+        console.log(` Encontrado en BD: "${videoInfo.descripcion}"`);
         console.log(`   Archivo físico: ${videoInfo.nombre_archivo}`);
 
         
         const pathVideo = path.join(__dirname, videoInfo.nombre_archivo!);
 
         if (!fs.existsSync(pathVideo)) {
-            console.error("❌ GRAVE: El registro existe en BD pero el archivo mp4 no está en la carpeta");
+            console.error(" GRAVE: El registro existe en BD pero el archivo mp4 no está en la carpeta");
             call.emit('error', { 
                 code: grpc.status.NOT_FOUND, 
                 details: "Archivo de video corrupto o perdido en servidor" 
@@ -85,9 +85,16 @@ server.addService(leccionesPackage.LeccionesService.service, {
     DescargarVideo: descargarVideo 
 });
 
-const PORT = `0.0.0.0:${process.env.PORT || 50051}`;
-server.bindAsync(PORT, grpc.ServerCredentials.createInsecure(), (error, port) => {
-    if (error) return console.error(error);
-    console.log(`--- Servidor gRPC + MongoDB listo en puerto ${port} ---`);
-    server.start();
+
+const PORT_NUMBER = process.env.PORT || "50051";
+const BIND_ADDRESS = `0.0.0.0:${PORT_NUMBER}`;
+
+
+server.bindAsync(BIND_ADDRESS, grpc.ServerCredentials.createInsecure(), (error, port) => {
+    if (error) {
+        console.error("Error al iniciar gRPC:", error);
+        return;
+    }
+    console.log(`--- Servidor gRPC escuchando en ${BIND_ADDRESS} (Puerto real: ${port}) ---`);
+    
 });
