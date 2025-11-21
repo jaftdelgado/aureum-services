@@ -96,5 +96,5 @@ server.bindAsync(BIND_ADDRESS, grpc.ServerCredentials.createInsecure(), (error, 
         return;
     }
     console.log(`--- Servidor gRPC escuchando en ${BIND_ADDRESS} (Puerto real: ${port}) ---`);
-    
+    server.start();
 });
