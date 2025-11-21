@@ -2,8 +2,10 @@
   "name": "lecciones-microservices",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.ts",
   "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
     "dev": "nodemon src/server.ts"
   },
   "keywords": [],
