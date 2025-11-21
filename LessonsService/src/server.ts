@@ -13,7 +13,7 @@ const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
     keepCase: true, longs: String, enums: String, defaults: true, oneofs: true
 });
 const protoDescriptor = grpc.loadPackageDefinition(packageDefinition) as any;
-const leccionesPackage = protoDescriptor.trading;
+const tradingPackage = protoDescriptor.trading;
 
 
 console.log("Intentando conectar a MongoDB...");
@@ -81,7 +81,7 @@ const descargarVideo = async (call: any) => {
 
 
 const server = new grpc.Server();
-server.addService(leccionesPackage.LeccionesService.service, { 
+server.addService(tradingPackage.LeccionesService.service, { 
     DescargarVideo: descargarVideo 
 });
 
