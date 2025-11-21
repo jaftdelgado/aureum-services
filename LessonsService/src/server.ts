@@ -85,7 +85,7 @@ server.addService(leccionesPackage.LeccionesService.service, {
     DescargarVideo: descargarVideo 
 });
 
-const PORT = "0.0.0.0:50051";
+const PORT = `0.0.0.0:${process.env.PORT || 50051}`;
 server.bindAsync(PORT, grpc.ServerCredentials.createInsecure(), (error, port) => {
     if (error) return console.error(error);
     console.log(`--- Servidor gRPC + MongoDB listo en puerto ${port} ---`);
