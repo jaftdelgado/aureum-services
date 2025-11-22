@@ -1,19 +1,24 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, UUID4, Field
+from typing import Optional
+from enum import Enum
+from datetime import datetime
 
-class ProfileBase(BaseModel):
-    first_name: str | None = None
-    last_name: str | None = None
-    profile_pic_url: str | None = None
-    profile_bio: str | None = None
-    birthday: str | None = None
-    organization: str | None = None
+class UserRoleEnum(str, Enum):
+    student = "student"
+    professor = "professor"
 
-class ProfileCreate(ProfileBase):
-    user_id: int
+class ProfileCreateDTO(BaseModel):
+    auth_user_id: UUID4 = Field(..., description="El UUID que retorna Supabase al registrarse")
+    username: str = Field(..., min_length=3, max_length=50)
+    full_name: str = Field(..., min_length=1, max_length=100)
+    role: UserRoleEnum
 
-class Profile(ProfileBase):
-    id: int
-    user_id: int
+class ProfileResponseDTO(ProfileCreateDTO):
+    profile_id: int
+    bio: Optional[str] = None
+    profile_pic_id: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
 
     class Config:
         from_attributes = True
