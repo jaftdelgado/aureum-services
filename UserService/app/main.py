@@ -1,14 +1,22 @@
-from fastapi import FastAPI, Depends
-from app.database import get_db
-from app.repositories import profile_repository
-from app import schemas
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from .controllers import profile_controller
+from .database import engine, Base
 
-app = FastAPI(title="UserProfileService")
+Base.metadata.create_all(bind=engine)
 
-@app.post("/profiles", response_model=schemas.Profile)
-def create_profile(profile: schemas.ProfileCreate, db=Depends(get_db)):
-    return profile_repository.create_profile(db, profile)
+app = FastAPI(title="UserService")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(profile_controller.router, prefix="/api/v1/profiles")
 
 @app.get("/health")
 def health_check():
-    return {"status": "ok"}
+    return {"status": "ok", "service": "UserService"}

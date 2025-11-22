@@ -1,19 +1,17 @@
 from sqlalchemy.orm import Session
-from app import models, schemas
+from ..models import Profile
+from ..schemas import ProfileCreateDTO
 
-def create_profile(db: Session, profile: schemas.ProfileCreate):
-    db_profile = models.Profile(
-        user_id=profile.user_id,
-        first_name=profile.first_name,
-        last_name=profile.last_name,
-        profile_pic_url=profile.profile_pic_url,
-        profile_bio=profile.profile_bio,
-        birthday=profile.birthday,
-        organization=profile.organization
-    )
+def create_profile(db: Session, profile_data: ProfileCreateDTO):
+    db_profile = Profile(**profile_data.model_dump())
     
     db.add(db_profile)
     db.commit()
-    db.refresh(db_profile)
-    
+    db.refresh(db_profile) 
     return db_profile
+
+def get_profile_by_username(db: Session, username: str):
+    return db.query(Profile).filter(Profile.username == username).first()
+
+def get_profile_by_auth_id(db: Session, auth_id: str):
+    return db.query(Profile).filter(Profile.auth_user_id == auth_id).first()

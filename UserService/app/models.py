@@ -1,15 +1,27 @@
-from sqlalchemy import Column, Integer, String, Date, ForeignKey
-from sqlalchemy.orm import relationship
-from app.database import Base
+from sqlalchemy import Column, Integer, String, Text, DateTime, Enum as SqEnum
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.sql import func
+import enum
+from .database import Base
+
+class UserRole(str, enum.Enum):
+    student = "student"
+    professor = "professor"
 
 class Profile(Base):
     __tablename__ = "profiles"
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, unique=True, nullable=False)
-    first_name = Column(String(32), nullable=True)
-    last_name = Column(String(48), nullable=True)
-    profile_pic_url = Column(String(100), nullable=True)
-    profile_bio = Column(String(128), nullable=True)
-    birthday = Column(Date, nullable=True)
-    organization = Column(String(48), nullable=True)
+    profile_id = Column(Integer, primary_key=True, index=True)
+    
+    auth_user_id = Column(UUID(as_uuid=True), unique=True, nullable=False, index=True)
+    
+    username = Column(String(50), unique=True, nullable=False)
+    full_name = Column(String(100), nullable=False)
+    
+    bio = Column(Text, nullable=True)
+    profile_pic_id = Column(String(50), nullable=True)
+
+    role = Column(SqEnum(UserRole), default=UserRole.student, nullable=False)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
