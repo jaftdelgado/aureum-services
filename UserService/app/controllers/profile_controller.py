@@ -8,7 +8,7 @@ router = APIRouter(
     tags=["Profiles"]
 )
 
-@router.post("/", response_model=ProfileResponseDTO, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=ProfileResponseDTO, status_code=status.HTTP_201_CREATED)
 def register_user_profile(
     profile_data: ProfileCreateDTO, 
     db: Session = Depends(get_db)
