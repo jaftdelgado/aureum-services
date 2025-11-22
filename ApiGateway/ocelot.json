@@ -2,7 +2,7 @@
   "Routes": [
     // --- 1. USER SERVICE (Crear Perfil) ---
     {
-      "DownstreamPathTemplate": "/profiles",
+      "DownstreamPathTemplate": "/api/v1/profiles",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -12,10 +12,6 @@
       ],
       "UpstreamPathTemplate": "/api/users/profiles",
       "UpstreamHttpMethod": [ "POST", "GET" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "SupabaseAuth",
-        "AllowedScopes": []
-      }
     },
 
     // --- 2. ASSET SERVICE ---
