@@ -2,7 +2,7 @@
   "Routes": [
     // --- 1. USER SERVICE (Crear Perfil) ---
     {
-      "DownstreamPathTemplate": "/api/v1/profiles",
+      "DownstreamPathTemplate": "/api/v1/profiles/",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
