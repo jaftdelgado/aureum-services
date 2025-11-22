@@ -8,6 +8,18 @@ router = APIRouter(
     tags=["Profiles"]
 )
 
+@router.get("/{auth_id}", response_model=ProfileResponseDTO)
+def get_user_profile(auth_id: str, db: Session = Depends(get_db)):
+    profile = profile_repository.get_profile_by_auth_id(db, auth_id=auth_id)
+    
+    if not profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="Perfil no encontrado"
+        )
+    
+    return profile
+
 @router.post("", response_model=ProfileResponseDTO, status_code=status.HTTP_201_CREATED)
 def register_user_profile(
     profile_data: ProfileCreateDTO, 
