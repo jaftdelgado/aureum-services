@@ -11,6 +11,16 @@ builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange
 var supabaseSecret = Environment.GetEnvironmentVariable("SUPABASE_JWT_SECRET") ?? "CLAVE_TEMPORAL_PARA_LOCAL_123456789";
 var bytes = Encoding.UTF8.GetBytes(supabaseSecret);
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("PermitirTodo", policy =>
+    {
+        policy.AllowAnyOrigin() 
+              .AllowAnyMethod()  
+              .AllowAnyHeader(); 
+    });
+});
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -33,6 +43,7 @@ builder.Services.AddOcelot();
 
 var app = builder.Build();
 
+app.UseCors("PermitirTodo");
 app.UseAuthentication();
 app.UseAuthorization(); 
 
