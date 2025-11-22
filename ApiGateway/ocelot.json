@@ -1,0 +1,78 @@
+{
+  "Routes": [
+    // --- 1. USER SERVICE (Crear Perfil) ---
+    {
+      "DownstreamPathTemplate": "/profiles",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "userservice.railway.internal",
+          "Port": 8001
+        }
+      ],
+      "UpstreamPathTemplate": "/api/users/profiles",
+      "UpstreamHttpMethod": [ "POST", "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "SupabaseAuth",
+        "AllowedScopes": []
+      }
+    },
+
+    // --- 2. ASSET SERVICE ---
+    {
+      "DownstreamPathTemplate": "/assets",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "assetservice.railway.internal",
+          "Port": 3000
+        }
+      ],
+      "UpstreamPathTemplate": "/api/assets",
+      "UpstreamHttpMethod": [ "GET", "POST" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "SupabaseAuth",
+        "AllowedScopes": []
+      }
+    },
+
+    // --- 3. ASSET SERVICE ---
+    {
+      "DownstreamPathTemplate": "/assets/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "assetservice.railway.internal",
+          "Port": 3000
+        }
+      ],
+      "UpstreamPathTemplate": "/api/assets/{id}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "SupabaseAuth",
+        "AllowedScopes": []
+      }
+    },
+
+    // --- 4. PORTFOLIO SERVICE (C#) ---
+    {
+      "DownstreamPathTemplate": "/api/portfolio",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "portfolioservice.railway.internal",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/portfolio",
+      "UpstreamHttpMethod": [ "GET", "POST" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "SupabaseAuth",
+        "AllowedScopes": []
+      }
+    }
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "https://gateway-production.up.railway.app"
+  }
+}
