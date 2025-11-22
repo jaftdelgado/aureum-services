@@ -1,6 +1,6 @@
 {
   "Routes": [
-    // --- 1. USER SERVICE (Crear Perfil) ---
+    // --- 1. USER SERVICE ---
     {
       "DownstreamPathTemplate": "/api/v1/profiles",
       "DownstreamScheme": "http",
@@ -12,6 +12,24 @@
       ],
       "UpstreamPathTemplate": "/api/users/profiles",
       "UpstreamHttpMethod": [ "POST", "GET" ],
+    },
+
+    // --- 1.b USER SERVICE ---
+    {
+      "DownstreamPathTemplate": "/api/v1/profiles/{authId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "userservice.railway.internal",
+          "Port": 8001
+        }
+      ],
+      "UpstreamPathTemplate": "/api/users/profiles/{authId}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "SupabaseAuth",
+        "AllowedScopes": []
+      }
     },
 
     // --- 2. ASSET SERVICE ---
