@@ -6,7 +6,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "userservice.railway.internal",
+          "Host": "aureum-services.railway.internal",
           "Port": 8001
         }
       ],
