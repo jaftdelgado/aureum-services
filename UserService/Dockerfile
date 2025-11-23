@@ -1,8 +1,8 @@
-FROM python:3.11-slim-bullseye
+FROM python:3.11-alpine
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache ca-certificates gcc musl-dev libffi-dev
 
 COPY requirements.txt .
 
