@@ -1,6 +1,7 @@
 ﻿import os
 from pymongo import MongoClient
 from dotenv import load_dotenv
+import certifi
 
 load_dotenv()
 
@@ -14,7 +15,7 @@ class MongoDBClient:
 
     def connect(self):
         if not self.client:
-            self.client = MongoClient(MONGO_URI)
+            self.client = MongoClient(MONGO_URI, tlsCAFile=certifi.where())
             self.db = self.client[DB_NAME]
             print("Conectado a MongoDB Atlas")
 
