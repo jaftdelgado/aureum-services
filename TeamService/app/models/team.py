@@ -16,6 +16,8 @@ class Team(Base):
     description = Column(String(128), nullable=True)
     teampic = Column(String(255), nullable=True)
 
+    access_code = Column(String(20), unique=True, nullable=False)
+
     createdat = Column(TIMESTAMP, nullable=False, server_default=func.now())
     professorid = Column(UUID(as_uuid=True), nullable=False, default=uuid4)
 
