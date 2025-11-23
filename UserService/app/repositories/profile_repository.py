@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from ..models import Profile
-from ..schemas import ProfileCreateDTO
+from ..schemas import ProfileCreateDTO, ProfileUpdateDTO
 
 def get_profile_by_auth_id(db: Session, auth_id: str):
     return db.query(models.Profile).filter(models.Profile.auth_user_id == auth_id).first()

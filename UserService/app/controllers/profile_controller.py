@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from .. import mongo_db
 from ..repositories import profile_repository
-from ..schemas import ProfileResponseDTO, ProfileCreateDTO
+from ..schemas import ProfileResponseDTO, ProfileCreateDTO, ProfileUpdateDTO
 from ..database import get_db
 
 router = APIRouter(
