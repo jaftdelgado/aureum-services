@@ -1,7 +1,6 @@
 import os
 from pymongo import MongoClient
 from dotenv import load_dotenv
-import certifi
 
 load_dotenv()
 
@@ -15,15 +14,17 @@ class MongoDBClient:
 
     def connect(self):
         if not self.client:
-            print("Conectando a Mongo (Bullseye + Certifi)...")
-            self.client = MongoClient(MONGO_URI, tlsCAFile=certifi.where())
+            print("Conectando a Mongo (Sin Certifi / Permisivo)...")
+            
+            self.client = MongoClient(MONGO_URI, tls=True, tlsAllowInvalidCertificates=True)
+            
             self.db = self.client[DB_NAME]
             
             try:
                 self.client.admin.command('ping')
-                print("✅ Conexión a Mongo Atlas EXITOSA")
+                print("Conexión a Mongo Atlas EXITOSA")
             except Exception as e:
-                print(f"❌ Error en PING a Mongo: {e}")
+                print(f"Error en PING a Mongo: {e}")
 
     def get_collection(self):
         if self.db is None:
