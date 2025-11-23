@@ -13,7 +13,7 @@ app = FastAPI(
 
 app.include_router(market_config_router)
 app.include_router(team_member_router)
-app.include_router(team_router.router)
+app.include_router(team_router)
 
 @app.get("/")
 def root():
