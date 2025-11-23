@@ -2,38 +2,58 @@ import path from 'path';
 import * as grpc from '@grpc/grpc-js';
 import * as protoLoader from '@grpc/proto-loader';
 
+const ID_A_PROBAR = "692254f707019eb2f8662e56";
+
 const PROTO_PATH = path.join(__dirname, 'proto', 'lecciones.proto');
 const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
     keepCase: true, longs: String, enums: String, defaults: true, oneofs: true
 });
 const protoDescriptor = grpc.loadPackageDefinition(packageDefinition) as any;
-const leccionesPackage = protoDescriptor.trading;
+const tradingPackage = protoDescriptor.trading;
 
-const client = new leccionesPackage.LeccionesService(
+const client = new tradingPackage.LeccionesService(
     'localhost:50051',
     grpc.credentials.createInsecure()
 );
 
-console.log("Pidiendo video (Streaming)...");
+const probarTodo = () => {
+    console.log(`PRUEBA 1: Obteniendo Detalles del ID: ${ID_A_PROBAR}`);
 
+    client.ObtenerDetalles({ id_leccion: ID_A_PROBAR }, (err: any, ficha: any) => {
+        if (err) {
+            console.error("Error obteniendo detalles:", err.details);
+            return;
+        }
 
-const call = client.DescargarVideo({ id_leccion: "692009a6348f04c75eedffc2" });
+        console.log("FICHA RECIBIDA:");
+        console.log(`   - Titulo: ${ficha.titulo}`);
+        console.log(`   - Descripcion: ${ficha.descripcion}`);
+        console.log(`   - Tamaño miniatura: ${ficha.miniatura.length} bytes`);
 
-let tamañoTotal = 0;
+        console.log("\nPRUEBA 2: Reproduciendo Video...");
+        
+        const call = client.DescargarVideo({ id_leccion: ID_A_PROBAR });
+        
+        let tamañoTotal = 0;
+        let paquetes = 0;
 
+        call.on('data', (chunk: any) => {
+            const datos = chunk.contenido;
+            tamañoTotal += datos.length;
+            paquetes++;
+            process.stdout.write('.');
+        });
 
-call.on('data', (response: any) => {
-    const chunk = response.contenido;
-    tamañoTotal += chunk.length;
-    process.stdout.write('📦'); 
-});
+        call.on('end', () => {
+            console.log("\nSTREAMING FINALIZADO.");
+            console.log(`   - Paquetes recibidos: ${paquetes}`);
+            console.log(`   - Tamaño total: ${(tamañoTotal / 1024 / 1024).toFixed(2)} MB`);
+        });
 
+        call.on('error', (e: any) => {
+            console.error("\nError en el video:", e);
+        });
+    });
+};
 
-call.on('end', () => {
-    console.log("\n\nTransmisión finalizada.");
-    console.log(`Total recibido: ${(tamañoTotal / 1024 / 1024).toFixed(2)} MB`);
-});
-
-call.on('error', (e: any) => {
-    console.error("Error:", e);
-});
+probarTodo();

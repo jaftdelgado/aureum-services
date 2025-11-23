@@ -1,12 +1,23 @@
 import path from 'path';
-import fs from 'fs';
 import * as grpc from '@grpc/grpc-js';
 import * as protoLoader from '@grpc/proto-loader';
 import mongoose from 'mongoose';
-import { Video } from './models/Video'; 
+import express from 'express';
+import multer from 'multer';
+import cors from 'cors';
+import { Readable } from 'stream';
 
-// 
-const MONGO_URI = "mongodb+srv://admin:admin1234@cluster0.5wusaqn.mongodb.net/trading_db?appName=Cluster0"; 
+const MONGO_URI = "mongodb+srv://admin:admin1234@cluster0.5wusaqn.mongodb.net/trading_db?appName=Cluster0";
+const GRPC_PORT = "50051";
+const HTTP_PORT = 3000;
+
+const lessonSchema = new mongoose.Schema({
+    title: String,
+    description: String,
+    thumbnail: Buffer,
+    videoFileId: mongoose.Types.ObjectId
+});
+const Lesson = mongoose.model('Lesson', lessonSchema);
 
 const PROTO_PATH = path.join(__dirname, 'proto', 'lecciones.proto');
 const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
@@ -15,86 +26,119 @@ const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
 const protoDescriptor = grpc.loadPackageDefinition(packageDefinition) as any;
 const tradingPackage = protoDescriptor.trading;
 
+let gridFSBucket: mongoose.mongo.GridFSBucket;
+const app = express();
+const upload = multer({ storage: multer.memoryStorage() });
 
-console.log("Intentando conectar a MongoDB...");
-mongoose.connect(MONGO_URI)
-    .then(() => console.log("Base de Datos Conectada Exitosamente"))
-    .catch(err => console.error("Error Fatal conectando a BD:", err));
+app.use(cors());
 
-
-const descargarVideo = async (call: any) => {
-    const idSolicitado = call.request.id_leccion;
-    console.log(`\n--> Cliente pide video con ID de BD: ${idSolicitado}`);
-
+app.post('/upload', upload.fields([{ name: 'video', maxCount: 1 }, { name: 'image', maxCount: 1 }]), async (req: any, res: any) => {
     try {
-        
-        const videoInfo = await Video.findById(idSolicitado);
-
-        
-        if (!videoInfo) {
-            console.error(" El ID no existe en la Base de Datos");
-            call.emit('error', { 
-                code: grpc.status.NOT_FOUND, 
-                details: "ID de video no encontrado en MongoDB" 
-            });
-            return;
+        if (!req.files || !req.files['video'] || !req.files['image']) {
+            return res.status(400).send("Faltan archivos");
         }
 
-        console.log(` Encontrado en BD: "${videoInfo.descripcion}"`);
-        console.log(`   Archivo físico: ${videoInfo.nombre_archivo}`);
+        const videoFile = req.files['video'][0];
+        const imageFile = req.files['image'][0];
+        const { title, description } = req.body;
 
-        
-        const pathVideo = path.join(__dirname, videoInfo.nombre_archivo!);
+        console.log(`Subiendo video: ${videoFile.originalname}`);
 
-        if (!fs.existsSync(pathVideo)) {
-            console.error(" GRAVE: El registro existe en BD pero el archivo mp4 no está en la carpeta");
-            call.emit('error', { 
-                code: grpc.status.NOT_FOUND, 
-                details: "Archivo de video corrupto o perdido en servidor" 
-            });
-            return;
-        }
+        const uploadStream = gridFSBucket.openUploadStream(videoFile.originalname);
+        
+        const readableVideo = new Readable();
+        readableVideo.push(videoFile.buffer);
+        readableVideo.push(null);
+        readableVideo.pipe(uploadStream);
 
-       
-        const videoStream = fs.createReadStream(pathVideo, { highWaterMark: 64 * 1024 });
-        
-        videoStream.on('data', (chunk) => {
-            call.write({ contenido: chunk });
-            process.stdout.write('.'); 
-        });
-        
-        videoStream.on('end', () => {
-            console.log("\nTransmisión finalizada con éxito.");
-            call.end();
+        await new Promise((resolve, reject) => {
+            uploadStream.on('finish', resolve);
+            uploadStream.on('error', reject);
         });
 
-        videoStream.on('error', (err) => {
-            console.error("Error leyendo disco:", err);
-            call.end();
+        const nuevaLeccion = new Lesson({
+            title: title || "Sin titulo",
+            description: description || "Sin descripcion",
+            thumbnail: imageFile.buffer,
+            videoFileId: uploadStream.id
         });
+
+        const resultado = await nuevaLeccion.save();
+
+        console.log(`Subida exitosa. ID: ${resultado._id}`);
+        res.json({ message: "Exito", id: resultado._id });
 
     } catch (error) {
-        console.error("Error del servidor:", error);
-        call.emit('error', { code: grpc.status.INTERNAL, details: "Error interno del servidor" });
+        console.error(error);
+        res.status(500).send("Error interno al subir");
+    }
+});
+
+app.get('/video/:id', async (req: any, res: any) => {
+    try {
+        const leccion = await Lesson.findById(req.params.id);
+        if (!leccion || !leccion.videoFileId) return res.status(404).send("Video no encontrado");
+
+        res.set('Content-Type', 'video/mp4');
+        res.set('Accept-Ranges', 'bytes');
+
+        const downloadStream = gridFSBucket.openDownloadStream(leccion.videoFileId as any);
+        downloadStream.pipe(res);
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("Error stream");
+    }
+});
+
+const obtenerDetalles = async (call: any, callback: any) => {
+    try {
+        const leccion = await Lesson.findById(call.request.id_leccion);
+        if (!leccion) return callback({ code: grpc.status.NOT_FOUND });
+        
+        callback(null, {
+            id: leccion._id.toString(),
+            titulo: leccion.title,
+            descripcion: leccion.description,
+            miniatura: leccion.thumbnail
+        });
+    } catch (error) {
+        callback({ code: grpc.status.INTERNAL });
     }
 };
 
+const descargarVideoGrpc = async (call: any) => {
+    try {
+        const leccion = await Lesson.findById(call.request.id_leccion);
+        if (!leccion || !leccion.videoFileId) return call.end();
 
-const server = new grpc.Server();
-server.addService(tradingPackage.LeccionesService.service, { 
-    DescargarVideo: descargarVideo 
-});
-
-
-const PORT_NUMBER = process.env.PORT || "50051";
-const BIND_ADDRESS = `0.0.0.0:${PORT_NUMBER}`;
-
-
-server.bindAsync(BIND_ADDRESS, grpc.ServerCredentials.createInsecure(), (error, port) => {
-    if (error) {
-        console.error("Error al iniciar gRPC:", error);
-        return;
+        const downloadStream = gridFSBucket.openDownloadStream(leccion.videoFileId as any);
+        downloadStream.on('data', (chunk) => call.write({ contenido: chunk }));
+        downloadStream.on('end', () => call.end());
+        downloadStream.on('error', () => call.end());
+    } catch (error) {
+        call.end();
     }
-    console.log(`--- Servidor gRPC escuchando en ${BIND_ADDRESS} (Puerto real: ${port}) ---`);
-    server.start();
-});
+};
+
+const startServer = async () => {
+    await mongoose.connect(MONGO_URI);
+    console.log("MongoDB Conectado");
+    gridFSBucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db!, { bucketName: 'videos' });
+
+    const server = new grpc.Server();
+    server.addService(tradingPackage.LeccionesService.service, { 
+        ObtenerDetalles: obtenerDetalles,
+        DescargarVideo: descargarVideoGrpc 
+    });
+    server.bindAsync(`0.0.0.0:${GRPC_PORT}`, grpc.ServerCredentials.createInsecure(), (err, port) => {
+        if (err) return console.error(err);
+        console.log(`gRPC corriendo en puerto ${port}`);
+    });
+
+    app.listen(HTTP_PORT, () => {
+        console.log(`HTTP API corriendo en http://localhost:${HTTP_PORT}`);
+    });
+};
+
+startServer();

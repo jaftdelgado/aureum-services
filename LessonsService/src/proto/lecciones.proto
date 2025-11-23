@@ -3,14 +3,20 @@ syntax = "proto3";
 package trading;
 
 service LeccionesService {
- 
-  rpc DescargarVideo (VideoRequest) returns (stream VideoChunk);
+  rpc ObtenerDetalles (LeccionRequest) returns (LeccionDetalles);
+  rpc DescargarVideo (LeccionRequest) returns (stream VideoChunk);
 }
 
-message VideoRequest {
+message LeccionRequest {
   string id_leccion = 1;
 }
 
+message LeccionDetalles {
+  string id = 1;
+  string titulo = 2;
+  string descripcion = 3;
+  bytes miniatura = 4; 
+}
 message VideoChunk {
   bytes contenido = 1; 
 }
