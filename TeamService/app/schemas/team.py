@@ -1,30 +1,24 @@
-from pydantic import BaseModel
-from uuid import UUID
-from datetime import datetime
+from pydantic import BaseModel, UUID4, Field
 from typing import Optional
+from datetime import datetime
 
+class TeamCreateDTO(BaseModel):
+    name: str = Field(..., min_length=3, max_length=48)
+    description: Optional[str] = Field(None, max_length=128)
+    professor_id: int 
 
-class TeamBase(BaseModel):
-    teamname: str
-    description: Optional[str] = None
-    teampic: Optional[str] = None
-    professorid: UUID
-
-
-class TeamCreate(TeamBase):
-    pass
-
-
-class TeamUpdate(BaseModel):
-    teamname: Optional[str] = None
-    description: Optional[str] = None
-    teampic: Optional[str] = None
-
-
-class TeamResponse(TeamBase):
-    teamid: int
-    publicid: UUID
-    createdat: datetime
+class TeamResponseDTO(BaseModel):
+    public_id: UUID4
+    name: str
+    description: Optional[str]
+    professor_id: int
+    access_code: str 
+    team_pic: Optional[str]
+    created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+class TeamUpdateDTO(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
