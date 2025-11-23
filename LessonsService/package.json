@@ -4,7 +4,7 @@
   "description": "",
   "main": "server.ts",
   "scripts": {
-    "build": "tsc && cp -r src/proto dist && cp src/*.mp4 dist",
+    "build": "tsc && cp -r src/proto dist",
     "start": "node dist/server.js",
     "dev": "nodemon src/server.ts"
   },
