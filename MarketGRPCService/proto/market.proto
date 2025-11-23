@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package market;
+
+// IMPORTANTE: go_package DEBE coincidir con el módulo + carpeta
+option go_package = "github.com/jaftdelgado/aureum-services/MarketGRPCService/proto;proto";
+
+// Petición: solo dejamos que el cliente indique el intervalo en segundos
+message MarketRequest {
+  int32 interval_seconds = 1; // default 4 si viene 0 o negativo
+}
+
+// Respuesta por cada “tick” de mercado
+message MarketAsset {
+  int32 id = 1;
+  string symbol = 2;
+  string name = 3;
+  double price = 4;
+  double base_price = 5;
+  double volatility = 6;
+}
+
+message MarketResponse {
+  int64 timestamp_unix_millis = 1;
+  repeated MarketAsset assets = 2;
+}
+
+// Servicio gRPC
+service MarketService {
+  // Server streaming: el servidor manda actualizaciones cada X segundos
+  rpc CheckMarket (MarketRequest) returns (stream MarketResponse);
+}
