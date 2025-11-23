@@ -1,38 +1,36 @@
 import os
-from pymongo import MongoClient
 from dotenv import load_dotenv
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
 load_dotenv()
 
-MONGO_URI = os.getenv("MONGO_URI")
-DB_NAME = "users_db"
-COLLECTION_NAME = "profile_images"
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-class MongoDBClient:
-    client: MongoClient = None
-    db = None
+if not DATABASE_URL:
+    user = os.getenv("USUARIOS_DB_USER", "postgres")
+    password = os.getenv("USUARIOS_DB_PASSWORD", "password")
+    host = os.getenv("USUARIOS_DB_HOST", "localhost")
+    port = os.getenv("USUARIOS_DB_PORT", "5432")
+    db_name = os.getenv("USUARIOS_DB_NAME", "users_db")
+    DATABASE_URL = f"postgresql://{user}:{password}@{host}:{port}/{db_name}"
 
-    def connect(self):
-        if not self.client:
-            print("Conectando a Mongo (Sin Certifi / Permisivo)...")
-            
-            self.client = MongoClient(MONGO_URI, tls=True, tlsAllowInvalidCertificates=True)
-            
-            self.db = self.client[DB_NAME]
-            
-            try:
-                self.client.admin.command('ping')
-                print("✅ Conexión a Mongo Atlas EXITOSA")
-            except Exception as e:
-                print(f"❌ Error en PING a Mongo: {e}")
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-    def get_collection(self):
-        if self.db is None:
-            self.connect()
-        return self.db[COLLECTION_NAME]
+engine = create_engine(
+    DATABASE_URL, 
+    pool_pre_ping=True, 
+    pool_recycle=300 
+)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
 
-    def close(self):
-        if self.client:
-            self.client.close()
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-mongo_client = MongoDBClient()
