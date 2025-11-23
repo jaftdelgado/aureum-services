@@ -11,7 +11,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/users/profiles",
-      "UpstreamHttpMethod": [ "POST", "GET" ],
+      "UpstreamHttpMethod": [ "POST", "GET" ]
     },
 
     // --- 1.b USER SERVICE ---
@@ -20,12 +20,66 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "userservice.railway.internal",
+          "Host": "aureum-services.railway.internal",
           "Port": 8001
         }
       ],
       "UpstreamPathTemplate": "/api/users/profiles/{authId}",
       "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "SupabaseAuth",
+        "AllowedScopes": []
+      }
+    },
+
+    // --- 1.c ACTUALIZAR PERFIL ---
+    {
+      "DownstreamPathTemplate": "/api/v1/profiles/{authId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "aureum-services.railway.internal",
+          "Port": 8001
+        }
+      ],
+      "UpstreamPathTemplate": "/api/users/profiles/{authId}",
+      "UpstreamHttpMethod": [ "PATCH" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "SupabaseAuth",
+        "AllowedScopes": []
+      }
+    },
+
+    // --- 1.d SUBIR AVATAR (POST) ---
+    {
+      "DownstreamPathTemplate": "/api/v1/profiles/{authId}/avatar",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "aureum-services.railway.internal",
+          "Port": 8001
+        }
+      ],
+      "UpstreamPathTemplate": "/api/users/profiles/{authId}/avatar",
+      "UpstreamHttpMethod": [ "POST" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "SupabaseAuth",
+        "AllowedScopes": []
+      }
+    },
+
+    // --- 1.e ELIMINAR CUENTA (DELETE) ---
+    {
+      "DownstreamPathTemplate": "/api/v1/profiles/{authId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "aureum-services.railway.internal",
+          "Port": 8001
+        }
+      ],
+      "UpstreamPathTemplate": "/api/users/profiles/{authId}",
+      "UpstreamHttpMethod": [ "DELETE" ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []

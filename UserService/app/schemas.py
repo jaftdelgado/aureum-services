@@ -22,3 +22,7 @@ class ProfileResponseDTO(ProfileCreateDTO):
 
     class Config:
         from_attributes = True
+
+class ProfileUpdateDTO(BaseModel):
+    full_name: Optional[str] = Field(None, min_length=1, max_length=100)
+    bio: Optional[str] = None

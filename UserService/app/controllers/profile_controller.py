@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from .. import mongo_db
 from ..repositories import profile_repository
 from ..schemas import ProfileResponseDTO, ProfileCreateDTO
 from ..database import get_db
@@ -48,3 +49,53 @@ def register_user_profile(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error interno al registrar el perfil."
         )
+
+@router.patch("/{auth_id}", response_model=ProfileResponseDTO)
+def update_user_profile(
+    auth_id: str, 
+    profile_update: schemas.ProfileUpdateDTO,
+    db: Session = Depends(get_db)
+):
+    updated_profile = profile_repository.update_profile(db, auth_id, profile_update)
+    if not updated_profile:
+        raise HTTPException(status_code=404, detail="Perfil no encontrado")
+    return updated_profile
+
+@router.post("/{auth_id}/avatar", response_model=ProfileResponseDTO)
+async def upload_avatar(
+    auth_id: str,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
+    profile = profile_repository.get_profile_by_auth_id(db, auth_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    try:
+        contents = await file.read()
+        
+        image_doc = {
+            "auth_user_id": auth_id,
+            "filename": file.filename,
+            "content_type": file.content_type,
+            "image_data": contents 
+        }
+        
+        collection = mongo_db.mongo_client.get_collection()
+        result = collection.insert_one(image_doc)
+        mongo_id = str(result.inserted_id) 
+        
+        updated_profile = profile_repository.update_profile_pic(db, auth_id, mongo_id)
+        
+        return updated_profile
+
+    except Exception as e:
+        print(f"Error subiendo imagen: {e}")
+        raise HTTPException(status_code=500, detail="Error al subir la imagen")
+
+@router.delete("/{auth_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_user_profile(auth_id: str, db: Session = Depends(get_db)):
+    success = profile_repository.delete_profile(db, auth_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Perfil no encontrado")
+    return None
