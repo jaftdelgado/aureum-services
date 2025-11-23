@@ -4,9 +4,8 @@ sqlalchemy
 psycopg2-binary
 pydantic
 python-dotenv
-pymongo
+pymongo[srv,tls]
 python-multipart
 email-validator
 requests
-certifi
 dnspython
