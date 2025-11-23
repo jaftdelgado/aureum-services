@@ -8,7 +8,7 @@ import cors from 'cors';
 import { Readable } from 'stream';
 
 const MONGO_URI = "mongodb+srv://admin:admin1234@cluster0.5wusaqn.mongodb.net/trading_db?appName=Cluster0";
-const GRPC_PORT = "50051";
+const GRPC_PORT = "50052";
 const HTTP_PORT = process.env.PORT || 3000;
 
 const lessonSchema = new mongoose.Schema({
