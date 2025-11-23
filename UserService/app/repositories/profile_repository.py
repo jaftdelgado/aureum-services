@@ -19,7 +19,7 @@ def get_profile_by_username(db: Session, username: str):
 def get_profile_by_auth_id(db: Session, auth_id: str):
     return db.query(Profile).filter(Profile.auth_user_id == auth_id).first()
 
-def update_profile(db: Session, auth_id: str, update_data: schemas.ProfileUpdateDTO):
+def update_profile(db: Session, auth_id: str, update_data: ProfileUpdateDTO):
     db_profile = get_profile_by_auth_id(db, auth_id)
     if not db_profile:
         return None
