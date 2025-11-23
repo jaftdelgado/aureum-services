@@ -17,8 +17,8 @@ def create_course(db: Session, course_data: TeamCreateDTO):
         
         name=course_data.name,
         description=course_data.description,
-        professor_id=course_data.professor_id
-        access_code = new_access_code
+        professor_id=course_data.professor_id,
+        access_code = new_access_code,
         team_pic=team_pic_id
     )
     
