@@ -53,7 +53,7 @@ def register_user_profile(
 @router.patch("/{auth_id}", response_model=ProfileResponseDTO)
 def update_user_profile(
     auth_id: str, 
-    profile_update: schemas.ProfileUpdateDTO,
+    profile_update: ProfileUpdateDTO,
     db: Session = Depends(get_db)
 ):
     updated_profile = profile_repository.update_profile(db, auth_id, profile_update)
