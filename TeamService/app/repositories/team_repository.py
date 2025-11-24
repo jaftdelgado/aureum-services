@@ -15,3 +15,6 @@ def get_courses_by_student(db: Session, student_profile_id: int):
     ).filter(
         TeamMembership.user_id == student_profile_id
     ).all()
+
+def get_team_by_access_code(db: Session, access_code: str):
+    return db.query(Team).filter(Team.access_code == access_code).first()
