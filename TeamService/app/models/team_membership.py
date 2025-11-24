@@ -13,7 +13,7 @@ class TeamMembership(Base):
     membershipid = Column(Integer, primary_key=True, index=True)
     publicid = Column(UUID(as_uuid=True), unique=True, default=uuid4)
 
-    teamid = Column(Integer, ForeignKey("Teams.TeamID", ondelete="CASCADE"), nullable=False)
+    teamid = Column(Integer, ForeignKey("teams.TeamID", ondelete="CASCADE"), nullable=False)
     userid = Column(Integer, nullable=False)
 
     joinedat = Column(TIMESTAMP, server_default=func.now())

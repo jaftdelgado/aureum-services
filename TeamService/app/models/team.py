@@ -7,7 +7,7 @@ import uuid
 from app.database import Base
 
 class Team(Base):
-    __tablename__ = "Teams"
+    __tablename__ = "teams"
 
     team_id = Column("TeamID", Integer, primary_key=True, index=True, autoincrement=True)
     
