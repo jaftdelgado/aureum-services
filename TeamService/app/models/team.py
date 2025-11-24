@@ -9,18 +9,18 @@ from app.database import Base
 class Team(Base):
     __tablename__ = "teams"
 
-    team_id = Column("TeamID", Integer, primary_key=True, index=True, autoincrement=True)
+    team_id = Column("teamid", Integer, primary_key=True, index=True, autoincrement=True)
     
-    public_id = Column("PublicID", UUID(as_uuid=True), default=uuid.uuid4, unique=True, nullable=False)
+    public_id = Column("publicid", UUID(as_uuid=True), default=uuid.uuid4, unique=True, nullable=False)
     
-    professor_id = Column("ProfessorID", Integer, nullable=False)
-    name = Column("TeamName", String(48), nullable=False)
-    description = Column("Description", String(128), nullable=True)
-    team_pic = Column("TeamPic", String(255), nullable=True)
+    professor_id = Column("professorid", Integer, nullable=False)
+    name = Column("teamname", String(48), nullable=False)
+    description = Column("description", String(128), nullable=True)
+    team_pic = Column("teampic", String(255), nullable=True)
     
-    access_code = Column("AccessCode", String(20), unique=True, nullable=False)
+    access_code = Column("accesscode", String(20), unique=True, nullable=False)
     
-    created_at = Column("CreatedAt", DateTime(timezone=True), server_default=func.now())
+    created_at = Column("createdat", DateTime(timezone=True), server_default=func.now())
 
     market_configuration = relationship(
         "MarketConfiguration",
