@@ -11,7 +11,8 @@ import (
 )
 
 func Run(port string, h *handler.MarketHandler) error {
-	lis, err := net.Listen("tcp", "0.0.0.0:50051")
+	address := "0.0.0.0:" + port
+	lis, err := net.Listen("tcp", address)
 	if err != nil {
 		return fmt.Errorf("no se pudo abrir el puerto %s: %w", port, err)
 	}
