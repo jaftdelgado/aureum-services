@@ -21,7 +21,7 @@ func getenv(key, def string) string {
 
 func GetConfig() *Config {
 	port := getenv("MARKET_GRPC_PORT", "50051")
-	assetURL := getenv("ASSET_SERVICE_URL", "https://assetservice-production.up.railway.app/assets")
+	assetURL := getenv("ASSET_SERVICE_URL", "https://assetservice.railway.internal/assets")
 
 	intervalStr := getenv("TICK_INTERVAL_SECONDS", "4")
 	intervalSeconds, err := strconv.Atoi(intervalStr)
