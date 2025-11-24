@@ -2,6 +2,8 @@ from sqlalchemy.orm import Session
 from ..models.team import Team
 from ..schemas.team import TeamCreateDTO
 import uuid
+import string 
+import random
 
 def generate_unique_code(length=8):
     chars = string.ascii_uppercase + string.digits
