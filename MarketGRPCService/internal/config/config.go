@@ -20,8 +20,15 @@ func getenv(key, def string) string {
 }
 
 func GetConfig() *Config {
-	port := getenv("MARKET_GRPC_PORT", "50051")
-	assetURL := getenv("ASSET_SERVICE_URL", "https://assetservice.railway.internal/assets")
+	// Railway siempre expone el puerto en la variable PORT.
+	// Si existe PORT, la usamos; si no, caemos a MARKET_GRPC_PORT o 50051.
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = getenv("MARKET_GRPC_PORT", "50051")
+	}
+
+	// URL del AssetService (sobrescrita por variable de entorno en Railway)
+	assetURL := getenv("ASSET_SERVICE_URL", "http://assetservice.railway.internal:5000/assets")
 
 	intervalStr := getenv("TICK_INTERVAL_SECONDS", "4")
 	intervalSeconds, err := strconv.Atoi(intervalStr)
