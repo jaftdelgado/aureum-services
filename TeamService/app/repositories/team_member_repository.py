@@ -16,3 +16,6 @@ def is_member(db: Session, team_id: int, user_id: int):
         TeamMembership.teamid == team_id,
         TeamMembership.userid == user_id
     ).first()
+
+def get_members_by_team_id(db: Session, team_id: int):
+    return db.query(TeamMembership).filter(TeamMembership.teamid == team_id).all()

@@ -225,6 +225,23 @@
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
       }
+    },
+    // --- GET STUDENTS IN COURSE ---
+    {
+      "DownstreamPathTemplate": "/api/v1/memberships/course/{identifier}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "courseservice.railway.internal",
+          "Port": 8000
+        }
+      ],
+      "UpstreamPathTemplate": "/api/courses/{identifier}/students",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "SupabaseAuth",
+        "AllowedScopes": []
+      }
     }
   ],
   "GlobalConfiguration": {
