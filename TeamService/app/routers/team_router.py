@@ -50,3 +50,15 @@ async def create_new_course(
         db.rollback()
         print(f"Error Postgres: {e}")
         raise HTTPException(status_code=500, detail="Error al crear el curso en base de datos")
+
+@router.get("/", response_model=List[TeamResponseDTO])
+def get_all(db: Session = Depends(get_db)):
+    return team_service.get_all_courses(db)
+
+@router.get("/professor/{profile_id}", response_model=List[TeamResponseDTO])
+def get_by_professor(profile_id: int, db: Session = Depends(get_db)):
+    return team_service.get_professor_courses(db, profile_id)
+
+@router.get("/student/{profile_id}", response_model=List[TeamResponseDTO])
+def get_by_student(profile_id: int, db: Session = Depends(get_db)):
+    return team_service.get_student_courses(db, profile_id)

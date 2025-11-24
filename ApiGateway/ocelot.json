@@ -155,6 +155,59 @@
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
       }
+    },
+    // --- 5.b GET ALL COURSES ---
+    {
+      "DownstreamPathTemplate": "/api/v1/courses/",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "courseservice.railway.internal",
+          "Port": 8000
+        }
+      ],
+      "UpstreamPathTemplate": "/api/courses",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "SupabaseAuth",
+        "AllowedScopes": []
+      }
+    },
+
+    // --- 5.c GET PROFESSOR COURSES ---
+    {
+      "DownstreamPathTemplate": "/api/v1/courses/professor/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "courseservice.railway.internal",
+          "Port": 8000
+        }
+      ],
+      "UpstreamPathTemplate": "/api/courses/professor/{id}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "SupabaseAuth",
+        "AllowedScopes": []
+      }
+    },
+
+    // --- 5.d GET STUDENT COURSES ---
+    {
+      "DownstreamPathTemplate": "/api/v1/courses/student/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "courseservice.railway.internal",
+          "Port": 8000
+        }
+      ],
+      "UpstreamPathTemplate": "/api/courses/student/{id}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "SupabaseAuth",
+        "AllowedScopes": []
+      }
     }
   ],
   "GlobalConfiguration": {
