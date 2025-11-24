@@ -13,7 +13,7 @@ func main() {
 
 	h := handler.NewMarketHandler(cfg)
 
-	if err := server.Run("0.0.0.0:" + cfg.Port, h); err != nil { 
+	if err := server.Run(cfg.Port, h); err != nil {
 		log.Fatalf("Error al iniciar MarketGRPCService: %v", err)
 	}
 }
