@@ -2,6 +2,7 @@ from pydantic import BaseModel, UUID4, Field
 from typing import Optional
 from enum import Enum
 from datetime import datetime
+from typing import List
 
 class UserRoleEnum(str, Enum):
     student = "student"
@@ -26,3 +27,6 @@ class ProfileResponseDTO(ProfileCreateDTO):
 class ProfileUpdateDTO(BaseModel):
     full_name: Optional[str] = Field(None, min_length=1, max_length=100)
     bio: Optional[str] = None
+
+class ProfileBatchRequestDTO(BaseModel):
+    profile_ids: List[int]

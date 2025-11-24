@@ -1,9 +1,13 @@
 from sqlalchemy.orm import Session
 from ..models import Profile
 from ..schemas import ProfileCreateDTO, ProfileUpdateDTO
+from typing import List
 
 def get_profile_by_auth_id(db: Session, auth_id: str):
     return db.query(models.Profile).filter(models.Profile.auth_user_id == auth_id).first()
+
+def get_profiles_by_ids(db: Session, profile_ids: List[int]):
+    return db.query(Profile).filter(Profile.profile_id.in_(profile_ids)).all()
 
 def create_profile(db: Session, profile_data: ProfileCreateDTO):
     db_profile = Profile(**profile_data.model_dump())

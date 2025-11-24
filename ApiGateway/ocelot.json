@@ -85,7 +85,23 @@
         "AllowedScopes": []
       }
     },
-
+    // --- 1.f USER SERVICE (Obtener varios alumnos) ---
+    {
+      "DownstreamPathTemplate": "/api/v1/profiles/batch",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "userservice.railway.internal",
+          "Port": 8001
+        }
+      ],
+      "UpstreamPathTemplate": "/api/users/profiles/batch",
+      "UpstreamHttpMethod": [ "POST" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "SupabaseAuth",
+        "AllowedScopes": []
+      }
+    },
     // --- 2. ASSET SERVICE ---
     {
       "DownstreamPathTemplate": "/assets",
