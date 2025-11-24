@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
 from .. import mongo_db
 from ..repositories import profile_repository
-from ..schemas import ProfileResponseDTO, ProfileCreateDTO, ProfileUpdateDTO
+from ..schemas import ProfileResponseDTO, ProfileCreateDTO, ProfileUpdateDTO, ProfileBatchRequestDTO
 from ..database import get_db
 from typing import List
 
@@ -10,9 +10,9 @@ router = APIRouter(
     tags=["Profiles"]
 )
 
-@router.post("/batch", response_model=List[schemas.ProfileResponseDTO])
+@router.post("/batch", response_model=List[ProfileResponseDTO])
 def get_profiles_batch(
-    batch_data: schemas.ProfileBatchRequestDTO,
+    batch_data: ProfileBatchRequestDTO,
     db: Session = Depends(get_db)
 ):
     return profile_repository.get_profiles_by_ids(db, batch_data.profile_ids)
