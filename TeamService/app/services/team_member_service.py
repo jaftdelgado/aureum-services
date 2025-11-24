@@ -26,6 +26,21 @@ class TeamMemberService:
         db.commit()
         return True
 
+def get_students_by_course(db: Session, identifier: str):
+    team = None
+    
+    team = team_repository.get_team_by_access_code(db, access_code=identifier)
+    
+    if not team and identifier.isdigit():
+        team = team_repository.get_team_by_id(db, team_id=int(identifier))
+        
+    if not team:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="Curso no encontrado con ese codigo o ID."
+        )
+    return team_member_repository.get_members_by_team_id(db, team.team_id)
+
 def join_course_by_code(db: Session, join_data: JoinCourseDTO):
     course = team_repository.get_team_by_access_code(db, join_data.access_code)
     

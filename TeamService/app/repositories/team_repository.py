@@ -18,3 +18,6 @@ def get_courses_by_student(db: Session, student_profile_id: int):
 
 def get_team_by_access_code(db: Session, access_code: str):
     return db.query(Team).filter(Team.access_code == access_code).first()
+
+def get_team_by_id(db: Session, team_id: int):
+    return db.query(Team).filter(Team.team_id == team_id).first()
