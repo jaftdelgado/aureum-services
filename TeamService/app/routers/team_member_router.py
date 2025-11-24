@@ -19,4 +19,4 @@ def delete_team_member(public_id: UUID, db: Session = Depends(get_db)):
 
 @router.post("/join", response_model=TeamMembershipResponse, status_code=status.HTTP_201_CREATED)
 def join_course(join_data: JoinCourseDTO, db: Session = Depends(get_db)):
-    return team_member_service.join_course_by_code(db, join_data)
+    return TeamMemberService.join_course_by_code(db, join_data)
