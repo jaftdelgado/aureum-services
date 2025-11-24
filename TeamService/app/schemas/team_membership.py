@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from uuid import UUID
 from datetime import datetime
+from pydantic import BaseModel, Field
 from typing import Optional
 
 
@@ -9,8 +10,9 @@ class TeamMembershipBase(BaseModel):
     userid: int
 
 
-class TeamMembershipCreate(TeamMembershipBase):
-    pass
+class JoinCourseDTO(BaseModel):
+    access_code: str = Field(..., min_length=3)
+    user_id: int 
 
 
 class TeamMembershipUpdate(BaseModel):
@@ -18,10 +20,12 @@ class TeamMembershipUpdate(BaseModel):
     userid: Optional[int] = None
 
 
-class TeamMembershipResponse(TeamMembershipBase):
+class TeamMembershipResponse(BaseModel):
     membershipid: int
     publicid: UUID
+    teamid: int
+    userid: int
     joinedat: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True

@@ -208,6 +208,23 @@
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
       }
+    },
+    // --- UNIRSE A CURSO ---
+    {
+      "DownstreamPathTemplate": "/api/v1/memberships/join",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "courseservice.railway.internal",
+          "Port": 8000
+        }
+      ],
+      "UpstreamPathTemplate": "/api/memberships/join",
+      "UpstreamHttpMethod": [ "POST" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "SupabaseAuth",
+        "AllowedScopes": []
+      }
     }
   ],
   "GlobalConfiguration": {
