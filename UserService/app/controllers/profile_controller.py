@@ -9,6 +9,13 @@ router = APIRouter(
     tags=["Profiles"]
 )
 
+@router.post("/batch", response_model=List[schemas.ProfileResponseDTO])
+def get_profiles_batch(
+    batch_data: schemas.ProfileBatchRequestDTO,
+    db: Session = Depends(get_db)
+):
+    return profile_repository.get_profiles_by_ids(db, batch_data.profile_ids)
+
 @router.get("/{auth_id}", response_model=ProfileResponseDTO)
 def get_user_profile(auth_id: str, db: Session = Depends(get_db)):
     profile = profile_repository.get_profile_by_auth_id(db, auth_id=auth_id)
