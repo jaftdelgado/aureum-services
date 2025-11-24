@@ -31,13 +31,13 @@ def join_course_by_code(db: Session, join_data: JoinCourseDTO):
     if not course:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, 
-            detail="Código de curso inválido o no existe."
+            detail="Codigo de curso invalido o no existe."
         )
 
     if team_member_repository.is_member(db, course.team_id, join_data.user_id):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, 
-            detail="El alumno ya está inscrito en este curso."
+            detail="El alumno ya esta inscrito en este curso."
         )
 
     return team_member_repository.create_membership(db, course.team_id, join_data.user_id)
