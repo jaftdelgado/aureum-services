@@ -7,19 +7,20 @@ from uuid import uuid4
 from app.database import Base
 
 class Team(Base):
-    __tablename__ = "teams"
+    __tablename__ = "Teams"
 
-    teamid = Column(Integer, primary_key=True, index=True)
-    publicid = Column(UUID(as_uuid=True), unique=True, default=uuid4)
-
-    teamname = Column(String(48), nullable=False)
-    description = Column(String(128), nullable=True)
-    teampic = Column(String(255), nullable=True)
-
-    access_code = Column(String(20), unique=True, nullable=False)
-
-    createdat = Column(TIMESTAMP, nullable=False, server_default=func.now())
-    professorid = Column(UUID(as_uuid=True), nullable=False, default=uuid4)
+    team_id = Column("TeamID", Integer, primary_key=True, index=True, autoincrement=True)
+    
+    public_id = Column("PublicID", UUID(as_uuid=True), default=uuid.uuid4, unique=True, nullable=False)
+    
+    professor_id = Column("ProfessorID", Integer, nullable=False)
+    name = Column("TeamName", String(48), nullable=False)
+    description = Column("Description", String(128), nullable=True)
+    team_pic = Column("TeamPic", String(255), nullable=True)
+    
+    access_code = Column("AccessCode", String(20), unique=True, nullable=False)
+    
+    created_at = Column("CreatedAt", DateTime(timezone=True), server_default=func.now())
 
     market_configuration = relationship(
         "MarketConfiguration",
