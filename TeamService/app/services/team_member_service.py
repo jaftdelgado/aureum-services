@@ -2,7 +2,8 @@ from sqlalchemy.orm import Session
 from uuid import UUID
 from fastapi import HTTPException, status
 from ..repositories import team_repository, team_member_repository
-from app.models.team_membership import TeamMembership, JoinCourseDTO
+from app.models.team_membership import TeamMembership
+from app.schemas.team_membership import JoinCourseDTO
 
 class TeamMemberService:
 
