@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from ..models.team import Team
 from ..schemas.team import TeamCreateDTO
+from ..repositories import team_repository
 import uuid
 import string 
 import random
@@ -28,3 +29,12 @@ def create_course(db: Session, course_data: TeamCreateDTO, team_pic_id: str = No
     db.commit()
     db.refresh(new_course)
     return new_course
+
+def get_all_courses(db: Session):
+    return team_repository.get_all_courses(db)
+
+def get_professor_courses(db: Session, professor_id: int):
+    return team_repository.get_courses_by_professor(db, professor_id)
+
+def get_student_courses(db: Session, student_id: int):
+    return team_repository.get_courses_by_student(db, student_id)
