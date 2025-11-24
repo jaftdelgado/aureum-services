@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from uuid import UUID
 from ..schemas.team_membership import JoinCourseDTO, TeamMembershipResponse
 from app.database import get_db
-from app.services.team_member_service import TeamMemberService
+from ..services import team_member_service
 
 router = APIRouter(
     prefix="/api/v1/memberships",
@@ -19,4 +19,4 @@ def delete_team_member(public_id: UUID, db: Session = Depends(get_db)):
 
 @router.post("/join", response_model=TeamMembershipResponse, status_code=status.HTTP_201_CREATED)
 def join_course(join_data: JoinCourseDTO, db: Session = Depends(get_db)):
-    return TeamMemberService.join_course_by_code(db, join_data)
+    return team_member_service.join_course_by_code(db, join_data)
