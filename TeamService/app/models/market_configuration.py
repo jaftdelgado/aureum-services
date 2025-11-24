@@ -44,7 +44,7 @@ class MarketConfiguration(Base):
     configid = Column(Integer, primary_key=True, index=True)
     publicid = Column(UUID(as_uuid=True), unique=True, default=uuid4)
 
-    teamid = Column(Integer, ForeignKey("teams.teamid", ondelete="CASCADE"), unique=True, nullable=False)
+    teamid = Column(Integer, ForeignKey("Teams.TeamID", ondelete="CASCADE"), unique=True, nullable=False)
 
     initialcash = Column(Double, nullable=False)
     currency = Column(currency_enum, nullable=False)
