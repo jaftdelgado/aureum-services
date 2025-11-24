@@ -11,9 +11,9 @@ def get_courses_by_professor(db: Session, professor_profile_id: int):
 def get_courses_by_student(db: Session, student_profile_id: int):
     return db.query(Team).join(
         TeamMembership, 
-        Team.team_id == TeamMembership.team_id
+        Team.team_id == TeamMembership.teamid
     ).filter(
-        TeamMembership.user_id == student_profile_id
+        TeamMembership.userid == student_profile_id
     ).all()
 
 def get_team_by_access_code(db: Session, access_code: str):
