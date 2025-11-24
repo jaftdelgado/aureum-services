@@ -8,7 +8,7 @@ def generate_unique_code(length=8):
     code = ''.join(random.choices(chars, k=length))
     return code
 
-def create_course(db: Session, course_data: TeamCreateDTO):
+def create_course(db: Session, course_data: TeamCreateDTO, team_pic_id: str = None):
 
     new_access_code = generate_unique_code()
 
