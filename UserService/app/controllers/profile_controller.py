@@ -4,6 +4,7 @@ from .. import mongo_db
 from ..repositories import profile_repository
 from ..schemas import ProfileResponseDTO, ProfileCreateDTO, ProfileUpdateDTO
 from ..database import get_db
+from typing import List
 
 router = APIRouter(
     tags=["Profiles"]
