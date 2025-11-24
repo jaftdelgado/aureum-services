@@ -138,6 +138,23 @@
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
       }
+    },
+    // --- 5. COURSE SERVICE ---
+    {
+      "DownstreamPathTemplate": "/api/v1/courses/",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "courseservice.railway.internal",
+          "Port": 8000
+        }
+      ],
+      "UpstreamPathTemplate": "/api/courses",
+      "UpstreamHttpMethod": [ "POST" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "SupabaseAuth",
+        "AllowedScopes": []
+      }
     }
   ],
   "GlobalConfiguration": {
