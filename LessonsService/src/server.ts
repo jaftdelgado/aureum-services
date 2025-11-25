@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
 import express from 'express';
 import multer from 'multer';
 import cors from 'cors';
-import { Readable, Transform } from 'stream';
+import { Readable } from 'stream';
 
 const MONGO_URI = "mongodb+srv://admin:admin1234@cluster0.5wusaqn.mongodb.net/trading_db?appName=Cluster0";
 const GRPC_PORT = "50051";
@@ -109,35 +109,14 @@ const obtenerDetalles = async (call: any, callback: any) => {
 
 const descargarVideoGrpc = async (call: any) => {
     try {
-        console.log(`Solicitando video ID: ${call.request.id_leccion}`);
-        
         const leccion = await Lesson.findById(call.request.id_leccion);
-        if (!leccion || !leccion.videoFileId) {
-            console.log("Video no encontrado");
-            return call.end();
-        }
+        if (!leccion || !leccion.videoFileId) return call.end();
 
         const downloadStream = gridFSBucket.openDownloadStream(leccion.videoFileId as any);
-
-        const transformer = new Transform({
-            objectMode: true,
-            transform(chunk, encoding, callback) {
-                const videoChunkMessage = { contenido: chunk };
-                this.push(videoChunkMessage);
-                callback();
-            }
-        });
-
-        downloadStream
-            .on('error', (err) => {
-                console.error("Error leyendo de Mongo:", err);
-                call.end();
-            })
-            .pipe(transformer)
-            .pipe(call); 
-
+        downloadStream.on('data', (chunk) => call.write({ contenido: chunk }));
+        downloadStream.on('end', () => call.end());
+        downloadStream.on('error', () => call.end());
     } catch (error) {
-        console.error("Error general:", error);
         call.end();
     }
 };
@@ -152,21 +131,15 @@ const startServer = async () => {
         ObtenerDetalles: obtenerDetalles,
         DescargarVideo: descargarVideoGrpc 
     });
-
-    const GRPC_HOST_PORT = `0.0.0.0:50051`; 
-
-    server.bindAsync(GRPC_HOST_PORT, grpc.ServerCredentials.createInsecure(), (err, port) => {
-        if (err) {
-            console.error("Error al iniciar gRPC:", err);
-            return;
-        }
-        console.log(`--- Servidor gRPC corriendo en puerto ${port} ---`);
-        
-        server.start(); 
+    server.bindAsync(`0.0.0.0:${GRPC_PORT}`, grpc.ServerCredentials.createInsecure(), (err, port) => {
+        if (err) return console.error(err);
+        console.log(`gRPC corriendo en puerto ${port}`);
     });
 
     app.listen(HTTP_PORT, () => {
-        console.log(`HTTP API (Subidas) corriendo en http://0.0.0.0:${HTTP_PORT}`);
+        console.log(`HTTP API corriendo en http://localhost:${HTTP_PORT}`);
     });
 };
+
+startServer();
 startServer();
