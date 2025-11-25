@@ -109,14 +109,26 @@ const obtenerDetalles = async (call: any, callback: any) => {
 
 const descargarVideoGrpc = async (call: any) => {
     try {
+        console.log(`Solicitando video ID: ${call.request.id_leccion}`);
         const leccion = await Lesson.findById(call.request.id_leccion);
-        if (!leccion || !leccion.videoFileId) return call.end();
 
+        if (!leccion || !leccion.videoFileId) {
+            console.log("Video no encontrado en BD");
+            return call.end();
+        }
+
+        console.log(`Iniciando stream de GridFS: ${leccion.videoFileId}`);
         const downloadStream = gridFSBucket.openDownloadStream(leccion.videoFileId as any);
-        downloadStream.on('data', (chunk) => call.write({ contenido: chunk }));
-        downloadStream.on('end', () => call.end());
-        downloadStream.on('error', () => call.end());
+
+        downloadStream.pipe(call);
+
+        downloadStream.on('error', (err) => {
+             console.error("Error en el stream de Mongo:", err);
+             call.end();
+        });
+
     } catch (error) {
+        console.error("Error general en descargarVideoGrpc:", error);
         call.end();
     }
 };
