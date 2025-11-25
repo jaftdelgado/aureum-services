@@ -61,7 +61,11 @@ var app = builder.Build();
 app.UseCors("PermitirTodo");
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapControllers();
+
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapControllers();
+});
 
 await app.UseOcelot();  
 
