@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net.Http;
 
+AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
@@ -24,6 +26,17 @@ builder.Services.AddGrpcClient<Market.MarketService.MarketServiceClient>(o =>
 builder.Services.AddGrpcClient<Trading.LeccionesService.LeccionesServiceClient>(o =>
 {
     o.Address = new Uri("http://lessonsservice.railway.internal:50051");
+})
+.ConfigureChannel(options =>
+{
+    options.HttpHandler = new SocketsHttpHandler
+    {
+        EnableMultipleHttp2Connections = true,
+        SslOptions = new System.Net.Security.SslClientAuthenticationOptions
+        {
+            RemoteCertificateValidationCallback = delegate { return true; } 
+        }
+    };
 });
 
 builder.Services.AddCors(options =>
