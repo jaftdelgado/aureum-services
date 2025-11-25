@@ -131,14 +131,21 @@ const startServer = async () => {
         ObtenerDetalles: obtenerDetalles,
         DescargarVideo: descargarVideoGrpc 
     });
-    server.bindAsync(`0.0.0.0:${GRPC_PORT}`, grpc.ServerCredentials.createInsecure(), (err, port) => {
-        if (err) return console.error(err);
-        console.log(`gRPC corriendo en puerto ${port}`);
+
+    const GRPC_HOST_PORT = `0.0.0.0:50051`; 
+
+    server.bindAsync(GRPC_HOST_PORT, grpc.ServerCredentials.createInsecure(), (err, port) => {
+        if (err) {
+            console.error("Error al iniciar gRPC:", err);
+            return;
+        }
+        console.log(`--- Servidor gRPC corriendo en puerto ${port} ---`);
+        
+        server.start(); 
     });
 
     app.listen(HTTP_PORT, () => {
-        console.log(`HTTP API corriendo en http://localhost:${HTTP_PORT}`);
+        console.log(`HTTP API (Subidas) corriendo en http://0.0.0.0:${HTTP_PORT}`);
     });
 };
-
 startServer();
