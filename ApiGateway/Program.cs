@@ -63,9 +63,9 @@ builder.Services.AddGrpcClient<Market.MarketService.MarketServiceClient>(o =>
 
 builder.Services.AddGrpcClient<Trading.LeccionesService.LeccionesServiceClient>(o =>
 {
-    o.Address = new Uri("http://hopper.proxy.rlwy.net:41297");
+    o.Address = new Uri("http://hopper.proxy.rlwy.net:41297"); 
 })
-.ConfigureChannel(o =>
+.ConfigurePrimaryHttpMessageHandler(() =>
 {
     var handler = new SocketsHttpHandler
     {
@@ -75,7 +75,14 @@ builder.Services.AddGrpcClient<Trading.LeccionesService.LeccionesServiceClient>(
             RemoteCertificateValidationCallback = delegate { return true; }
         }
     };
-    o.HttpHandler = handler;
+    return handler;
+})
+.ConfigureHttpClient(client =>
+{
+    // --- FUERZA BRUTA HTTP/2 ---
+    // Esto le dice: "No uses HTTP/1.1, usa HTTP/2 directo desde el byte 0"
+    client.DefaultRequestVersion = new Version(2, 0);
+    client.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher;
 });
 
 builder.Services.AddOcelot();
