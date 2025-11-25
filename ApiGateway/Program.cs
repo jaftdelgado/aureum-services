@@ -63,23 +63,26 @@ builder.Services.AddGrpcClient<Market.MarketService.MarketServiceClient>(o =>
 
 builder.Services.AddGrpcClient<Trading.LeccionesService.LeccionesServiceClient>(o =>
 {
-    o.Address = new Uri("http://lessonsservice.railway.internal:50051");
+    o.Address = new Uri("http://hopper.proxy.rlwy.net:41297"); 
 })
-.ConfigureHttpClient(client =>
-{
-    client.DefaultRequestVersion = new Version(2, 0);
-    client.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher;
-})
-.ConfigureChannel(o =>
+.ConfigurePrimaryHttpMessageHandler(() =>
 {
     var handler = new SocketsHttpHandler
     {
-        PooledConnectionIdleTimeout = Timeout.InfiniteTimeSpan,
-        KeepAlivePingDelay = TimeSpan.FromSeconds(60),
-        KeepAlivePingTimeout = TimeSpan.FromSeconds(30),
-        EnableMultipleHttp2Connections = true
+        EnableMultipleHttp2Connections = true,
+        SslOptions = new System.Net.Security.SslClientAuthenticationOptions
+        {
+            RemoteCertificateValidationCallback = delegate { return true; }
+        }
     };
-    o.HttpHandler = handler;
+    return handler;
+})
+.ConfigureHttpClient(client =>
+{
+    // --- FUERZA BRUTA HTTP/2 ---
+    // Esto le dice: "No uses HTTP/1.1, usa HTTP/2 directo desde el byte 0"
+    client.DefaultRequestVersion = new Version(2, 0);
+    client.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher;
 });
 
 builder.Services.AddOcelot();
