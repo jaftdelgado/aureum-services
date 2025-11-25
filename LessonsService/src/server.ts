@@ -94,8 +94,6 @@ const obtenerDetalles = async (call: any, callback: any) => {
     }
 };
 
-// Endpoint gRPC: Descargar Video (Streaming)
-// ARREGLADO: Usamos .pipe() en lugar de .write()
 const descargarVideoGrpc = async (call: any) => {
     try {
         console.log(`Solicitando video ID: ${call.request.id_leccion}`);
@@ -106,13 +104,21 @@ const descargarVideoGrpc = async (call: any) => {
             return call.end();
         }
 
+        console.log(`Iniciando descarga de archivo: ${leccion.videoFileId}`);
         const downloadStream = gridFSBucket.openDownloadStream(leccion.videoFileId as any);
+
         
-        // FIX CRÍTICO: Usar pipe para conectar Mongo con gRPC
-        downloadStream.pipe(call);
+        downloadStream.on('data', (chunk) => {
+            call.write({ contenido: chunk });
+        });
+
+        downloadStream.on('end', () => {
+            console.log("Envío finalizado");
+            call.end();
+        });
 
         downloadStream.on('error', (err) => {
-             console.error("Error stream Mongo:", err);
+             console.error("Error leyendo de GridFS:", err);
              call.end();
         });
 
