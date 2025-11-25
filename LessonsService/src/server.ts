@@ -7,9 +7,11 @@ import multer from 'multer';
 import cors from 'cors';
 import { Readable } from 'stream';
 
-const MONGO_URI = "mongodb+srv://admin:admin1234@cluster0.5wusaqn.mongodb.net/trading_db?appName=Cluster0";
+// Usa variables de entorno para flexibilidad en Railway
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://admin:admin1234@cluster0.5wusaqn.mongodb.net/trading_db?appName=Cluster0";
 const GRPC_PORT = "50051";
-const HTTP_PORT = 3000;
+// Forzamos 3000 para Express para no chocar con gRPC en Railway
+const HTTP_PORT = 3000; 
 
 const lessonSchema = new mongoose.Schema({
     title: String,
@@ -32,6 +34,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 app.use(cors());
 
+// Endpoint HTTP para subir videos
 app.post('/upload', upload.fields([{ name: 'video', maxCount: 1 }, { name: 'image', maxCount: 1 }]), async (req: any, res: any) => {
     try {
         if (!req.files || !req.files['video'] || !req.files['image']) {
@@ -74,23 +77,7 @@ app.post('/upload', upload.fields([{ name: 'video', maxCount: 1 }, { name: 'imag
     }
 });
 
-app.get('/video/:id', async (req: any, res: any) => {
-    try {
-        const leccion = await Lesson.findById(req.params.id);
-        if (!leccion || !leccion.videoFileId) return res.status(404).send("Video no encontrado");
-
-        res.set('Content-Type', 'video/mp4');
-        res.set('Accept-Ranges', 'bytes');
-
-        const downloadStream = gridFSBucket.openDownloadStream(leccion.videoFileId as any);
-        downloadStream.pipe(res);
-
-    } catch (error) {
-        console.error(error);
-        res.status(500).send("Error stream");
-    }
-});
-
+// Endpoint gRPC: Detalles
 const obtenerDetalles = async (call: any, callback: any) => {
     try {
         const leccion = await Lesson.findById(call.request.id_leccion);
@@ -107,39 +94,71 @@ const obtenerDetalles = async (call: any, callback: any) => {
     }
 };
 
+// Endpoint gRPC: Descargar Video (Streaming)
+// ARREGLADO: Usamos .pipe() en lugar de .write()
 const descargarVideoGrpc = async (call: any) => {
     try {
+        console.log(`Solicitando video ID: ${call.request.id_leccion}`);
         const leccion = await Lesson.findById(call.request.id_leccion);
-        if (!leccion || !leccion.videoFileId) return call.end();
+
+        if (!leccion || !leccion.videoFileId) {
+            console.log("Video no encontrado en BD");
+            return call.end();
+        }
 
         const downloadStream = gridFSBucket.openDownloadStream(leccion.videoFileId as any);
-        downloadStream.on('data', (chunk) => call.write({ contenido: chunk }));
-        downloadStream.on('end', () => call.end());
-        downloadStream.on('error', () => call.end());
+        
+        // FIX CRÍTICO: Usar pipe para conectar Mongo con gRPC
+        downloadStream.pipe(call);
+
+        downloadStream.on('error', (err) => {
+             console.error("Error stream Mongo:", err);
+             call.end();
+        });
+
     } catch (error) {
+        console.error("Error en descargarVideoGrpc:", error);
         call.end();
     }
 };
 
 const startServer = async () => {
-    await mongoose.connect(MONGO_URI);
-    console.log("MongoDB Conectado");
-    gridFSBucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db!, { bucketName: 'videos' });
+    try {
+        // 1. Conectar a Mongo y esperar
+        const conn = await mongoose.connect(MONGO_URI);
+        console.log("MongoDB Conectado Exitosamente");
 
-    const server = new grpc.Server();
-    server.addService(tradingPackage.LeccionesService.service, { 
-        ObtenerDetalles: obtenerDetalles,
-        DescargarVideo: descargarVideoGrpc 
-    });
-    server.bindAsync(`0.0.0.0:${GRPC_PORT}`, grpc.ServerCredentials.createInsecure(), (err, port) => {
-        if (err) return console.error(err);
-        console.log(`gRPC corriendo en puerto ${port}`);
-    });
+        // 2. Inicializar GridFS solo cuando la conexión esté lista
+        if (!conn.connection.db) {
+             throw new Error("La base de datos no está inicializada");
+        }
+        gridFSBucket = new mongoose.mongo.GridFSBucket(conn.connection.db, { bucketName: 'videos' });
 
-    app.listen(HTTP_PORT, () => {
-        console.log(`HTTP API corriendo en http://localhost:${HTTP_PORT}`);
-    });
+        // 3. Iniciar servidor gRPC
+        const server = new grpc.Server();
+        server.addService(tradingPackage.LeccionesService.service, { 
+            ObtenerDetalles: obtenerDetalles,
+            DescargarVideo: descargarVideoGrpc 
+        });
+
+        // FIX: Escuchar en 0.0.0.0:50051 y ARRANCAR (start)
+        server.bindAsync(`0.0.0.0:${GRPC_PORT}`, grpc.ServerCredentials.createInsecure(), (err, port) => {
+            if (err) {
+                console.error("Error fatal al iniciar gRPC:", err);
+                return;
+            }
+            console.log(`--- Servidor gRPC corriendo en puerto ${port} ---`);
+            server.start(); // <--- ¡VITAL! NO BORRAR
+        });
+
+        // 4. Iniciar servidor HTTP (Express)
+        app.listen(HTTP_PORT, () => {
+            console.log(`HTTP API corriendo en http://0.0.0.0:${HTTP_PORT}`);
+        });
+
+    } catch (error) {
+        console.error("Error al iniciar la aplicación:", error);
+    }
 };
 
-startServer();
 startServer();
