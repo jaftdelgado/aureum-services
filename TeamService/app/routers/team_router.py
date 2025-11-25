@@ -12,7 +12,7 @@ router = APIRouter(
 )
 
 
-@router.post("/", response_model=TeamResponseDTO, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=TeamResponseDTO, status_code=status.HTTP_201_CREATED)
 async def create_new_course(
     name: str = Form(...),
     description: str = Form(None),
@@ -52,7 +52,7 @@ async def create_new_course(
         print(f"Error Postgres: {e}")
         raise HTTPException(status_code=500, detail="Error al crear el curso en base de datos")
 
-@router.get("/", response_model=List[TeamResponseDTO])
+@router.get("", response_model=List[TeamResponseDTO])
 def get_all(db: Session = Depends(get_db)):
     return team_service.get_all_courses(db)
 
