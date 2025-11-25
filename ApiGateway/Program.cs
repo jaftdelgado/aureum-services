@@ -65,19 +65,15 @@ builder.Services.AddGrpcClient<Trading.LeccionesService.LeccionesServiceClient>(
 {
     o.Address = new Uri("http://lessonsservice.railway.internal:50051");
 })
-.ConfigureHttpClient(client =>
-{
-    client.DefaultRequestVersion = new Version(2, 0);
-    client.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher;
-})
 .ConfigureChannel(o =>
 {
     var handler = new SocketsHttpHandler
     {
-        PooledConnectionIdleTimeout = Timeout.InfiniteTimeSpan,
-        KeepAlivePingDelay = TimeSpan.FromSeconds(60),
-        KeepAlivePingTimeout = TimeSpan.FromSeconds(30),
-        EnableMultipleHttp2Connections = true
+        EnableMultipleHttp2Connections = true,
+        SslOptions = new System.Net.Security.SslClientAuthenticationOptions
+        {
+            RemoteCertificateValidationCallback = delegate { return true; }
+        }
     };
     o.HttpHandler = handler;
 });
