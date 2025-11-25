@@ -20,7 +20,7 @@ public class MarketController : ControllerBase
     [Authorize(AuthenticationSchemes = "SupabaseAuth")] // Protegido
     public async Task GetMarketUpdates(CancellationToken cancellationToken)
     {
-        Response.Headers.Add("Content-Type", "text/event-stream");
+        Response.Headers.Append("Content-Type", "text/event-stream");
 
         // Pedimos actualizaciones cada 2 segundos
         var request = new MarketRequest { IntervalSeconds = 2 };
