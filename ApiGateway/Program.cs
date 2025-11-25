@@ -63,7 +63,7 @@ builder.Services.AddGrpcClient<Market.MarketService.MarketServiceClient>(o =>
 
 builder.Services.AddGrpcClient<Trading.LeccionesService.LeccionesServiceClient>(o =>
 {
-    o.Address = new Uri("http://lessonsservice.railway.internal:50051");
+    o.Address = new Uri("http://hopper.proxy.rlwy.net:41297");
 })
 .ConfigureChannel(o =>
 {
