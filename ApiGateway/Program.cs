@@ -59,6 +59,7 @@ builder.Services.AddOcelot();
 var app = builder.Build();
 
 app.UseCors("PermitirTodo");
+app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
