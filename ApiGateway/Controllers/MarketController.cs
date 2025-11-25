@@ -15,7 +15,7 @@ public class MarketController : ControllerBase
     }
 
     // GET: api/market/updates
-    // Este endpoint mantiene la conexión abierta y envía datos en tiempo real al navegador
+    // Este endpoint mantiene la conexiÃ³n abierta y envÃ­a datos en tiempo real al navegador
     [HttpGet("updates")]
     [Authorize(AuthenticationSchemes = "SupabaseAuth")] // Protegido
     public async Task GetMarketUpdates(CancellationToken cancellationToken)
@@ -37,9 +37,9 @@ public class MarketController : ControllerBase
                 await Response.Body.FlushAsync();
             }
         }
-        catch (RpcException ex) when (ex.StatusCode == StatusCode.Cancelled)
+        catch (RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.Cancelled)
         {
-            // El cliente cerró la conexión, normal.
+            // El cliente cerrÃ³ la conexiÃ³n, normal.
         }
     }
 }
