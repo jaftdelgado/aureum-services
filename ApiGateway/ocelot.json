@@ -165,7 +165,7 @@
           "Port": 8000
         }
       ],
-      "UpstreamPathTemplate": "/api/courses/",
+      "UpstreamPathTemplate": "/api/courses",
       "UpstreamHttpMethod": [ "POST" ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
@@ -182,7 +182,7 @@
           "Port": 8000
         }
       ],
-      "UpstreamPathTemplate": "/api/courses/",
+      "UpstreamPathTemplate": "/api/courses",
       "UpstreamHttpMethod": [ "GET" ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
