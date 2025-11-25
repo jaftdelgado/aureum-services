@@ -27,14 +27,14 @@ public class LessonsController : ControllerBase
         }
         catch (RpcException ex)
         {
-            return StatusCode((int)ex.StatusCode, ex.Status.Detail);
+            return this.StatusCode((int)ex.StatusCode, ex.Status.Detail);
         }
     }
 
     // GET: api/lessons/{id}/video (Streaming de Video)
-    // El Frontend pondr· esto en <video src="...">
+    // El Frontend pondr√° esto en <video src="...">
     [HttpGet("{id}/video")]
-    // [Authorize] <-- Opcional: A veces los tags <video> no envÌan headers de auth f·cil. 
+    // [Authorize] <-- Opcional: A veces los tags <video> no env√≠an headers de auth f√°cil. 
     // Si falla el video, prueba quitando el Authorize temporalmente o pasando el token por query param.
     public async Task GetVideo(string id)
     {
@@ -54,9 +54,9 @@ public class LessonsController : ControllerBase
                 }
             }
         }
-        catch (RpcException ex) when (ex.StatusCode == StatusCode.Cancelled)
+        catch (RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.Cancelled)
         {
-            // Cliente cerrÛ el video
+            // Cliente cerr√≥ el video
         }
     }
 }
