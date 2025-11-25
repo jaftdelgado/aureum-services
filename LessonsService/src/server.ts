@@ -6,6 +6,7 @@ import express from 'express';
 import multer from 'multer';
 import cors from 'cors';
 import { Readable } from 'stream';
+import { Readable, Transform } from 'stream'; 
 
 const MONGO_URI = "mongodb+srv://admin:admin1234@cluster0.5wusaqn.mongodb.net/trading_db?appName=Cluster0";
 const GRPC_PORT = "50051";
@@ -110,25 +111,34 @@ const obtenerDetalles = async (call: any, callback: any) => {
 const descargarVideoGrpc = async (call: any) => {
     try {
         console.log(`Solicitando video ID: ${call.request.id_leccion}`);
+        
         const leccion = await Lesson.findById(call.request.id_leccion);
-
         if (!leccion || !leccion.videoFileId) {
-            console.log("Video no encontrado en BD");
+            console.log("Video no encontrado");
             return call.end();
         }
 
-        console.log(`Iniciando stream de GridFS: ${leccion.videoFileId}`);
         const downloadStream = gridFSBucket.openDownloadStream(leccion.videoFileId as any);
 
-        downloadStream.pipe(call);
-
-        downloadStream.on('error', (err) => {
-             console.error("Error en el stream de Mongo:", err);
-             call.end();
+        const transformer = new Transform({
+            objectMode: true,
+            transform(chunk, encoding, callback) {
+                const videoChunkMessage = { contenido: chunk };
+                this.push(videoChunkMessage);
+                callback();
+            }
         });
 
+        downloadStream
+            .on('error', (err) => {
+                console.error("Error leyendo de Mongo:", err);
+                call.end();
+            })
+            .pipe(transformer)
+            .pipe(call); 
+
     } catch (error) {
-        console.error("Error general en descargarVideoGrpc:", error);
+        console.error("Error general:", error);
         call.end();
     }
 };
