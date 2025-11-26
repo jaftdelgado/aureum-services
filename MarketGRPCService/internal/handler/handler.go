@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"time"
 
+	"gorm.io/gorm"
+
 	"github.com/jaftdelgado/aureum-services/MarketGRPCService/internal/config"
 	pb "github.com/jaftdelgado/aureum-services/MarketGRPCService/proto"
 	"google.golang.org/grpc/codes"
@@ -37,11 +39,13 @@ type MarketHandler struct {
 	pb.UnimplementedMarketServiceServer
 	cfg        *config.Config
 	httpClient *http.Client
+	db         *gorm.DB
 }
 
-func NewMarketHandler(cfg *config.Config) *MarketHandler {
+func NewMarketHandler(cfg *config.Config, db *gorm.DB) *MarketHandler {
 	return &MarketHandler{
 		cfg: cfg,
+		db:  db,
 		httpClient: &http.Client{
 			Timeout: 5 * time.Second,
 		},
