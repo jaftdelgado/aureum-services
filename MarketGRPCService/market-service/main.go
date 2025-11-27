@@ -3,8 +3,6 @@ package main
 import (
 	"log"
 
-	"github.com/joho/godotenv"
-
 	"github.com/jaftdelgado/aureum-services/MarketGRPCService/internal/config"
 	dbpkg "github.com/jaftdelgado/aureum-services/MarketGRPCService/internal/db"
 	"github.com/jaftdelgado/aureum-services/MarketGRPCService/internal/handler"
@@ -12,7 +10,6 @@ import (
 )
 
 func main() {
-	godotenv.Load()
 	log.Println("Cargando configuración...")
 	cfg := config.GetConfig()
 
