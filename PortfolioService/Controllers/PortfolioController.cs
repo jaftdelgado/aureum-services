@@ -1,0 +1,212 @@
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using PortfolioService.Data;
+using PortfolioService.Models;
+using PortfolioService.Dtos;
+
+namespace PortfolioService.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class PortfolioController : ControllerBase
+    {
+        private readonly PortfolioContext _portfolioContext;
+        private readonly MarketContext _marketContext;
+        private readonly IHttpClientFactory _httpClientFactory;
+
+        public PortfolioController(PortfolioContext portfolioContext, MarketContext marketContext, IHttpClientFactory httpClientFactory)
+        {
+            _portfolioContext = portfolioContext;
+            _marketContext = marketContext;
+            _httpClientFactory = httpClientFactory;
+        }
+
+        [HttpGet("course/{courseId}")]
+        public async Task<ActionResult<IEnumerable<PortfolioDto>>> GetByCourse(Guid courseId)
+        {
+            var items = await _portfolioContext.PortfolioItems
+                                     .Where(p => p.TeamId == courseId && p.IsActive)
+                                     .ToListAsync();
+
+            if (items == null || !items.Any())
+            {
+                return NotFound(new { message = "No se encontraron activos para este curso/equipo." });
+            }
+
+            var result = new List<PortfolioDto>();
+            var client = _httpClientFactory.CreateClient();
+
+            foreach (var item in items)
+            {
+                string name = "Cargando...";
+                string symbol = "---";
+
+                try
+                {
+                    var response = await client.GetFromJsonAsync<AssetExternalDto>(
+                        $"https://assetservice-production.up.railway.app/assets/{item.AssetId}");
+
+                    if (response != null)
+                    {
+                        name = response.Name;
+                        symbol = response.Symbol;
+                    }
+                }
+                catch
+                {
+                    Console.WriteLine($"Error conectando a AssetService para {item.AssetId}");
+                }
+
+                double currentTotal = item.Quantity * item.CurrentValue;
+                double investedTotal = item.Quantity * item.AvgPrice;
+                double pnl = currentTotal - investedTotal;
+                double pnlPct = investedTotal != 0 ? (pnl / investedTotal) * 100 : 0;
+
+                result.Add(new PortfolioDto
+                {
+                    PortfolioId = item.PortfolioId,
+                    AssetId = item.AssetId,
+                    Quantity = item.Quantity,
+                    AvgPrice = item.AvgPrice,
+                    CurrentValue = item.CurrentValue,
+                    AssetName = name,
+                    AssetSymbol = symbol,
+                    TotalInvestment = investedTotal,
+                    CurrentTotalValue = currentTotal,
+                    ProfitOrLoss = pnl,
+                    ProfitOrLossPercentage = Math.Round(pnlPct, 2)
+                });
+            }
+
+            return Ok(result);
+        }
+
+        [HttpGet("detail/{portfolioId}")]
+        public async Task<ActionResult<PortfolioDto>> GetPortfolioDetail(int portfolioId)
+        {
+            var item = await _portfolioContext.PortfolioItems.FindAsync(portfolioId);
+
+            if (item == null) return NotFound("El activo no existe en el portafolio.");
+
+            var client = _httpClientFactory.CreateClient();
+            string name = "Desconocido";
+            string symbol = "---";
+
+            try
+            {
+                var response = await client.GetFromJsonAsync<AssetExternalDto>(
+                    $"https://assetservice-production.up.railway.app/assets/{item.AssetId}");
+
+                if (response != null)
+                {
+                    name = response.Name;
+                    symbol = response.Symbol;
+                }
+            }
+            catch { }
+
+            double currentTotal = item.Quantity * item.CurrentValue;
+            double investedTotal = item.Quantity * item.AvgPrice;
+            double pnl = currentTotal - investedTotal;
+            double pnlPct = investedTotal != 0 ? (pnl / investedTotal) * 100 : 0;
+
+            var detail = new PortfolioDto
+            {
+                PortfolioId = item.PortfolioId,
+                AssetId = item.AssetId,
+                Quantity = item.Quantity,
+                AvgPrice = item.AvgPrice,
+                CurrentValue = item.CurrentValue,
+                AssetName = name,
+                AssetSymbol = symbol,
+                TotalInvestment = investedTotal,
+                CurrentTotalValue = currentTotal,
+                ProfitOrLoss = pnl,
+                ProfitOrLossPercentage = Math.Round(pnlPct, 2)
+            };
+
+            return Ok(detail);
+        }
+
+        [HttpGet("history/course/{courseId}/student/{studentId}")]
+        public async Task<ActionResult<IEnumerable<HistoryDto>>> GetHistory(Guid courseId, Guid studentId)
+        {
+           
+            var movements = await _marketContext.Movements
+                                    .Include(m => m.Transaction)
+                                    .Where(m => m.UserId == studentId)
+                                    .OrderByDescending(m => m.CreatedDate)
+                                    .ToListAsync();
+
+            if (movements == null || !movements.Any())
+            {
+                return NotFound(new { message = "No hay historial de movimientos para este estudiante." });
+            }
+
+            var resultList = new List<HistoryDto>();
+            var client = _httpClientFactory.CreateClient();
+
+            
+            foreach (var mov in movements)
+            {
+                string name = "Desconocido";
+                string symbol = "---";
+
+                try
+                {
+                    var response = await client.GetFromJsonAsync<AssetExternalDto>(
+                        $"https://assetservice-production.up.railway.app/assets/{mov.AssetId}");
+
+                    if (response != null)
+                    {
+                        name = response.Name;
+                        symbol = response.Symbol;
+                    }
+                }
+                catch
+                {
+                    
+                }
+
+                
+                decimal price = mov.Transaction?.TransactionPrice ?? 0;
+                bool isBuy = mov.Transaction?.IsBuy ?? false;
+
+                resultList.Add(new HistoryDto
+                {
+                    MovementId = mov.PublicId,
+                    AssetId = mov.AssetId,
+                    AssetName = name,
+                    AssetSymbol = symbol,
+                    Quantity = mov.Quantity,
+                    Price = price,
+                    TotalAmount = mov.Quantity * price,
+                    Type = isBuy ? "Compra" : "Venta",
+                    Date = mov.CreatedDate
+                });
+            }
+
+            return Ok(resultList);
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<PortfolioItem>> PostPortfolioItem(PortfolioItem item)
+        {
+            if (item.UserId == Guid.Empty || item.AssetId == Guid.Empty || item.TeamId == Guid.Empty)
+            {
+                return BadRequest("UserId, AssetId y TeamId son obligatorios.");
+            }
+
+            if (item.PublicId == Guid.Empty) item.PublicId = Guid.NewGuid();
+
+            item.IsActive = true;
+            item.CreatedAt = DateTime.UtcNow;
+            item.UpdatedAt = DateTime.UtcNow;
+
+            _portfolioContext.PortfolioItems.Add(item);
+            await _portfolioContext.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetByCourse), new { courseId = item.TeamId }, item);
+        }
+    }
+}

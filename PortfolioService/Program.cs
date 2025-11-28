@@ -1,15 +1,26 @@
+using Microsoft.EntityFrameworkCore;
+using PortfolioService.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContext<PortfolioContext>(options =>
+    options.UseNpgsql(connectionString));
+
+
+var marketConnectionString = builder.Configuration.GetConnectionString("MarketConnection");
+builder.Services.AddDbContext<MarketContext>(options =>
+    options.UseNpgsql(marketConnectionString));
+
+builder.Services.AddHttpClient();
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
