@@ -1,4 +1,6 @@
-﻿namespace PortfolioService.Dtos
+﻿using System.Text.Json.Serialization;
+
+namespace PortfolioService.Dtos
 {
    
     public class PortfolioDto
@@ -20,11 +22,18 @@
         public double ProfitOrLossPercentage { get; set; } 
     }
 
-    
+
     public class AssetExternalDto
     {
+      
+        [JsonPropertyName("publicId")]
         public Guid Id { get; set; }
+
+       
+        [JsonPropertyName("assetName")]
         public string Name { get; set; }
+
+        [JsonPropertyName("assetSymbol")]
         public string Symbol { get; set; }
     }
 }

@@ -146,29 +146,32 @@ namespace PortfolioService.Controllers
             var resultList = new List<HistoryDto>();
             var client = _httpClientFactory.CreateClient();
 
-            
+           
             foreach (var mov in movements)
             {
+                
                 string name = "Desconocido";
                 string symbol = "---";
 
                 try
                 {
-                    var response = await client.GetFromJsonAsync<AssetExternalDto>(
-                        $"https://assetservice-production.up.railway.app/assets/{mov.AssetId}");
+                    
+                    var url = $"https://assetservice-production.up.railway.app/assets/{mov.AssetId}";
+                    var response = await client.GetFromJsonAsync<AssetExternalDto>(url);
 
                     if (response != null)
                     {
-                        name = response.Name;
-                        symbol = response.Symbol;
+                        
+                        name = response.Name ?? "Sin Nombre";
+                        symbol = response.Symbol ?? "---";
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
                     
+                    Console.WriteLine($"Error en historial para Asset {mov.AssetId}: {ex.Message}");
                 }
 
-                
                 decimal price = mov.Transaction?.TransactionPrice ?? 0;
                 bool isBuy = mov.Transaction?.IsBuy ?? false;
 
@@ -176,8 +179,11 @@ namespace PortfolioService.Controllers
                 {
                     MovementId = mov.PublicId,
                     AssetId = mov.AssetId,
+
+                    
                     AssetName = name,
                     AssetSymbol = symbol,
+
                     Quantity = mov.Quantity,
                     Price = price,
                     TotalAmount = mov.Quantity * price,
