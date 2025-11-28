@@ -1,6 +1,9 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "baseUrl": "./",
     "paths": {
       "@entities/*": ["src/entities/*"],
       "@services/*": ["src/services/*"],
@@ -10,5 +13,6 @@
       "@utils/*": ["src/utils/*"]
     }
   },
-  "exclude": ["node_modules", "test", "dist", "**/*spec.ts"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "test", "**/*.spec.ts"]
 }
