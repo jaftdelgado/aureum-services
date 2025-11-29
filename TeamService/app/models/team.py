@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
-import uuid
+import uuid 
 
 from app.database import Base
 
@@ -13,7 +13,7 @@ class Team(Base):
     
     public_id = Column("publicid", UUID(as_uuid=True), default=uuid.uuid4, unique=True, nullable=False)
     
-    professor_id = Column("professorid", Integer, nullable=False)
+    professor_id = Column("professorid", UUID(as_uuid=True), nullable=False)
     name = Column("teamname", String(48), nullable=False)
     description = Column("description", String(128), nullable=True)
     team_pic = Column("teampic", String(255), nullable=True)
