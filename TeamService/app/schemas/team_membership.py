@@ -6,25 +6,25 @@ from typing import Optional
 
 
 class TeamMembershipBase(BaseModel):
-    teamid: int
-    userid: int
+    teamid: UUID
+    userid: UUID
 
 
 class JoinCourseDTO(BaseModel):
     access_code: str = Field(..., min_length=3)
-    user_id: int 
+    user_id: UUID 
 
 
 class TeamMembershipUpdate(BaseModel):
-    teamid: Optional[int] = None
-    userid: Optional[int] = None
+    teamid: Optional[UUID] = None
+    userid: Optional[UUID] = None
 
 
 class TeamMembershipResponse(BaseModel):
     membershipid: int
     publicid: UUID
-    teamid: int
-    userid: int
+    teamid: UUID
+    userid: UUID
     joinedat: datetime
 
     class Config:

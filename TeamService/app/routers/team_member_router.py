@@ -5,6 +5,7 @@ from ..schemas.team_membership import JoinCourseDTO, TeamMembershipResponse
 from app.database import get_db
 from ..services import team_member_service
 from typing import List
+from uuid import UUID
 
 router = APIRouter(
     prefix="/api/v1/memberships",
@@ -23,6 +24,6 @@ def join_course(join_data: JoinCourseDTO, db: Session = Depends(get_db)):
     return team_member_service.join_course_by_code(db, join_data)
 
 
-@router.get("/course/{identifier}", response_model=List[TeamMembershipResponse])
-def get_course_students(identifier: str, db: Session = Depends(get_db)):
-    return team_member_service.get_students_by_course(db, identifier)
+@router.get("/course/{team_public_id}", response_model=List[TeamMembershipResponse])
+def get_course_students(team_public_id: UUID, db: Session = Depends(get_db)):
+    return team_member_service.get_students_by_course(db, team_public_id)
