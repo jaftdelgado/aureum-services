@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from ..models.team_membership import TeamMembership
 from uuid import UUID
 
-def create_membership(db: Session, team_id: uuid, user_id: uuid):
+def create_membership(db: Session, team_id: UUID, user_id: UUID):
     new_membership = TeamMembership(
         teamid=team_id,
         userid=user_id
