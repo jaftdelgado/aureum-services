@@ -12,11 +12,11 @@ def create_membership(db: Session, team_id: uuid, user_id: uuid):
     db.refresh(new_membership)
     return new_membership
 
-def is_member(db: Session, team_id: uuid, user_id: uuid):
+def is_member(db: Session, team_id: UUID, user_id: UUID):
     return db.query(TeamMembership).filter(
         TeamMembership.teamid == team_id,
         TeamMembership.userid == user_id
     ).first()
 
-def get_members_by_team_id(db: Session, team_id: uuid):
+def get_members_by_team_id(db: Session, team_id: UUID):
     return db.query(TeamMembership).filter(TeamMembership.teamid == team_id).all()
