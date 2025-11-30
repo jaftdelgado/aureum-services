@@ -194,6 +194,61 @@ namespace PortfolioService.Controllers
 
             return Ok(resultList);
         }
+      
+        [HttpPut("{portfolioId}")]
+        public async Task<IActionResult> UpdatePortfolio(int portfolioId, [FromBody] PortfolioUpdateDto dto)
+        {
+            
+            var item = await _portfolioContext.PortfolioItems.FindAsync(portfolioId);
+
+            if (item == null)
+            {
+                return NotFound(new { message = "El activo no existe en el portafolio." });
+            }
+
+            
+            item.Quantity = dto.Quantity;
+            item.AvgPrice = dto.AvgPrice;
+            item.Notes = dto.Notes;
+            item.UpdatedAt = DateTime.UtcNow; 
+
+            
+            try
+            {
+                await _portfolioContext.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                
+                if (!_portfolioContext.PortfolioItems.Any(e => e.PortfolioId == portfolioId))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return Ok(new { message = "Activo actualizado correctamente.", item });
+        }
+        [HttpDelete("{portfolioId}")]
+        public async Task<IActionResult> DeletePortfolioItem(int portfolioId)
+        {
+            var item = await _portfolioContext.PortfolioItems.FindAsync(portfolioId);
+
+            if (item == null)
+            {
+                return NotFound(new { message = "El activo no existe." });
+            }
+
+            
+            _portfolioContext.PortfolioItems.Remove(item);
+
+            await _portfolioContext.SaveChangesAsync();
+
+            return Ok(new { message = "Activo eliminado permanentemente del portafolio." });
+        }
 
         [HttpPost]
         public async Task<ActionResult<PortfolioItem>> PostPortfolioItem(PortfolioItem item)
