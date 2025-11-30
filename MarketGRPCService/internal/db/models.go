@@ -41,6 +41,7 @@ type HistoricalPrice struct {
 	HistoricalPriceID int       `gorm:"column:historicalpriceid;primaryKey;autoIncrement"`
 	PublicID          uuid.UUID `gorm:"column:publicid;type:uuid;default:uuid_generate_v4()"`
 	Price             float64   `gorm:"column:price"`
+	TeamAssetID       int       `gorm:"column:teamassetid"`
 }
 
 func (HistoricalPrice) TableName() string { return "historicalprices" }

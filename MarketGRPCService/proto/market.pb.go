@@ -21,10 +21,11 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// Petición: solo dejamos que el cliente indique el intervalo en segundos
+// Petición: ahora también recibimos el team (uuid)
 type MarketRequest struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	IntervalSeconds int32                  `protobuf:"varint,1,opt,name=interval_seconds,json=intervalSeconds,proto3" json:"interval_seconds,omitempty"` // default 4 si viene 0 o negativo
+	TeamPublicId    string                 `protobuf:"bytes,2,opt,name=team_public_id,json=teamPublicId,proto3" json:"team_public_id,omitempty"`         // <-- NUEVO: uuid del team
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -64,6 +65,13 @@ func (x *MarketRequest) GetIntervalSeconds() int32 {
 		return x.IntervalSeconds
 	}
 	return 0
+}
+
+func (x *MarketRequest) GetTeamPublicId() string {
+	if x != nil {
+		return x.TeamPublicId
+	}
+	return ""
 }
 
 // Respuesta por cada “tick” de mercado
@@ -207,9 +215,10 @@ var File_proto_market_proto protoreflect.FileDescriptor
 
 const file_proto_market_proto_rawDesc = "" +
 	"\n" +
-	"\x12proto/market.proto\x12\x06market\":\n" +
+	"\x12proto/market.proto\x12\x06market\"`\n" +
 	"\rMarketRequest\x12)\n" +
-	"\x10interval_seconds\x18\x01 \x01(\x05R\x0fintervalSeconds\"\x9e\x01\n" +
+	"\x10interval_seconds\x18\x01 \x01(\x05R\x0fintervalSeconds\x12$\n" +
+	"\x0eteam_public_id\x18\x02 \x01(\tR\fteamPublicId\"\x9e\x01\n" +
 	"\vMarketAsset\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x16\n" +
 	"\x06symbol\x18\x02 \x01(\tR\x06symbol\x12\x12\n" +
