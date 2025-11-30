@@ -194,44 +194,76 @@ namespace PortfolioService.Controllers
 
             return Ok(resultList);
         }
-      
-        [HttpPut("{portfolioId}")]
-        public async Task<IActionResult> UpdatePortfolio(int portfolioId, [FromBody] PortfolioUpdateDto dto)
+
+        [HttpPost("{portfolioId}/transaction")]
+        public async Task<IActionResult> AddTransaction(int portfolioId, [FromBody] PortfolioTransactionDto dto)
         {
-            
             var item = await _portfolioContext.PortfolioItems.FindAsync(portfolioId);
 
-            if (item == null)
-            {
-                return NotFound(new { message = "El activo no existe en el portafolio." });
-            }
+            if (item == null) return NotFound(new { message = "El activo no existe." });
 
-            
-            item.Quantity = dto.Quantity;
-            item.AvgPrice = dto.AvgPrice;
-            item.Notes = dto.Notes;
-            item.UpdatedAt = DateTime.UtcNow; 
+            if (dto.IsBuy)
+            {
+              
+                double currentTotalCost = item.Quantity * item.AvgPrice;
+                double newPurchaseCost = dto.Quantity * (double)dto.Price;
+                double finalQuantity = item.Quantity + dto.Quantity;
 
-            
-            try
-            {
-                await _portfolioContext.SaveChangesAsync();
+                if (finalQuantity > 0)
+                {
+                    item.AvgPrice = (currentTotalCost + newPurchaseCost) / finalQuantity;
+                }
+                item.Quantity = finalQuantity;
+
+               
+                item.IsActive = true; 
             }
-            catch (DbUpdateConcurrencyException)
+            else
             {
+               
+                if (item.Quantity < dto.Quantity)
+                {
+                    return BadRequest(new { message = "No tienes suficientes activos para vender." });
+                }
+
+                item.Quantity -= dto.Quantity;
+
                 
-                if (!_portfolioContext.PortfolioItems.Any(e => e.PortfolioId == portfolioId))
+                if (item.Quantity <= 0.000001)
                 {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
+                    item.Quantity = 0;    
+                    item.IsActive = false; 
                 }
             }
 
-            return Ok(new { message = "Activo actualizado correctamente.", item });
+            item.UpdatedAt = DateTime.UtcNow;
+
+           
+            var movement = new Movement
+            {
+                PublicId = Guid.NewGuid(),
+                UserId = item.UserId,
+                AssetId = item.AssetId,
+                Quantity = (decimal)dto.Quantity,
+                CreatedDate = DateTime.UtcNow,
+                Transaction = new Transaction
+                {
+                    PublicId = Guid.NewGuid(),
+                    TransactionPrice = dto.Price,
+                    IsBuy = dto.IsBuy,
+                    CreatedDate = DateTime.UtcNow
+                }
+            };
+
+            _marketContext.Movements.Add(movement);
+
+            await _portfolioContext.SaveChangesAsync();
+            await _marketContext.SaveChangesAsync();
+
+            return Ok(new { message = "Transacción registrada.", item });
         }
+
+
         [HttpDelete("{portfolioId}")]
         public async Task<IActionResult> DeletePortfolioItem(int portfolioId)
         {
