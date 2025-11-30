@@ -17,7 +17,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 COPY --from=builder /usr/src/app/dist ./dist
 
-RUN npm install --only=production
+RUN npm install
 
 ENV NODE_ENV=development
 ENV PORT=3000
