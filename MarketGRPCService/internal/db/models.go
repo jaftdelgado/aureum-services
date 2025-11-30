@@ -83,3 +83,5 @@ type TeamAsset struct {
 }
 
 func (TeamAsset) TableName() string { return "teamassets" }
+
+
