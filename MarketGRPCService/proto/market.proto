@@ -2,12 +2,12 @@ syntax = "proto3";
 
 package market;
 
-// IMPORTANTE: go_package DEBE coincidir con el módulo + carpeta
 option go_package = "github.com/jaftdelgado/aureum-services/MarketGRPCService/proto;proto";
 
-// Petición: solo dejamos que el cliente indique el intervalo en segundos
+// Petición: ahora también recibimos el team (uuid)
 message MarketRequest {
   int32 interval_seconds = 1; // default 4 si viene 0 o negativo
+  string team_public_id  = 2; // <-- NUEVO: uuid del team
 }
 
 // Respuesta por cada “tick” de mercado
@@ -27,6 +27,5 @@ message MarketResponse {
 
 // Servicio gRPC
 service MarketService {
-  // Server streaming: el servidor manda actualizaciones cada X segundos
   rpc CheckMarket (MarketRequest) returns (stream MarketResponse);
 }

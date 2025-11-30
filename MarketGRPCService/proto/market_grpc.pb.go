@@ -28,7 +28,6 @@ const (
 //
 // Servicio gRPC
 type MarketServiceClient interface {
-	// Server streaming: el servidor manda actualizaciones cada X segundos
 	CheckMarket(ctx context.Context, in *MarketRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[MarketResponse], error)
 }
 
@@ -65,7 +64,6 @@ type MarketService_CheckMarketClient = grpc.ServerStreamingClient[MarketResponse
 //
 // Servicio gRPC
 type MarketServiceServer interface {
-	// Server streaming: el servidor manda actualizaciones cada X segundos
 	CheckMarket(*MarketRequest, grpc.ServerStreamingServer[MarketResponse]) error
 	mustEmbedUnimplementedMarketServiceServer()
 }
