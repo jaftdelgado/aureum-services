@@ -113,11 +113,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/users/profiles/{authId}/avatar",
-      "UpstreamHttpMethod": [ "GET" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "SupabaseAuth",
-        "AllowedScopes": []
-      }
+      "UpstreamHttpMethod": [ "GET" ]
     },
     // --- 2. ASSET SERVICE ---
     {
