@@ -195,55 +195,82 @@ namespace PortfolioService.Controllers
             return Ok(resultList);
         }
 
-        [HttpPost("{portfolioId}/transaction")]
-        public async Task<IActionResult> AddTransaction(int portfolioId, [FromBody] PortfolioTransactionDto dto)
+
+        [HttpPost("transaction")] 
+        public async Task<IActionResult> RegisterSmartTransaction([FromBody] PortfolioTransactionDto dto)
         {
-            var item = await _portfolioContext.PortfolioItems.FindAsync(portfolioId);
+           
+            var item = await _portfolioContext.PortfolioItems
+                                .FirstOrDefaultAsync(p => p.UserId == dto.UserId
+                                                       && p.AssetId == dto.AssetId
+                                                       && p.TeamId == dto.TeamId);
 
-            if (item == null) return NotFound(new { message = "El activo no existe." });
-
-            if (dto.IsBuy)
+            
+            if (item == null)
             {
-              
-                double currentTotalCost = item.Quantity * item.AvgPrice;
-                double newPurchaseCost = dto.Quantity * (double)dto.Price;
-                double finalQuantity = item.Quantity + dto.Quantity;
-
-                if (finalQuantity > 0)
+                if (!dto.IsBuy)
                 {
-                    item.AvgPrice = (currentTotalCost + newPurchaseCost) / finalQuantity;
+                    return BadRequest(new { message = "No puedes vender un activo que no tienes." });
                 }
-                item.Quantity = finalQuantity;
 
-               
-                item.IsActive = true; 
+                item = new PortfolioItem
+                {
+                    
+                    PublicId = Guid.NewGuid(),
+                    UserId = dto.UserId,
+                    TeamId = dto.TeamId,
+                    AssetId = dto.AssetId,
+                    Quantity = dto.Quantity,
+                    AvgPrice = (double)dto.Price, 
+                    CurrentValue = (double)dto.Price, 
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                    Notes = "Primera compra"
+                };
+
+                _portfolioContext.PortfolioItems.Add(item);
             }
+            
             else
             {
-               
-                if (item.Quantity < dto.Quantity)
+                if (dto.IsBuy)
                 {
-                    return BadRequest(new { message = "No tienes suficientes activos para vender." });
+                   
+                    double currentTotalCost = item.Quantity * item.AvgPrice;
+                    double newPurchaseCost = dto.Quantity * (double)dto.Price;
+                    double finalQuantity = item.Quantity + dto.Quantity;
+
+                    if (finalQuantity > 0)
+                    {
+                        item.AvgPrice = (currentTotalCost + newPurchaseCost) / finalQuantity;
+                    }
+                    item.Quantity = finalQuantity;
+                    item.IsActive = true; 
                 }
-
-                item.Quantity -= dto.Quantity;
-
-                
-                if (item.Quantity <= 0.000001)
+                else
                 {
-                    item.Quantity = 0;    
-                    item.IsActive = false; 
+                 
+                    if (item.Quantity < dto.Quantity)
+                        return BadRequest(new { message = "Fondos insuficientes." });
+
+                    item.Quantity -= dto.Quantity;
+
+                    if (item.Quantity <= 0.000001)
+                    {
+                        item.Quantity = 0;
+                        item.IsActive = false; 
+                    }
                 }
+                item.UpdatedAt = DateTime.UtcNow;
             }
 
-            item.UpdatedAt = DateTime.UtcNow;
-
-           
+            
             var movement = new Movement
             {
                 PublicId = Guid.NewGuid(),
-                UserId = item.UserId,
-                AssetId = item.AssetId,
+                UserId = dto.UserId,
+                AssetId = dto.AssetId,
                 Quantity = (decimal)dto.Quantity,
                 CreatedDate = DateTime.UtcNow,
                 Transaction = new Transaction
@@ -257,12 +284,12 @@ namespace PortfolioService.Controllers
 
             _marketContext.Movements.Add(movement);
 
+          
             await _portfolioContext.SaveChangesAsync();
             await _marketContext.SaveChangesAsync();
 
-            return Ok(new { message = "Transacción registrada.", item });
+            return Ok(new { message = "Transacción exitosa", currentQuantity = item.Quantity });
         }
-
 
         [HttpDelete("{portfolioId}")]
         public async Task<IActionResult> DeletePortfolioItem(int portfolioId)
