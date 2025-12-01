@@ -46,9 +46,28 @@ message BuyAssetResponse {
   repeated BuyAssetNotification notifications = 5;
 }
 
+message SellAssetRequest {
+  string team_public_id  = 1;
+  string asset_public_id = 2;
+  string user_public_id  = 3;
+  double quantity        = 4;
+  double price           = 5;
+}
+
+message SellAssetResponse {
+  string movement_public_id    = 1;
+  string transaction_public_id = 2;
+  double transaction_price     = 3;
+  double quantity              = 4;
+  repeated BuyAssetNotification notifications = 5;
+}
+
 // ====== servicio ======
 service MarketService {
   rpc CheckMarket (MarketRequest) returns (stream MarketResponse);
 
   rpc BuyAsset (BuyAssetRequest) returns (BuyAssetResponse);
+
+  rpc SellAsset (SellAssetRequest) returns (SellAssetResponse);
+
 }

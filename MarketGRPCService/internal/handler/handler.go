@@ -358,3 +358,96 @@ func (h *MarketHandler) BuyAsset(ctx context.Context, req *pb.BuyAssetRequest) (
 
 	return resp, nil
 }
+
+func (h *MarketHandler) SellAsset(ctx context.Context, req *pb.SellAssetRequest) (*pb.SellAssetResponse, error) {
+	teamIDStr := req.GetTeamPublicId()
+	assetIDStr := req.GetAssetPublicId()
+	userIDStr := req.GetUserPublicId()
+	qty := req.GetQuantity()
+	price := req.GetPrice()
+
+	if teamIDStr == "" || assetIDStr == "" || userIDStr == "" {
+		return nil, status.Error(codes.InvalidArgument, "team_public_id, asset_public_id y user_public_id son obligatorios")
+	}
+	if qty <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "quantity debe ser mayor a cero")
+	}
+	if price <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "price debe ser mayor a cero")
+	}
+
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "user_public_id inválido: %v", err)
+	}
+	assetID, err := uuid.Parse(assetIDStr)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "asset_public_id inválido: %v", err)
+	}
+
+	// === 1. Persist Movement + Transaction ===
+	tx := h.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return nil, status.Errorf(codes.Internal, "no se pudo iniciar transacción: %v", tx.Error)
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	now := time.Now().UTC()
+
+	mov := &db.Movement{
+		UserID:      userID,
+		AssetID:     assetID,
+		Quantity:    qty,
+		CreatedDate: now,
+	}
+	if err := tx.Create(mov).Error; err != nil {
+		tx.Rollback()
+		return nil, status.Errorf(codes.Internal, "no se pudo crear movement: %v", err)
+	}
+
+	trx := &db.Transaction{
+		MovementID:       mov.MovementID,
+		TransactionPrice: -price,
+		IsBuy:            false,
+		CreatedDate:      now,
+	}
+	if err := tx.Create(trx).Error; err != nil {
+		tx.Rollback()
+		return nil, status.Errorf(codes.Internal, "no se pudo crear transaction: %v", err)
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, status.Errorf(codes.Internal, "no se pudo confirmar transacción: %v", err)
+	}
+
+	// === 2. Obtener miembros del team para enviar alertas ===
+	memberships, err := h.fetchTeamMemberships(ctx, teamIDStr)
+	if err != nil {
+		h.logger.Printf("error obteniendo memberships para team %s: %v", teamIDStr, err)
+		memberships = nil
+	}
+
+	alertMsg := fmt.Sprintf("El usuario %s vendió el activo %s", userIDStr, assetIDStr)
+
+	notifications := make([]*pb.BuyAssetNotification, 0, len(memberships))
+	for _, m := range memberships {
+		notifications = append(notifications, &pb.BuyAssetNotification{
+			UserPublicId: m.UserID,
+			Message:      alertMsg,
+		})
+	}
+
+	resp := &pb.SellAssetResponse{
+		MovementPublicId:    mov.PublicID.String(),
+		TransactionPublicId: trx.PublicID.String(),
+		TransactionPrice:    -price,
+		Quantity:            qty,
+		Notifications:       notifications,
+	}
+
+	return resp, nil
+}
