@@ -356,6 +356,7 @@ func (h *MarketHandler) BuyAsset(ctx context.Context, req *pb.BuyAssetRequest) (
 		Notifications:       notifications,
 	}
 
+	h.notifyPortfolioService(ctx)
 	return resp, nil
 }
 
@@ -449,5 +450,29 @@ func (h *MarketHandler) SellAsset(ctx context.Context, req *pb.SellAssetRequest)
 		Notifications:       notifications,
 	}
 
+	h.notifyPortfolioService(ctx)
 	return resp, nil
+
+}
+
+func (h *MarketHandler) notifyPortfolioService(ctx context.Context) {
+	base := strings.TrimRight(h.cfg.PortfolioServiceURL, "/")
+	url := fmt.Sprintf("%s/api/portfolio/transaction", base)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, nil)
+	if err != nil {
+		h.logger.Printf("error creando request a PortfolioService: %v", err)
+		return
+	}
+
+	resp, err := h.httpClient.Do(req)
+	if err != nil {
+		h.logger.Printf("error llamando a PortfolioService: %v", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		h.logger.Printf("PortfolioService devolvió status %d", resp.StatusCode)
+	}
 }
