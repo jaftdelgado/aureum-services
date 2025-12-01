@@ -5,9 +5,9 @@ from sqlalchemy.orm import sessionmaker
 from fastapi.testclient import TestClient 
 from pymongo import MongoClient
 
-from app.main import app
-from app.database import Base, get_db
-from app import mongo_db 
+from ..app.main import app
+from ..app.database import Base, get_db
+from ..app import mongo_db 
 
 DB_USER = os.getenv("POSTGRES_USER", "test_user")
 DB_PASS = os.getenv("POSTGRES_PASSWORD", "test_pass")

@@ -129,7 +129,7 @@ def test_get_avatar_no_pic_associated(client):
 def test_get_avatar_broken_link(client, db):
     client.post(f"{BASE_URL}/", json=VALID_PROFILE)
     
-    from ..models import Profile
+    from ..app.models import Profile
     user = db.query(Profile).filter_by(auth_user_id=VALID_PROFILE['auth_user_id']).first()
     user.profile_pic_id = str(ObjectId()) 
     db.commit()
