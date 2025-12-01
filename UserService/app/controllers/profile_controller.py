@@ -4,6 +4,7 @@ from .. import mongo_db
 from ..repositories import profile_repository
 from ..schemas import ProfileResponseDTO, ProfileCreateDTO, ProfileUpdateDTO, ProfileBatchRequestDTO
 from ..database import get_db
+from bson.objectid import ObjectId
 from typing import List
 
 router = APIRouter(
@@ -110,23 +111,35 @@ def delete_user_profile(auth_id: str, db: Session = Depends(get_db)):
 
 @router.get("/{auth_id}/avatar")
 def get_avatar(auth_id: str, db: Session = Depends(get_db)):
+    print(f"📷 Solicitando avatar para: {auth_id}")
+    
     profile = profile_repository.get_profile_by_auth_id(db, auth_id)
     
-    if not profile or not profile.profile_pic_id:
-        raise HTTPException(status_code=404, detail="Avatar no encontrado")
+    if not profile:
+        print(" Perfil no encontrado en Postgres")
+        raise HTTPException(status_code=404, detail="Perfil no encontrado")
+        
+    if not profile.profile_pic_id:
+        print(" El perfil no tiene foto asociada (profile_pic_id es null)")
+        raise HTTPException(status_code=404, detail="Avatar no configurado")
+
+    print(f"🔍 Buscando en Mongo ID: {profile.profile_pic_id}")
 
     try:
         collection = mongo_db.mongo_client.get_collection()
         image_doc = collection.find_one({"_id": ObjectId(profile.profile_pic_id)})
 
         if not image_doc:
-            raise HTTPException(status_code=404, detail="Imagen no encontrada en Mongo")
+            print(f" Documento no encontrado en Mongo para ID: {profile.profile_pic_id}")
+            raise HTTPException(status_code=404, detail="Imagen no encontrada en base de datos")
 
+        print("✅ Imagen encontrada, enviando bytes...")
+        
         return Response(
             content=image_doc["image_data"], 
             media_type=image_doc.get("content_type", "image/jpeg")
         )
 
     except Exception as e:
-        print(f"Error recuperando imagen: {e}")
-        raise HTTPException(status_code=500, detail="Error al leer la imagen")
+        print(f" ERROR CRÍTICO EN GET_AVATAR: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
