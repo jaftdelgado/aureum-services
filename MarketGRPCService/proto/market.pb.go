@@ -21,11 +21,10 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// Petición: ahora también recibimos el team (uuid)
 type MarketRequest struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
-	IntervalSeconds int32                  `protobuf:"varint,1,opt,name=interval_seconds,json=intervalSeconds,proto3" json:"interval_seconds,omitempty"` // default 4 si viene 0 o negativo
-	TeamPublicId    string                 `protobuf:"bytes,2,opt,name=team_public_id,json=teamPublicId,proto3" json:"team_public_id,omitempty"`         // <-- NUEVO: uuid del team
+	IntervalSeconds int32                  `protobuf:"varint,1,opt,name=interval_seconds,json=intervalSeconds,proto3" json:"interval_seconds,omitempty"`
+	TeamPublicId    string                 `protobuf:"bytes,2,opt,name=team_public_id,json=teamPublicId,proto3" json:"team_public_id,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -74,7 +73,6 @@ func (x *MarketRequest) GetTeamPublicId() string {
 	return ""
 }
 
-// Respuesta por cada “tick” de mercado
 type MarketAsset struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -211,6 +209,210 @@ func (x *MarketResponse) GetAssets() []*MarketAsset {
 	return nil
 }
 
+type BuyAssetRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TeamPublicId  string                 `protobuf:"bytes,1,opt,name=team_public_id,json=teamPublicId,proto3" json:"team_public_id,omitempty"`    // uuid del team
+	AssetPublicId string                 `protobuf:"bytes,2,opt,name=asset_public_id,json=assetPublicId,proto3" json:"asset_public_id,omitempty"` // uuid del asset
+	UserPublicId  string                 `protobuf:"bytes,3,opt,name=user_public_id,json=userPublicId,proto3" json:"user_public_id,omitempty"`    // uuid del usuario que compra
+	Quantity      float64                `protobuf:"fixed64,4,opt,name=quantity,proto3" json:"quantity,omitempty"`                                // cantidad comprada
+	Price         float64                `protobuf:"fixed64,5,opt,name=price,proto3" json:"price,omitempty"`                                      // precio al que se ejecuta la compra
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BuyAssetRequest) Reset() {
+	*x = BuyAssetRequest{}
+	mi := &file_proto_market_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BuyAssetRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BuyAssetRequest) ProtoMessage() {}
+
+func (x *BuyAssetRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_market_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BuyAssetRequest.ProtoReflect.Descriptor instead.
+func (*BuyAssetRequest) Descriptor() ([]byte, []int) {
+	return file_proto_market_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *BuyAssetRequest) GetTeamPublicId() string {
+	if x != nil {
+		return x.TeamPublicId
+	}
+	return ""
+}
+
+func (x *BuyAssetRequest) GetAssetPublicId() string {
+	if x != nil {
+		return x.AssetPublicId
+	}
+	return ""
+}
+
+func (x *BuyAssetRequest) GetUserPublicId() string {
+	if x != nil {
+		return x.UserPublicId
+	}
+	return ""
+}
+
+func (x *BuyAssetRequest) GetQuantity() float64 {
+	if x != nil {
+		return x.Quantity
+	}
+	return 0
+}
+
+func (x *BuyAssetRequest) GetPrice() float64 {
+	if x != nil {
+		return x.Price
+	}
+	return 0
+}
+
+type BuyAssetNotification struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserPublicId  string                 `protobuf:"bytes,1,opt,name=user_public_id,json=userPublicId,proto3" json:"user_public_id,omitempty"`
+	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BuyAssetNotification) Reset() {
+	*x = BuyAssetNotification{}
+	mi := &file_proto_market_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BuyAssetNotification) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BuyAssetNotification) ProtoMessage() {}
+
+func (x *BuyAssetNotification) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_market_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BuyAssetNotification.ProtoReflect.Descriptor instead.
+func (*BuyAssetNotification) Descriptor() ([]byte, []int) {
+	return file_proto_market_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *BuyAssetNotification) GetUserPublicId() string {
+	if x != nil {
+		return x.UserPublicId
+	}
+	return ""
+}
+
+func (x *BuyAssetNotification) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+type BuyAssetResponse struct {
+	state               protoimpl.MessageState  `protogen:"open.v1"`
+	MovementPublicId    string                  `protobuf:"bytes,1,opt,name=movement_public_id,json=movementPublicId,proto3" json:"movement_public_id,omitempty"`
+	TransactionPublicId string                  `protobuf:"bytes,2,opt,name=transaction_public_id,json=transactionPublicId,proto3" json:"transaction_public_id,omitempty"`
+	TransactionPrice    float64                 `protobuf:"fixed64,3,opt,name=transaction_price,json=transactionPrice,proto3" json:"transaction_price,omitempty"`
+	Quantity            float64                 `protobuf:"fixed64,4,opt,name=quantity,proto3" json:"quantity,omitempty"`
+	Notifications       []*BuyAssetNotification `protobuf:"bytes,5,rep,name=notifications,proto3" json:"notifications,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
+}
+
+func (x *BuyAssetResponse) Reset() {
+	*x = BuyAssetResponse{}
+	mi := &file_proto_market_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BuyAssetResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BuyAssetResponse) ProtoMessage() {}
+
+func (x *BuyAssetResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_market_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BuyAssetResponse.ProtoReflect.Descriptor instead.
+func (*BuyAssetResponse) Descriptor() ([]byte, []int) {
+	return file_proto_market_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *BuyAssetResponse) GetMovementPublicId() string {
+	if x != nil {
+		return x.MovementPublicId
+	}
+	return ""
+}
+
+func (x *BuyAssetResponse) GetTransactionPublicId() string {
+	if x != nil {
+		return x.TransactionPublicId
+	}
+	return ""
+}
+
+func (x *BuyAssetResponse) GetTransactionPrice() float64 {
+	if x != nil {
+		return x.TransactionPrice
+	}
+	return 0
+}
+
+func (x *BuyAssetResponse) GetQuantity() float64 {
+	if x != nil {
+		return x.Quantity
+	}
+	return 0
+}
+
+func (x *BuyAssetResponse) GetNotifications() []*BuyAssetNotification {
+	if x != nil {
+		return x.Notifications
+	}
+	return nil
+}
+
 var File_proto_market_proto protoreflect.FileDescriptor
 
 const file_proto_market_proto_rawDesc = "" +
@@ -231,9 +433,25 @@ const file_proto_market_proto_rawDesc = "" +
 	"volatility\"q\n" +
 	"\x0eMarketResponse\x122\n" +
 	"\x15timestamp_unix_millis\x18\x01 \x01(\x03R\x13timestampUnixMillis\x12+\n" +
-	"\x06assets\x18\x02 \x03(\v2\x13.market.MarketAssetR\x06assets2O\n" +
+	"\x06assets\x18\x02 \x03(\v2\x13.market.MarketAssetR\x06assets\"\xb7\x01\n" +
+	"\x0fBuyAssetRequest\x12$\n" +
+	"\x0eteam_public_id\x18\x01 \x01(\tR\fteamPublicId\x12&\n" +
+	"\x0fasset_public_id\x18\x02 \x01(\tR\rassetPublicId\x12$\n" +
+	"\x0euser_public_id\x18\x03 \x01(\tR\fuserPublicId\x12\x1a\n" +
+	"\bquantity\x18\x04 \x01(\x01R\bquantity\x12\x14\n" +
+	"\x05price\x18\x05 \x01(\x01R\x05price\"V\n" +
+	"\x14BuyAssetNotification\x12$\n" +
+	"\x0euser_public_id\x18\x01 \x01(\tR\fuserPublicId\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\"\x81\x02\n" +
+	"\x10BuyAssetResponse\x12,\n" +
+	"\x12movement_public_id\x18\x01 \x01(\tR\x10movementPublicId\x122\n" +
+	"\x15transaction_public_id\x18\x02 \x01(\tR\x13transactionPublicId\x12+\n" +
+	"\x11transaction_price\x18\x03 \x01(\x01R\x10transactionPrice\x12\x1a\n" +
+	"\bquantity\x18\x04 \x01(\x01R\bquantity\x12B\n" +
+	"\rnotifications\x18\x05 \x03(\v2\x1c.market.BuyAssetNotificationR\rnotifications2\x8e\x01\n" +
 	"\rMarketService\x12>\n" +
-	"\vCheckMarket\x12\x15.market.MarketRequest\x1a\x16.market.MarketResponse0\x01BFZDgithub.com/jaftdelgado/aureum-services/MarketGRPCService/proto;protob\x06proto3"
+	"\vCheckMarket\x12\x15.market.MarketRequest\x1a\x16.market.MarketResponse0\x01\x12=\n" +
+	"\bBuyAsset\x12\x17.market.BuyAssetRequest\x1a\x18.market.BuyAssetResponseBFZDgithub.com/jaftdelgado/aureum-services/MarketGRPCService/proto;protob\x06proto3"
 
 var (
 	file_proto_market_proto_rawDescOnce sync.Once
@@ -247,21 +465,27 @@ func file_proto_market_proto_rawDescGZIP() []byte {
 	return file_proto_market_proto_rawDescData
 }
 
-var file_proto_market_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_proto_market_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_proto_market_proto_goTypes = []any{
-	(*MarketRequest)(nil),  // 0: market.MarketRequest
-	(*MarketAsset)(nil),    // 1: market.MarketAsset
-	(*MarketResponse)(nil), // 2: market.MarketResponse
+	(*MarketRequest)(nil),        // 0: market.MarketRequest
+	(*MarketAsset)(nil),          // 1: market.MarketAsset
+	(*MarketResponse)(nil),       // 2: market.MarketResponse
+	(*BuyAssetRequest)(nil),      // 3: market.BuyAssetRequest
+	(*BuyAssetNotification)(nil), // 4: market.BuyAssetNotification
+	(*BuyAssetResponse)(nil),     // 5: market.BuyAssetResponse
 }
 var file_proto_market_proto_depIdxs = []int32{
 	1, // 0: market.MarketResponse.assets:type_name -> market.MarketAsset
-	0, // 1: market.MarketService.CheckMarket:input_type -> market.MarketRequest
-	2, // 2: market.MarketService.CheckMarket:output_type -> market.MarketResponse
-	2, // [2:3] is the sub-list for method output_type
-	1, // [1:2] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	4, // 1: market.BuyAssetResponse.notifications:type_name -> market.BuyAssetNotification
+	0, // 2: market.MarketService.CheckMarket:input_type -> market.MarketRequest
+	3, // 3: market.MarketService.BuyAsset:input_type -> market.BuyAssetRequest
+	2, // 4: market.MarketService.CheckMarket:output_type -> market.MarketResponse
+	5, // 5: market.MarketService.BuyAsset:output_type -> market.BuyAssetResponse
+	4, // [4:6] is the sub-list for method output_type
+	2, // [2:4] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_proto_market_proto_init() }
@@ -275,7 +499,7 @@ func file_proto_market_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_market_proto_rawDesc), len(file_proto_market_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

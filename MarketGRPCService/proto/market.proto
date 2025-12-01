@@ -4,13 +4,11 @@ package market;
 
 option go_package = "github.com/jaftdelgado/aureum-services/MarketGRPCService/proto;proto";
 
-// Petición: ahora también recibimos el team (uuid)
 message MarketRequest {
-  int32 interval_seconds = 1; // default 4 si viene 0 o negativo
-  string team_public_id  = 2; // <-- NUEVO: uuid del team
+  int32 interval_seconds = 1;
+  string team_public_id  = 2;
 }
 
-// Respuesta por cada “tick” de mercado
 message MarketAsset {
   int32 id = 1;
   string symbol = 2;
@@ -25,7 +23,32 @@ message MarketResponse {
   repeated MarketAsset assets = 2;
 }
 
-// Servicio gRPC
+// ====== NUEVOS MENSAJES PARA BUYASSET ======
+
+message BuyAssetRequest {
+  string team_public_id  = 1;  // uuid del team
+  string asset_public_id = 2;  // uuid del asset
+  string user_public_id  = 3;  // uuid del usuario que compra
+  double quantity        = 4;  // cantidad comprada
+  double price           = 5;  // precio al que se ejecuta la compra
+}
+
+message BuyAssetNotification {
+  string user_public_id = 1; 
+  string message        = 2;
+}
+
+message BuyAssetResponse {
+  string movement_public_id    = 1;
+  string transaction_public_id = 2;
+  double transaction_price     = 3;
+  double quantity              = 4;
+  repeated BuyAssetNotification notifications = 5;
+}
+
+// ====== servicio ======
 service MarketService {
   rpc CheckMarket (MarketRequest) returns (stream MarketResponse);
+
+  rpc BuyAsset (BuyAssetRequest) returns (BuyAssetResponse);
 }

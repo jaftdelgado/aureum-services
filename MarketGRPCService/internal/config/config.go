@@ -7,10 +7,11 @@ import (
 )
 
 type Config struct {
-	Port            string
-	AssetServiceURL string
-	TickInterval    time.Duration
-	DBURL           string
+	Port             string
+	AssetServiceURL  string
+	CourseServiceURL string
+	TickInterval     time.Duration
+	DBURL            string
 }
 
 func getenv(key, def string) string {
@@ -23,9 +24,10 @@ func getenv(key, def string) string {
 func GetConfig() *Config {
 	port := getenv("PORT", ":50051")
 	assetURL := getenv("ASSET_SERVICE_URL", "http://assetservice.railway.internal:5000/assets")
-
+	courseURL := getenv("COURSE_SERVICE_URL", "")
 	intervalStr := getenv("TICK_INTERVAL_SECONDS", "4")
 	intervalSeconds, err := strconv.Atoi(intervalStr)
+
 	if err != nil || intervalSeconds <= 0 {
 		intervalSeconds = 4
 	}
@@ -33,9 +35,10 @@ func GetConfig() *Config {
 	dbURL := getenv("MARKET_DATABASE_URL", "")
 
 	return &Config{
-		Port:            port,
-		AssetServiceURL: assetURL,
-		TickInterval:    time.Duration(intervalSeconds) * time.Second,
-		DBURL:           dbURL,
+		Port:             port,
+		AssetServiceURL:  assetURL,
+		CourseServiceURL: courseURL,
+		TickInterval:     time.Duration(intervalSeconds) * time.Second,
+		DBURL:            dbURL,
 	}
 }
