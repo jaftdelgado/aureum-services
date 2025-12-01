@@ -1,5 +1,18 @@
 {
   "Routes": [
+    // --- 1.g USER SERVICE (Obtener Avatar) ---
+    {
+      "DownstreamPathTemplate": "/api/v1/profiles/{authId}/avatar",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "aureum-services.railway.internal", 
+          "Port": 8001
+        }
+      ],
+      "UpstreamPathTemplate": "/api/users/profiles/{authId}/avatar",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
     // --- 1. USER SERVICE ---
     {
       "DownstreamPathTemplate": "/api/v1/profiles",
@@ -101,19 +114,6 @@
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
       }
-    },
-    // --- 1.g USER SERVICE (Obtener Avatar) ---
-    {
-      "DownstreamPathTemplate": "/api/v1/profiles/{authId}/avatar",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "aureum-services.railway.internal", 
-          "Port": 8001
-        }
-      ],
-      "UpstreamPathTemplate": "/api/users/profiles/{authId}/avatar",
-      "UpstreamHttpMethod": [ "GET" ]
     },
     // --- 2. ASSET SERVICE ---
     {
