@@ -34,12 +34,23 @@ def db():
 
 @pytest.fixture(scope="function")
 def mongo_client():
-    client = MongoClient(MONGO_URI)
-    mongo_db.mongo_client = client 
-    db = client.get_database()
+    real_client = MongoClient(MONGO_URI)
+    test_db = real_client.get_database()
+    class MockMongoDBClient:
+        client = real_client
+        db = test_db
+        
+        def get_collection(self):
+            return self.db["profile_images"]
+
+        def close(self):
+            self.client.close()
+
+    mock_instance = MockMongoDBClient()
+    mongo_db.mongo_client = mock_instance
     yield db
-    db["profile_images"].drop() 
-    client.close()
+    test_db["profile_images"].drop()
+    real_client.close()
 
 @pytest.fixture(scope="function")
 def client(db, mongo_client):
