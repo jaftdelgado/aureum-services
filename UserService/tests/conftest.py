@@ -2,8 +2,7 @@ import pytest
 import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from fastapi.testclient import TestClient
-from mongomock import MongoClient as MockMongoClient 
+from fastapi.testclient import TestClient 
 from pymongo import MongoClient
 
 from app.main import app
