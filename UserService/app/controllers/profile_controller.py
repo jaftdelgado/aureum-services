@@ -107,3 +107,26 @@ def delete_user_profile(auth_id: str, db: Session = Depends(get_db)):
     if not success:
         raise HTTPException(status_code=404, detail="Perfil no encontrado")
     return None
+
+@router.get("/{auth_id}/avatar")
+def get_avatar(auth_id: str, db: Session = Depends(get_db)):
+    profile = profile_repository.get_profile_by_auth_id(db, auth_id)
+    
+    if not profile or not profile.profile_pic_id:
+        raise HTTPException(status_code=404, detail="Avatar no encontrado")
+
+    try:
+        collection = mongo_db.mongo_client.get_collection()
+        image_doc = collection.find_one({"_id": ObjectId(profile.profile_pic_id)})
+
+        if not image_doc:
+            raise HTTPException(status_code=404, detail="Imagen no encontrada en Mongo")
+
+        return Response(
+            content=image_doc["image_data"], 
+            media_type=image_doc.get("content_type", "image/jpeg")
+        )
+
+    except Exception as e:
+        print(f"Error recuperando imagen: {e}")
+        raise HTTPException(status_code=500, detail="Error al leer la imagen")
