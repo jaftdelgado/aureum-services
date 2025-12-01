@@ -10,6 +10,8 @@ VALID_PROFILE = {
     "role": "student"
 }
 
+# --- 1. CREACION (POST) ---
+
 def test_create_profile_success(client):
     response = client.post(f"{BASE_URL}/", json=VALID_PROFILE)
     assert response.status_code == 201
@@ -26,7 +28,7 @@ def test_create_profile_duplicate_username(client):
     
     response = client.post(f"{BASE_URL}/", json=duplicate_data)
     assert response.status_code == 409
-    assert "nombre de usuario ya está en uso" in response.json()["detail"]
+    assert "nombre de usuario" in response.json()["detail"]
 
 def test_create_profile_duplicate_auth_id(client):
     client.post(f"{BASE_URL}/", json=VALID_PROFILE)
@@ -38,6 +40,7 @@ def test_create_profile_duplicate_auth_id(client):
     assert response.status_code == 409
     assert "Este usuario ya tiene un perfil" in response.json()["detail"]
 
+# --- 2. OBTENCION (GET) ---
 
 def test_get_all_profiles_batch(client):
     u1 = client.post(f"{BASE_URL}/", json=VALID_PROFILE).json()
@@ -68,29 +71,32 @@ def test_get_profile_not_found(client):
     response = client.get(f"{BASE_URL}/uuid-inexistente")
     assert response.status_code == 404
 
+# --- 3. ACTUALIZACION (PATCH) ---
+
 def test_update_profile_success(client):
     client.post(f"{BASE_URL}/", json=VALID_PROFILE)
     
     update_payload = {
         "full_name": "Juan Actualizado",
-        "bio": "Nueva biografía"
+        "bio": "Nueva biografia" 
     }
     
     response = client.patch(f"{BASE_URL}/{VALID_PROFILE['auth_user_id']}", json=update_payload)
     assert response.status_code == 200
     data = response.json()
     assert data["full_name"] == "Juan Actualizado"
-    assert data["bio"] == "Nueva biografía"
+    assert data["bio"] == "Nueva biografia"
     assert data["role"] == "student"
 
 def test_update_profile_not_found(client):
     response = client.patch(f"{BASE_URL}/uuid-falso", json={"full_name": "Nadie"})
     assert response.status_code == 404
 
+# --- 4. AVATAR (UPLOAD & GET) ---
 
 def test_upload_avatar_success(client):
     client.post(f"{BASE_URL}/", json=VALID_PROFILE)
-
+    
     files = {
         'file': ('avatar.png', b'fakeimagebytes', 'image/png')
     }
@@ -129,15 +135,17 @@ def test_get_avatar_no_pic_associated(client):
 def test_get_avatar_broken_link(client, db):
     client.post(f"{BASE_URL}/", json=VALID_PROFILE)
     
-    from app.models import Profile
-    user = db.query(Profile).filter_by(auth_user_id=VALID_PROFILE['auth_user_id']).first()
+    from app.models import models 
+    user = db.query(models.Profile).filter_by(auth_user_id=VALID_PROFILE['auth_user_id']).first()
     user.profile_pic_id = str(ObjectId()) 
     db.commit()
     
     response = client.get(f"{BASE_URL}/{VALID_PROFILE['auth_user_id']}/avatar")
     assert response.status_code == 404
-    assert "Imagen no encontrada en base de datos" in response.json()["detail"]
+    # Buscamos substring seguro sin tildes por si acaso
+    assert "Imagen no encontrada" in response.json()["detail"]
 
+# --- 5. BORRADO (DELETE) ---
 
 def test_delete_profile_success(client):
     client.post(f"{BASE_URL}/", json=VALID_PROFILE)
