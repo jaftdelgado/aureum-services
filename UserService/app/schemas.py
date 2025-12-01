@@ -20,6 +20,7 @@ class ProfileResponseDTO(ProfileCreateDTO):
     profile_pic_id: Optional[str] = None
     created_at: datetime
     updated_at: datetime
+    profile_pic_id: Optional[str] = None
 
     class Config:
         from_attributes = True
