@@ -20,15 +20,17 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	MarketService_CheckMarket_FullMethodName = "/market.MarketService/CheckMarket"
+	MarketService_BuyAsset_FullMethodName    = "/market.MarketService/BuyAsset"
 )
 
 // MarketServiceClient is the client API for MarketService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// Servicio gRPC
+// ====== servicio ======
 type MarketServiceClient interface {
 	CheckMarket(ctx context.Context, in *MarketRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[MarketResponse], error)
+	BuyAsset(ctx context.Context, in *BuyAssetRequest, opts ...grpc.CallOption) (*BuyAssetResponse, error)
 }
 
 type marketServiceClient struct {
@@ -58,13 +60,24 @@ func (c *marketServiceClient) CheckMarket(ctx context.Context, in *MarketRequest
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type MarketService_CheckMarketClient = grpc.ServerStreamingClient[MarketResponse]
 
+func (c *marketServiceClient) BuyAsset(ctx context.Context, in *BuyAssetRequest, opts ...grpc.CallOption) (*BuyAssetResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(BuyAssetResponse)
+	err := c.cc.Invoke(ctx, MarketService_BuyAsset_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MarketServiceServer is the server API for MarketService service.
 // All implementations must embed UnimplementedMarketServiceServer
 // for forward compatibility.
 //
-// Servicio gRPC
+// ====== servicio ======
 type MarketServiceServer interface {
 	CheckMarket(*MarketRequest, grpc.ServerStreamingServer[MarketResponse]) error
+	BuyAsset(context.Context, *BuyAssetRequest) (*BuyAssetResponse, error)
 	mustEmbedUnimplementedMarketServiceServer()
 }
 
@@ -77,6 +90,9 @@ type UnimplementedMarketServiceServer struct{}
 
 func (UnimplementedMarketServiceServer) CheckMarket(*MarketRequest, grpc.ServerStreamingServer[MarketResponse]) error {
 	return status.Errorf(codes.Unimplemented, "method CheckMarket not implemented")
+}
+func (UnimplementedMarketServiceServer) BuyAsset(context.Context, *BuyAssetRequest) (*BuyAssetResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BuyAsset not implemented")
 }
 func (UnimplementedMarketServiceServer) mustEmbedUnimplementedMarketServiceServer() {}
 func (UnimplementedMarketServiceServer) testEmbeddedByValue()                       {}
@@ -110,13 +126,36 @@ func _MarketService_CheckMarket_Handler(srv interface{}, stream grpc.ServerStrea
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type MarketService_CheckMarketServer = grpc.ServerStreamingServer[MarketResponse]
 
+func _MarketService_BuyAsset_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BuyAssetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MarketServiceServer).BuyAsset(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MarketService_BuyAsset_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MarketServiceServer).BuyAsset(ctx, req.(*BuyAssetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // MarketService_ServiceDesc is the grpc.ServiceDesc for MarketService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var MarketService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "market.MarketService",
 	HandlerType: (*MarketServiceServer)(nil),
-	Methods:     []grpc.MethodDesc{},
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "BuyAsset",
+			Handler:    _MarketService_BuyAsset_Handler,
+		},
+	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "CheckMarket",

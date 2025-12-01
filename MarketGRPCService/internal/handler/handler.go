@@ -7,8 +7,10 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 
 	"github.com/jaftdelgado/aureum-services/MarketGRPCService/internal/config"
@@ -22,9 +24,9 @@ type TeamAsset struct {
 	TeamAssetID  int64   `json:"teamAssetId"`
 	PublicID     string  `json:"publicId"`
 	TeamID       string  `json:"teamId"`
-	AssetID      string  `json:"assetId"`      // uuid del asset-team
-	CurrentPrice float64 `json:"currentPrice"` // precio actual del team
-	Asset        Asset   `json:"asset"`        // datos del asset anidado
+	AssetID      string  `json:"assetId"`
+	CurrentPrice float64 `json:"currentPrice"`
+	Asset        Asset   `json:"asset"`
 }
 
 type Asset struct {
@@ -60,6 +62,14 @@ type RemoteTeamAsset struct {
 	AssetID      string  `json:"assetId"`
 	CurrentPrice float64 `json:"currentPrice"`
 	Asset        Asset   `json:"asset"`
+}
+
+type Membership struct {
+	MembershipID int       `json:"membershipid"`
+	PublicID     string    `json:"publicid"`
+	TeamID       string    `json:"teamid"`
+	UserID       string    `json:"userid"`
+	JoinedAt     time.Time `json:"joinedat"`
 }
 
 func NewMarketHandler(cfg *config.Config, dbConn *gorm.DB) *MarketHandler {
@@ -118,7 +128,7 @@ func nextPrice(prev float64, a Asset) float64 {
 
 	newPrice := prev * (1 + change)
 
-	// Respetar límites si existen
+	// Respetar límites
 	if a.MaxPrice > 0 && newPrice > a.MaxPrice {
 		newPrice = a.MaxPrice
 	}
@@ -133,7 +143,6 @@ func nextPrice(prev float64, a Asset) float64 {
 }
 
 func (h *MarketHandler) persistPrice(ctx context.Context, teamAssetID int, price float64) error {
-	// 1) Insertar en historicalprices
 	hp := &db.HistoricalPrice{
 		Price:       price,
 		TeamAssetID: teamAssetID,
@@ -143,7 +152,6 @@ func (h *MarketHandler) persistPrice(ctx context.Context, teamAssetID int, price
 		return fmt.Errorf("insertar historicalprice: %w", err)
 	}
 
-	// 2) Actualizar currentprice en teamassets
 	if err := h.db.WithContext(ctx).
 		Model(&db.TeamAsset{}).
 		Where("teamassetid = ?", teamAssetID).
@@ -155,7 +163,6 @@ func (h *MarketHandler) persistPrice(ctx context.Context, teamAssetID int, price
 	return nil
 }
 
-// Implementación del RPC CheckMarket
 func (h *MarketHandler) CheckMarket(req *pb.MarketRequest, stream pb.MarketService_CheckMarketServer) error {
 	ctx := stream.Context()
 
@@ -200,12 +207,9 @@ func (h *MarketHandler) CheckMarket(req *pb.MarketRequest, stream pb.MarketServi
 
 		case t := <-ticker.C:
 			for _, s := range states {
-				// 1) calcular nuevo precio
 				s.currentPrice = nextPrice(s.currentPrice, s.asset)
 
-				// 2) persistir en DB
 				if err := h.persistPrice(ctx, s.teamAssetID, s.currentPrice); err != nil {
-					// loguea pero no mates el stream por un fallo puntual
 					h.logger.Printf("error guardando precio para teamAssetID=%d: %v", s.teamAssetID, err)
 				}
 			}
@@ -231,4 +235,126 @@ func (h *MarketHandler) CheckMarket(req *pb.MarketRequest, stream pb.MarketServi
 			}
 		}
 	}
+}
+
+func (h *MarketHandler) fetchTeamMemberships(ctx context.Context, teamPublicID string) ([]Membership, error) {
+	base := strings.TrimRight(h.cfg.CourseServiceURL, "/")
+	url := fmt.Sprintf("%s/api/v1/memberships/course/%s", base, teamPublicID)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("crear request a CourseService: %w", err)
+	}
+
+	resp, err := h.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("llamar a CourseService: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("CourseService devolvió status %d", resp.StatusCode)
+	}
+
+	var memberships []Membership
+	if err := json.NewDecoder(resp.Body).Decode(&memberships); err != nil {
+		return nil, fmt.Errorf("decodificar respuesta CourseService: %w", err)
+	}
+
+	return memberships, nil
+}
+
+func (h *MarketHandler) BuyAsset(ctx context.Context, req *pb.BuyAssetRequest) (*pb.BuyAssetResponse, error) {
+	teamIDStr := req.GetTeamPublicId()
+	assetIDStr := req.GetAssetPublicId()
+	userIDStr := req.GetUserPublicId()
+	qty := req.GetQuantity()
+	price := req.GetPrice()
+
+	if teamIDStr == "" || assetIDStr == "" || userIDStr == "" {
+		return nil, status.Error(codes.InvalidArgument, "team_public_id, asset_public_id y user_public_id son obligatorios")
+	}
+	if qty <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "quantity debe ser mayor a cero")
+	}
+	if price <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "price debe ser mayor a cero")
+	}
+
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "user_public_id inválido: %v", err)
+	}
+	assetID, err := uuid.Parse(assetIDStr)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "asset_public_id inválido: %v", err)
+	}
+
+	// ====== 1. Persistir Movement + Transaction en una transacción de BD ======
+	tx := h.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return nil, status.Errorf(codes.Internal, "no se pudo iniciar transacción: %v", tx.Error)
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	now := time.Now().UTC()
+
+	mov := &db.Movement{
+		UserID:      userID,
+		AssetID:     assetID,
+		Quantity:    qty,
+		CreatedDate: now,
+	}
+	if err := tx.Create(mov).Error; err != nil {
+		tx.Rollback()
+		return nil, status.Errorf(codes.Internal, "no se pudo crear movement: %v", err)
+	}
+
+	trx := &db.Transaction{
+		MovementID:       mov.MovementID,
+		TransactionPrice: price,
+		IsBuy:            true,
+		CreatedDate:      now,
+	}
+	if err := tx.Create(trx).Error; err != nil {
+		tx.Rollback()
+		return nil, status.Errorf(codes.Internal, "no se pudo crear transaction: %v", err)
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, status.Errorf(codes.Internal, "no se pudo confirmar transacción: %v", err)
+	}
+
+	// ====== 2. Obtener alumnos del team para enviar alerta lógica ======
+	memberships, err := h.fetchTeamMemberships(ctx, teamIDStr)
+	if err != nil {
+		// No rompemos la compra, solo logueamos y devolvemos sin notificaciones
+		h.logger.Printf("error obteniendo memberships para team %s: %v", teamIDStr, err)
+		memberships = nil
+	}
+
+	// Mensaje de alerta
+	alertMsg := fmt.Sprintf("El usuario %s compró el activo %s", userIDStr, assetIDStr)
+
+	notifications := make([]*pb.BuyAssetNotification, 0, len(memberships))
+	for _, m := range memberships {
+		notifications = append(notifications, &pb.BuyAssetNotification{
+			UserPublicId: m.UserID,
+			Message:      alertMsg,
+		})
+	}
+
+	resp := &pb.BuyAssetResponse{
+		MovementPublicId:    mov.PublicID.String(),
+		TransactionPublicId: trx.PublicID.String(),
+		TransactionPrice:    price,
+		Quantity:            qty,
+		Notifications:       notifications,
+	}
+
+	return resp, nil
 }

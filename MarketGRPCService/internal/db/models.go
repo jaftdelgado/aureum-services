@@ -13,8 +13,8 @@ type Movement struct {
 	PublicID    uuid.UUID `gorm:"column:publicid;type:uuid;default:uuid_generate_v4()"`
 	UserID      uuid.UUID `gorm:"column:userid;type:uuid;not null"`
 	AssetID     uuid.UUID `gorm:"column:assetid;type:uuid;not null"`
-	Quantity    float64   `gorm:"column:quantity"`    // DECIMAL(18,6)
-	CreatedDate time.Time `gorm:"column:createddate"` // TIMESTAMP
+	Quantity    float64   `gorm:"column:quantity"`
+	CreatedDate time.Time `gorm:"column:createddate"`
 }
 
 func (Movement) TableName() string { return "movements" }
@@ -25,11 +25,10 @@ type Transaction struct {
 	TransactionID    int       `gorm:"column:transactionid;primaryKey;autoIncrement"`
 	PublicID         uuid.UUID `gorm:"column:publicid;type:uuid;default:uuid_generate_v4()"`
 	MovementID       int       `gorm:"column:movementid;not null;unique"`
-	TransactionPrice float64   `gorm:"column:transactionprice"` // DECIMAL(18,6)
+	TransactionPrice float64   `gorm:"column:transactionprice"`
 	IsBuy            bool      `gorm:"column:isbuy"`
 	CreatedDate      time.Time `gorm:"column:createddate"`
 
-	// Relación con Movement (opcional)
 	Movement Movement `gorm:"foreignKey:MovementID;references:MovementID"`
 }
 
@@ -83,5 +82,3 @@ type TeamAsset struct {
 }
 
 func (TeamAsset) TableName() string { return "teamassets" }
-
-
