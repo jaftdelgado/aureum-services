@@ -8,7 +8,7 @@ on:
 
 jobs:
   # ------------------------------------------------------------------
-  # TEST USER SERVICE (Python + Postgres)
+  # TEST USER SERVICE (Python + Postgres + Mongo)
   # ------------------------------------------------------------------
   test-user-service:
     runs-on: ubuntu-latest
@@ -27,6 +27,11 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+      
+      mongo:
+        image: mongo:6.0
+        ports:
+          - 27017:27017
 
     steps:
       - uses: actions/checkout@v4
@@ -49,76 +54,71 @@ jobs:
           POSTGRES_USER: test_user
           POSTGRES_PASSWORD: test_pass
           POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
           POSTGRES_DB: test_db
+          MONGO_URI: mongodb://localhost:27017/test_mongo_db
         run: |
-          pytest
+          pytest -v
 
   # ------------------------------------------------------------------
-  # TEST TEAM SERVICE (Python + Postgres + Mongo)
+  # OTROS SERVICIOS (Comentados hasta que tengan tests)
   # ------------------------------------------------------------------
-  test-team-service:
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_USER: test_user
-          POSTGRES_PASSWORD: test_pass
-          POSTGRES_DB: teams_test_db
-        ports:
-          - 5432:5432
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-      
-      mongo:
-        image: mongo:6.0
-        ports:
-          - 27017:27017
+  
+  # test-team-service:
+  #   runs-on: ubuntu-latest
+  #   services:
+  #     postgres:
+  #       image: postgres:15
+  #       env:
+  #         POSTGRES_USER: test_user
+  #         POSTGRES_PASSWORD: test_pass
+  #         POSTGRES_DB: teams_test_db
+  #       ports:
+  #         - 5432:5432
+  #       options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+  #     mongo:
+  #       image: mongo:6.0
+  #       ports:
+  #         - 27017:27017
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: '3.10'
+  #     - name: Install Dependencies
+  #       working-directory: ./TeamService
+  #       run: |
+  #         pip install -r requirements.txt
+  #         pip install pytest httpx
+  #     - name: Run Tests
+  #       working-directory: ./TeamService
+  #       env:
+  #         POSTGRES_USER: test_user
+  #         POSTGRES_PASSWORD: test_pass
+  #         POSTGRES_HOST: localhost
+  #         POSTGRES_DB: teams_test_db
+  #         MONGO_URI: mongodb://localhost:27017/teams_test
+  #       run: pytest
 
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-      - name: Install Dependencies
-        working-directory: ./TeamService
-        run: |
-          pip install -r requirements.txt
-          pip install pytest httpx
-      - name: Run Tests
-        working-directory: ./TeamService
-        env:
-          POSTGRES_USER: test_user
-          POSTGRES_PASSWORD: test_pass
-          POSTGRES_HOST: localhost
-          POSTGRES_DB: teams_test_db
-          MONGO_URI: mongodb://localhost:27017/teams_test
-        run: pytest
-
-  # ------------------------------------------------------------------
-  # TEST LESSONS SERVICE (Node.js + Mongo)
-  # ------------------------------------------------------------------
-  test-lessons-service:
-    runs-on: ubuntu-latest
-    services:
-      mongo:
-        image: mongo:6.0
-        ports:
-          - 27017:27017
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-      
-      - name: Install Dependencies
-        working-directory: ./LessonsService
-        run: npm install
-
-      - name: Run Tests
-        working-directory: ./LessonsService
-        env:
-          MONGO_URI: mongodb://localhost:27017/lessons_test
-        run: npm test
+  # test-lessons-service:
+  #   runs-on: ubuntu-latest
+  #   services:
+  #     mongo:
+  #       image: mongo:6.0
+  #       ports:
+  #         - 27017:27017
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Set up Node
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: '18'
+  #     - name: Install Dependencies
+  #       working-directory: ./LessonsService
+  #       run: npm install
+  #     - name: Run Tests
+  #       working-directory: ./LessonsService
+  #       env:
+  #         MONGO_URI: mongodb://localhost:27017/lessons_test
+  #       run: npm test

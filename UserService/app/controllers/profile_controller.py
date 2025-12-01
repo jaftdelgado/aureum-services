@@ -141,6 +141,9 @@ def get_avatar(auth_id: str, db: Session = Depends(get_db)):
             media_type=image_doc.get("content_type", "image/jpeg")
         )
 
+    except HTTPException as e:
+        raise e
+
     except Exception as e:
         print(f" ERROR CRÍTICO EN GET_AVATAR: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
