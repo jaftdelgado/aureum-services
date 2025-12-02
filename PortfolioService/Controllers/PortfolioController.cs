@@ -140,7 +140,8 @@ namespace PortfolioService.Controllers
 
             if (movements == null || !movements.Any())
             {
-                return NotFound(new { message = "No hay historial de movimientos para este estudiante." });
+                
+                return Ok(new List<HistoryDto>());
             }
 
             var resultList = new List<HistoryDto>();

@@ -3,14 +3,12 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.VisualStudio.TestPlatform.TestHost;
-// TUS NAMESPACES CORRECTOS
-using PortfolioService;
-using PortfolioService.Data;
+using Testcontainers.PostgreSql;
 using System.Linq;
 using System.Threading.Tasks;
-using Testcontainers.PostgreSql;
 using Xunit;
+using PortfolioService;
+using PortfolioService.Data;
 
 namespace PortfolioService.Tests
 {
@@ -27,39 +25,48 @@ namespace PortfolioService.Tests
         {
             builder.ConfigureTestServices(services =>
             {
-                // 1. Eliminar la configuración de DbContext de producción
-                var descriptor = services.SingleOrDefault(
-                    d => d.ServiceType == typeof(DbContextOptions<PortfolioContext>));
+                var descriptorPortfolio = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<PortfolioContext>));
+                if (descriptorPortfolio != null) services.Remove(descriptorPortfolio);
+                services.AddDbContext<PortfolioContext>(options => options.UseNpgsql(_dbContainer.GetConnectionString()));
 
-                if (descriptor != null)
-                {
-                    services.Remove(descriptor);
-                }
+                var descriptorMarket = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<MarketContext>));
+                if (descriptorMarket != null) services.Remove(descriptorMarket);
+                services.AddDbContext<MarketContext>(options => options.UseNpgsql(_dbContainer.GetConnectionString()));
 
-                // 2. Inyectar la conexión al contenedor de Docker
-                services.AddDbContext<PortfolioContext>(options =>
-                {
-                    options.UseNpgsql(_dbContainer.GetConnectionString());
-                });
-
-                // 3. Preparar la Base de Datos
                 var sp = services.BuildServiceProvider();
                 using (var scope = sp.CreateScope())
                 {
-                    var db = scope.ServiceProvider.GetRequiredService<PortfolioContext>();
+                    var portfolioDb = scope.ServiceProvider.GetRequiredService<PortfolioContext>();
+                    var marketDb = scope.ServiceProvider.GetRequiredService<MarketContext>();
 
-                    // ¡IMPORTANTE! Activamos la extensión para que funcione uuid_generate_v4()
-                    db.Database.OpenConnection();
-                    db.Database.ExecuteSqlRaw("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";");
+                    portfolioDb.Database.OpenConnection();
+                    portfolioDb.Database.ExecuteSqlRaw("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";");
+                    portfolioDb.Database.EnsureCreated();
 
-                    // Creamos las tablas
-                    db.Database.EnsureCreated();
+                    marketDb.Database.ExecuteSqlRaw(@"
+                        CREATE TABLE IF NOT EXISTS public.movements (
+                            movementid SERIAL PRIMARY KEY,
+                            publicid UUID NOT NULL,
+                            userid UUID NOT NULL,
+                            assetid UUID NOT NULL,
+                            quantity DECIMAL NOT NULL,
+                            createddate TIMESTAMP NOT NULL
+                        );
+                        CREATE TABLE IF NOT EXISTS public.transactions (
+                            transactionid SERIAL PRIMARY KEY,
+                            publicid UUID NOT NULL,
+                            movementid INT NOT NULL,
+                            transactionprice DECIMAL NOT NULL,
+                            isbuy BOOLEAN NOT NULL,
+                            createddate TIMESTAMP NOT NULL,
+                            CONSTRAINT fk_transactions_movements FOREIGN KEY (movementid) REFERENCES public.movements(movementid)
+                        );
+                    ");
                 }
             });
         }
 
         public Task InitializeAsync() => _dbContainer.StartAsync();
-
         public new Task DisposeAsync() => _dbContainer.StopAsync();
     }
 }

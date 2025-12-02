@@ -1,14 +1,14 @@
-﻿using FluentAssertions;
+﻿using System.Net;
+using System.Net.Http.Json;
+using FluentAssertions;
 using PortfolioService.Dtos;
 using PortfolioService.Models;
-using PortfolioService.Tests;
-using System.Net;
-using System.Net.Http.Json; // Necesario para PostAsJsonAsync
 using Xunit;
 
 namespace PortfolioService.Tests
 {
-    public class PortfolioTests : IClassFixture<IntegrationTestFactory>
+    [Collection("IntegrationTests")]
+    public class PortfolioTests
     {
         private readonly HttpClient _client;
 
@@ -59,7 +59,6 @@ namespace PortfolioService.Tests
         [Fact]
         public async Task CreateAndGet_ShouldSaveAndRetrieveData()
         {
-            // 1. ARRANGE: Preparamos datos de prueba
             var courseId = Guid.NewGuid();
             var assetId = Guid.NewGuid();
             var userId = Guid.NewGuid();
@@ -113,5 +112,6 @@ namespace PortfolioService.Tests
            
             response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         }
+        
     }
 }
