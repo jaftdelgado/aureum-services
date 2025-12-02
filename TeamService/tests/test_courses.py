@@ -12,7 +12,7 @@ def test_create_course_success(client):
     payload = {
         "name": "Matematicas Avanzadas",
         "description": "Curso de prueba",
-        "professor_id": PROFESSOR_ID
+        "professor_id": str(PROFESSOR_ID)
     }
     files = {
         'file': ('curso.png', b'fakebytes', 'image/png')
