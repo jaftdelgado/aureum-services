@@ -30,8 +30,8 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddAuthentication(options =>
 {
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultAuthenticateScheme = "SupabaseAuth";
+    options.DefaultChallengeScheme = "SupabaseAuth";
 })
 .AddJwtBearer("SupabaseAuth", options =>
 {
