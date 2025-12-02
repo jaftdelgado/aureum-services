@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
-using PortfolioService.Dtos;
+using PortfolioService.Dtos; 
 using PortfolioService.Models;
 using Xunit;
 
@@ -20,42 +20,32 @@ namespace PortfolioService.Tests
         [Fact]
         public async Task GetByCourse_ShouldReturnEmptyList_WhenNoAssetsForThatCourse()
         {
-            
             var courseId = Guid.NewGuid();
-
             var response = await _client.GetAsync($"/api/portfolio/course/{courseId}");
 
             response.StatusCode.Should().Be(HttpStatusCode.OK);
-
             var content = await response.Content.ReadAsStringAsync();
-            
             content.Should().Be("[]");
         }
 
         [Fact]
         public async Task CreatePortfolioItem_ShouldSaveToDatabase()
         {
-            
-            var newItem = new PortfolioItem
+            var newItemDto = new
             {
                 UserId = Guid.NewGuid(),
                 AssetId = Guid.NewGuid(),
-                TeamId = Guid.NewGuid(),
+                TeamId = Guid.NewGuid(), 
                 Quantity = 10,
-                AvgPrice = 100,
-                CurrentValue = 100,
-                IsActive = true,
-                Notes = "Test Integration",
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                AvgPrice = 100.00, 
+                Notes = "Test Integration"
             };
 
-            
-            var response = await _client.PostAsJsonAsync("/api/portfolio", newItem);
+            var response = await _client.PostAsJsonAsync("/api/portfolio", newItemDto);
 
-            
             response.StatusCode.Should().Be(HttpStatusCode.Created);
         }
+
         [Fact]
         public async Task CreateAndGet_ShouldSaveAndRetrieveData()
         {
@@ -63,55 +53,48 @@ namespace PortfolioService.Tests
             var assetId = Guid.NewGuid();
             var userId = Guid.NewGuid();
 
-            var newItem = new PortfolioItem
+            var newItemDto = new
             {
                 UserId = userId,
                 AssetId = assetId,
                 TeamId = courseId,
                 Quantity = 10,
                 AvgPrice = 150.50,
-                CurrentValue = 150.50,
-                IsActive = true,
-                Notes = "Compra Happy Path",
-                
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                Notes = "Compra Happy Path"
             };
 
-     
-            var postResponse = await _client.PostAsJsonAsync("/api/portfolio", newItem);
-            postResponse.StatusCode.Should().Be(HttpStatusCode.Created); 
+            var postResponse = await _client.PostAsJsonAsync("/api/portfolio", newItemDto);
+            postResponse.StatusCode.Should().Be(HttpStatusCode.Created);
 
-           
             var getResponse = await _client.GetAsync($"/api/portfolio/course/{courseId}");
 
-           
             getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
             var content = await getResponse.Content.ReadFromJsonAsync<List<PortfolioDto>>();
 
             content.Should().NotBeNull();
-            content.Should().HaveCount(1); 
-            content.First().Quantity.Should().Be(10);
-            content.First().AvgPrice.Should().Be(150.50);
+            content.Should().HaveCount(1);
+
+            var item = content.First();
+            item.Quantity.Should().Be(10);
+            item.AvgPrice.Should().Be(150.50);
+           
             
         }
+
         [Fact]
         public async Task CreateWithMissingData_ShouldReturnBadRequest()
         {
-           
-            var invalidItem = new PortfolioItem
+            
+            var invalidItem = new
             {
-                Quantity = 10,
-               
+                Quantity = 10
+                
             };
 
-            
             var response = await _client.PostAsJsonAsync("/api/portfolio", invalidItem);
 
-           
             response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         }
-        
     }
 }
