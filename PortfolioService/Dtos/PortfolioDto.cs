@@ -5,6 +5,7 @@ namespace PortfolioService.Dtos
    
     public class PortfolioDto
     {
+        public Guid UserId { get; set; }
         public int PortfolioId { get; set; }
         public Guid AssetId { get; set; } 
         public double Quantity { get; set; }
