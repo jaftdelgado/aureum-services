@@ -6,7 +6,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "aureum-services.railway.internal", 
+          "Host": "aureum-services.railway.internal",
           "Port": 8001
         }
       ],
@@ -144,6 +144,42 @@
         }
       ],
       "UpstreamPathTemplate": "/api/assets/{id}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "SupabaseAuth",
+        "AllowedScopes": []
+      }
+    },
+
+    // --- 4. TEAM ASSETS (Asociar Activos a Equipos) ---
+    {
+      "DownstreamPathTemplate": "/team-assets",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "assetservice.railway.internal",
+          "Port": 3000
+        }
+      ],
+      "UpstreamPathTemplate": "/api/team-assets",
+      "UpstreamHttpMethod": [ "POST" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "SupabaseAuth",
+        "AllowedScopes": []
+      }
+    },
+
+    // --- 5. TEAM ASSETS (Ver activos de un equipo) ---
+    {
+      "DownstreamPathTemplate": "/team-assets/team/{teamId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "assetservice.railway.internal",
+          "Port": 3000
+        }
+      ],
+      "UpstreamPathTemplate": "/api/team-assets/team/{teamId}",
       "UpstreamHttpMethod": [ "GET" ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
