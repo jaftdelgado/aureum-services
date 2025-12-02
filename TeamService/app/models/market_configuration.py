@@ -17,25 +17,25 @@ from app.database import Base
 currency_enum = ENUM(
     "USD", "EUR", "MXN",
     name="currency_enum",
-    create_type=False
+    create_type=True
 )
 
 volatility_enum = ENUM(
     "High", "Medium", "Low", "Disabled",
     name="volatility_enum",
-    create_type=False
+    create_type=True
 )
 
 thick_speed_enum = ENUM(
     "High", "Medium", "Low",
     name="thick_speed_enum",
-    create_type=False
+    create_type=True
 )
 
 transaction_fee_enum = ENUM(
     "High", "Medium", "Low", "Disabled",
     name="transaction_fee_enum",
-    create_type=False
+    create_type=True
 )
 
 class MarketConfiguration(Base):
