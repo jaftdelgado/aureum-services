@@ -21,10 +21,10 @@ class TeamMembershipUpdate(BaseModel):
 
 
 class TeamMembershipResponse(BaseModel):
-    membership_id: int
-    public_id: UUID
-    team_id: UUID
-    user_id: str
+    membershipid: int
+    publicid: UUID
+    teamid: UUID
+    userid: str
     joinedat: datetime
 
     class Config:

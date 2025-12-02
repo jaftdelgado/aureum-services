@@ -109,15 +109,16 @@ def test_get_students_in_course(client):
     files = {'file': ('x.png', b'x', 'image/png')}
     course = client.post(f"{COURSES_URL}/", data={"name": "Curso Grupal", "professor_id": PROFESSOR_ID}, files=files).json()
     code = course["access_code"]
+    public_id = course["public_id"]
     
     client.post(f"{MEMBERSHIPS_URL}/join", json={"access_code": code, "user_id": STUDENT_ID})
     client.post(f"{MEMBERSHIPS_URL}/join", json={"access_code": code, "user_id": STUDENT_ID_2})
     
-    response = client.get(f"{MEMBERSHIPS_URL}/course/{code}")
+    response = client.get(f"{MEMBERSHIPS_URL}/course/{public_id}")
     assert response.status_code == 200
     data = response.json()
     assert len(data) == 2
     
-    members = [m["user_id"] for m in data]
-    assert STUDENT_ID in members
-    assert STUDENT_ID_2 in members
+    user_ids = [m["userid"] for m in data]
+    assert STUDENT_ID in user_ids
+    assert STUDENT_ID_2 in user_ids
