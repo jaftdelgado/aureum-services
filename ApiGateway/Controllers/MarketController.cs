@@ -1,45 +1,95 @@
+using Grpc.Core;
+using Market; // Namespace generado del proto
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Grpc.Core;
-using Market;
 
-[ApiController]
-[Route("api/market")]
-public class MarketController : ControllerBase
+namespace ApiGateway.Controllers
 {
-    private readonly MarketService.MarketServiceClient _client;
-
-    public MarketController(MarketService.MarketServiceClient client)
+    [Route("api/[controller]")]
+    [ApiController]
+    public class MarketController : ControllerBase
     {
-        _client = client;
-    }
+        private readonly MarketService.MarketServiceClient _client;
 
-    // GET: api/market/updates
-    // Este endpoint mantiene la conexión abierta y envía datos en tiempo real al navegador
-    [HttpGet("updates")]
-    [Authorize(AuthenticationSchemes = "SupabaseAuth")] // Protegido
-    public async Task GetMarketUpdates(CancellationToken cancellationToken)
-    {
-        Response.Headers.Append("Content-Type", "text/event-stream");
-
-        // Pedimos actualizaciones cada 2 segundos
-        var request = new MarketRequest { IntervalSeconds = 2 };
-
-        using var call = _client.CheckMarket(request, cancellationToken: cancellationToken);
-
-        try
+        public MarketController(MarketService.MarketServiceClient client)
         {
-            await foreach (var response in call.ResponseStream.ReadAllAsync(cancellationToken))
+            _client = client;
+        }
+
+        // GET: api/market/status/{teamId}
+        // Convierte el stream gRPC en una respuesta REST simple (Snapshot del mercado actual)
+        [HttpGet("status/{teamId}")]
+        public async Task<IActionResult> GetMarketStatus(string teamId)
+        {
+            try
             {
-                // Enviamos cada tick al frontend como JSON
-                var json = System.Text.Json.JsonSerializer.Serialize(response);
-                await Response.WriteAsync($"data: {json}\n\n");
-                await Response.Body.FlushAsync();
+                // Solicitamos iniciar el stream
+                using var call = _client.CheckMarket(new MarketRequest 
+                { 
+                    TeamPublicId = teamId,
+                    IntervalSeconds = 1 // Pedimos intervalo corto para que responda rápido
+                });
+
+                // Esperamos solo el primer mensaje (Snapshot)
+                if (await call.ResponseStream.MoveNext(CancellationToken.None))
+                {
+                    var data = call.ResponseStream.Current;
+                    
+                    // Mapeamos a un objeto anónimo (o DTO) para devolver JSON limpio
+                    return Ok(new 
+                    {
+                        Timestamp = data.TimestampUnixMillis,
+                        Assets = data.Assets.Select(a => new 
+                        {
+                            a.Id,
+                            a.Symbol,
+                            a.Name,
+                            Price = Math.Round(a.Price, 2), // Redondear para frontend
+                            a.BasePrice,
+                            a.Volatility
+                        })
+                    });
+                }
+                
+                return NotFound("No se recibieron datos del mercado.");
+            }
+            catch (RpcException ex)
+            {
+                return StatusCode(500, $"Error gRPC: {ex.Status.Detail}");
             }
         }
-        catch (RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.Cancelled)
+
+        // POST: api/market/buy
+        [HttpPost("buy")]
+        [Authorize] // Asumiendo que requieres login
+        public async Task<IActionResult> BuyAsset([FromBody] BuyAssetRequest request)
         {
-            // El cliente cerró la conexión, normal.
+            try
+            {
+                // El Gateway pasa la petición al microservicio tal cual
+                var response = await _client.BuyAssetAsync(request);
+                return Ok(response);
+            }
+            catch (RpcException ex)
+            {
+                return StatusCode(500, $"Error en compra: {ex.Status.Detail}");
+            }
+        }
+
+        // POST: api/market/sell
+        [HttpPost("sell")]
+        [Authorize]
+        public async Task<IActionResult> SellAsset([FromBody] SellAssetRequest request)
+        {
+            try
+            {
+                var response = await _client.SellAssetAsync(request);
+                return Ok(response);
+            }
+            catch (RpcException ex)
+            {
+                return StatusCode(500, $"Error en venta: {ex.Status.Detail}");
+            }
         }
     }
 }
