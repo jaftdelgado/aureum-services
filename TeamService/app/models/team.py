@@ -13,7 +13,7 @@ class Team(Base):
     
     public_id = Column("publicid", UUID(as_uuid=True), default=uuid.uuid4, unique=True, nullable=False)
     
-    professor_id = Column("professorid", UUID(as_uuid=True), nullable=False)
+    professor_id = Column("professorid", String, nullable=False)
     name = Column("teamname", String(48), nullable=False)
     description = Column("description", String(128), nullable=True)
     team_pic = Column("teampic", String(255), nullable=True)

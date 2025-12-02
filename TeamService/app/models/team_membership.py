@@ -14,7 +14,7 @@ class TeamMembership(Base):
     publicid = Column(UUID(as_uuid=True), unique=True, default=uuid.uuid4)
 
     teamid = Column(UUID(as_uuid=True), ForeignKey("teams.publicid", ondelete="CASCADE"), nullable=False)
-    userid = Column(UUID(as_uuid=True), nullable=False)
+    userid = Column(String, nullable=False)
 
     joinedat = Column(TIMESTAMP, server_default=func.now())
 
