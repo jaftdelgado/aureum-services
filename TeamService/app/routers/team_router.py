@@ -23,7 +23,7 @@ def get_course_detail(public_id: UUID, db: Session = Depends(get_db)):
 async def create_new_course(
     name: str = Form(...),
     description: str = Form(None),
-    professor_id: UUID = Form(...),
+    professor_id: str = Form(...),
     file: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
@@ -49,7 +49,7 @@ async def create_new_course(
     course_data = TeamCreateDTO(
         name=name,
         description=description,
-        professor_id=professor_id
+        professor_id=str(professor_id)
     )
 
     try:

@@ -7,7 +7,7 @@ from typing import Optional
 
 class TeamMembershipBase(BaseModel):
     teamid: UUID
-    userid: UUID
+    userid: str
 
 
 class JoinCourseDTO(BaseModel):
@@ -24,7 +24,7 @@ class TeamMembershipResponse(BaseModel):
     membershipid: int
     publicid: UUID
     teamid: UUID
-    userid: UUID
+    userid: str
     joinedat: datetime
 
     class Config:

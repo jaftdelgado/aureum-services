@@ -6,7 +6,6 @@ from app.models.team_membership import TeamMembership
 from app.schemas.team_membership import JoinCourseDTO
 
 class TeamMemberService:
-
     @staticmethod
     def delete_member(db: Session, public_id: UUID) -> bool:
 
