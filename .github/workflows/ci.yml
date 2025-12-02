@@ -140,3 +140,24 @@ jobs:
         env:
           MONGO_URI: mongodb://localhost:27017/lessons_test_db
         run: npm test
+    
+
+  # ------------------------------------------------------------------
+  # TEST PORTFOLIO SERVICE (.NET 8 + Testcontainers)
+  # ------------------------------------------------------------------
+  test-portfolio-service:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore Dependencies
+        run: dotnet restore PortfolioService.Tests/PortfolioService.Tests.csproj
+
+      - name: Run Tests
+        run: dotnet test PortfolioService.Tests/PortfolioService.Tests.csproj --no-restore --verbosity normal
