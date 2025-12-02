@@ -30,7 +30,7 @@ namespace PortfolioService.Controllers
 
             if (items == null || !items.Any())
             {
-                return NotFound(new { message = "No se encontraron activos para este curso/equipo." });
+                return Ok(new List<PortfolioDto>());
             }
 
             var result = new List<PortfolioDto>();

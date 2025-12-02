@@ -5,6 +5,11 @@ VisualStudioVersion = 17.14.36327.8
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PortfolioService", "PortfolioService\PortfolioService.csproj", "{7C636F5D-8488-4B4B-AB5B-FAB3FFAC4B4A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PortfolioService.Tests", "PortfolioService.Tests\PortfolioService.Tests.csproj", "{713B8C2D-690C-4092-950F-7B8098A9B6D0}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7C636F5D-8488-4B4B-AB5B-FAB3FFAC4B4A} = {7C636F5D-8488-4B4B-AB5B-FAB3FFAC4B4A}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +20,10 @@ Global
 		{7C636F5D-8488-4B4B-AB5B-FAB3FFAC4B4A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7C636F5D-8488-4B4B-AB5B-FAB3FFAC4B4A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7C636F5D-8488-4B4B-AB5B-FAB3FFAC4B4A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{713B8C2D-690C-4092-950F-7B8098A9B6D0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{713B8C2D-690C-4092-950F-7B8098A9B6D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{713B8C2D-690C-4092-950F-7B8098A9B6D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{713B8C2D-690C-4092-950F-7B8098A9B6D0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
