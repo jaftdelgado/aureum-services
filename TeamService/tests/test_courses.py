@@ -10,7 +10,7 @@ STUDENT_ID_2 = str(uuid.uuid4())
 
 def test_create_course_success(client):
     payload = {
-        "name": "Matemáticas Avanzadas",
+        "name": "Matematicas Avanzadas",
         "description": "Curso de prueba",
         "professor_id": PROFESSOR_ID
     }
@@ -22,7 +22,7 @@ def test_create_course_success(client):
     assert response.status_code == 201
     
     data = response.json()
-    assert data["name"] == "Matemáticas Avanzadas"
+    assert data["name"] == "Matematicas Avanzadas"
     assert data["professor_id"] == PROFESSOR_ID
     assert data["access_code"] is not None
 
@@ -61,7 +61,7 @@ def test_join_course_invalid_code(client):
     assert response.status_code == 404
 
 def test_join_course_duplicate(client):
-    create_payload = {"name": "Química", "professor_id": PROFESSOR_ID}
+    create_payload = {"name": "Quimica", "professor_id": PROFESSOR_ID}
     files = {'file': ('test.jpg', b'img', 'image/jpeg')}
     course = client.post(f"{COURSES_URL}/", data=create_payload, files=files).json()
     
