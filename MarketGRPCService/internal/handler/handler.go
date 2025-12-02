@@ -95,10 +95,8 @@ func NewMarketHandler(cfg *config.Config, dbConn *gorm.DB) *MarketHandler {
 
 // Llama al microservicio AssetService y obtiene la lista de activos para un team
 func (h *MarketHandler) fetchAssets(ctx context.Context, teamPublicID string) ([]RemoteTeamAsset, error) {
-	url := fmt.Sprintf(
-		"https://assetservice-production.up.railway.app/team-assets/team/%s",
-		teamPublicID,
-	)
+	base := strings.TrimRight(h.cfg.AssetServiceURL, "/")
+	url := fmt.Sprintf("%s/team-assets/team/%s", base, teamPublicID)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
