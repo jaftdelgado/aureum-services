@@ -10,6 +10,9 @@ using Grpc.Core;
 
 AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
 
+var marketUrl = Environment.GetEnvironmentVariable("MARKET_SERVICE_URL") ?? "http://marketservice.railway.internal:50051";
+var lessonsUrl = Environment.GetEnvironmentVariable("LESSONS_SERVICE_URL") ?? "http://lessonsservice.railway.internal:3000";
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
@@ -47,7 +50,7 @@ builder.Services.AddControllers();
 
 builder.Services.AddGrpcClient<Market.MarketService.MarketServiceClient>(o =>
 {
-    o.Address = new Uri("http://marketservice.railway.internal:50051");
+    o.Address = new Uri(marketUrl);
 })
 .ConfigureChannel(o =>
 {
@@ -63,7 +66,7 @@ builder.Services.AddGrpcClient<Market.MarketService.MarketServiceClient>(o =>
 
 builder.Services.AddGrpcClient<Trading.LeccionesService.LeccionesServiceClient>(o =>
 {
-    o.Address = new Uri("http://hopper.proxy.rlwy.net:41297"); 
+    o.Address = new Uri(lessonUrl); 
 })
 .ConfigurePrimaryHttpMessageHandler(() =>
 {
