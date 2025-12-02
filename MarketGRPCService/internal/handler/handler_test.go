@@ -341,3 +341,4 @@ func TestSellAsset_OK(t *testing.T) {
 
 	require.NoError(t, mock.ExpectationsWereMet())
 }
+
