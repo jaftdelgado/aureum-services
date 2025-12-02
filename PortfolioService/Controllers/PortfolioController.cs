@@ -13,12 +13,20 @@ namespace PortfolioService.Controllers
         private readonly PortfolioContext _portfolioContext;
         private readonly MarketContext _marketContext;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IConfiguration _configuration;
 
-        public PortfolioController(PortfolioContext portfolioContext, MarketContext marketContext, IHttpClientFactory httpClientFactory)
+        public PortfolioController(PortfolioContext portfolioContext, MarketContext marketContext, IHttpClientFactory httpClientFactory, IConfiguration configuration)
         {
             _portfolioContext = portfolioContext;
             _marketContext = marketContext;
             _httpClientFactory = httpClientFactory;
+            _configuration = configuration;
+        }
+        private string GetAssetServiceUrl()
+        {
+         
+            var url = _configuration["AssetServiceUrl"] ?? "http://assetservice.railway.internal:3000";
+            return url.TrimEnd('/');
         }
 
         [HttpGet("course/{courseId}")]
@@ -35,6 +43,7 @@ namespace PortfolioService.Controllers
 
             var result = new List<PortfolioDto>();
             var client = _httpClientFactory.CreateClient();
+            var baseUrl = GetAssetServiceUrl();
 
             foreach (var item in items)
             {
@@ -44,7 +53,7 @@ namespace PortfolioService.Controllers
                 try
                 {
                     var response = await client.GetFromJsonAsync<AssetExternalDto>(
-                        $"https://assetservice-production.up.railway.app/assets/{item.AssetId}");
+                        $"{baseUrl}/assets/{item.AssetId}");
 
                     if (response != null)
                     {
@@ -89,13 +98,14 @@ namespace PortfolioService.Controllers
             if (item == null) return NotFound("El activo no existe en el portafolio.");
 
             var client = _httpClientFactory.CreateClient();
+            var baseUrl = GetAssetServiceUrl();
             string name = "Desconocido";
             string symbol = "---";
 
             try
             {
                 var response = await client.GetFromJsonAsync<AssetExternalDto>(
-                    $"https://assetservice-production.up.railway.app/assets/{item.AssetId}");
+                    $"{baseUrl}/assets/{item.AssetId}");
 
                 if (response != null)
                 {
@@ -146,8 +156,10 @@ namespace PortfolioService.Controllers
 
             var resultList = new List<HistoryDto>();
             var client = _httpClientFactory.CreateClient();
+            var baseUrl = GetAssetServiceUrl(); 
 
-           
+
+
             foreach (var mov in movements)
             {
                 
@@ -156,8 +168,7 @@ namespace PortfolioService.Controllers
 
                 try
                 {
-                    
-                    var url = $"https://assetservice-production.up.railway.app/assets/{mov.AssetId}";
+                    var url = $"{baseUrl}/assets/{mov.AssetId}";
                     var response = await client.GetFromJsonAsync<AssetExternalDto>(url);
 
                     if (response != null)
