@@ -2,6 +2,7 @@ using Grpc.Core;
 using Market; // Namespace generado del proto
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
 namespace ApiGateway.Controllers
 {
@@ -16,27 +17,27 @@ namespace ApiGateway.Controllers
             _client = client;
         }
 
-        // GET: api/market/status/{teamId}
-        // Convierte el stream gRPC en una respuesta REST simple (Snapshot del mercado actual)
-        [HttpGet("status/{teamId}")]
-        public async Task<IActionResult> GetMarketStatus(string teamId)
+        [HttpGet("stream/{teamId}")]
+        public async Task GetMarketStream(string teamId, CancellationToken cancellationToken)
         {
+
+            Response.Headers.Append("Content-Type", "text/event-stream");
+            Response.Headers.Append("Cache-Control", "no-cache");
+            Response.Headers.Append("Connection", "keep-alive");
+
             try
             {
-                // Solicitamos iniciar el stream
                 using var call = _client.CheckMarket(new MarketRequest 
                 { 
                     TeamPublicId = teamId,
-                    IntervalSeconds = 1 // Pedimos intervalo corto para que responda rápido
-                });
+                    IntervalSeconds = 4 
+                }, cancellationToken: cancellationToken);
 
-                // Esperamos solo el primer mensaje (Snapshot)
-                if (await call.ResponseStream.MoveNext(CancellationToken.None))
+                while (await call.ResponseStream.MoveNext(cancellationToken))
                 {
                     var data = call.ResponseStream.Current;
-                    
-                    // Mapeamos a un objeto anónimo (o DTO) para devolver JSON limpio
-                    return Ok(new 
+
+                    var payload = new 
                     {
                         Timestamp = data.TimestampUnixMillis,
                         Assets = data.Assets.Select(a => new 
@@ -44,21 +45,26 @@ namespace ApiGateway.Controllers
                             a.Id,
                             a.Symbol,
                             a.Name,
-                            Price = Math.Round(a.Price, 2), // Redondear para frontend
+                            Price = Math.Round(a.Price, 2),
                             a.BasePrice,
                             a.Volatility
                         })
-                    });
+                    };
+
+                    var json = JsonSerializer.Serialize(payload);
+                    await Response.WriteAsync($"data: {json}\n\n", cancellationToken);
+                    await Response.Body.FlushAsync(cancellationToken);
                 }
-                
-                return NotFound("No se recibieron datos del mercado.");
+            }
+            catch (OperationCanceledException)
+            {
             }
             catch (RpcException ex)
             {
-                return StatusCode(500, $"Error gRPC: {ex.Status.Detail}");
+                 await Response.WriteAsync($"event: error\ndata: {ex.Status.Detail}\n\n", cancellationToken);
             }
         }
-
+        
         // POST: api/market/buy
         [HttpPost("buy")]
         [Authorize] // Asumiendo que requieres login
