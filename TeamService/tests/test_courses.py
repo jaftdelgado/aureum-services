@@ -118,6 +118,6 @@ def test_get_students_in_course(client):
     data = response.json()
     assert len(data) == 2
     
-    user_ids = [m["userid"] for m in data]
-    assert STUDENT_ID in user_ids
-    assert STUDENT_ID_2 in user_ids
+    members = [m["user_id"] for m in data]
+    assert STUDENT_ID in members
+    assert STUDENT_ID_2 in members

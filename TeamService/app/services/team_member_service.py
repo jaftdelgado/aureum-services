@@ -6,7 +6,6 @@ from app.models.team_membership import TeamMembership
 from app.schemas.team_membership import JoinCourseDTO
 
 class TeamMemberService:
-
     @staticmethod
     def delete_member(db: Session, public_id: UUID) -> bool:
 
@@ -46,10 +45,10 @@ def join_course_by_code(db: Session, join_data: JoinCourseDTO):
             detail="Codigo de curso invalido o no existe."
         )
 
-    if team_member_repository.is_member(db, course.public_id, join_data.user_id):
+    if team_member_repository.is_member(db, course.team_id, join_data.user_id):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, 
             detail="El alumno ya esta inscrito en este curso."
         )
 
-    return team_member_repository.create_membership(db, course.public_id, join_data.user_id)
+    return team_member_repository.create_membership(db, course.team_id, join_data.user_id)
