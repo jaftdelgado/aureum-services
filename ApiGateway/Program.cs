@@ -66,7 +66,7 @@ builder.Services.AddGrpcClient<Market.MarketService.MarketServiceClient>(o =>
 
 builder.Services.AddGrpcClient<Trading.LeccionesService.LeccionesServiceClient>(o =>
 {
-    o.Address = new Uri(lessonUrl); 
+    o.Address = new Uri(lessonsUrl); 
 })
 .ConfigurePrimaryHttpMessageHandler(() =>
 {
