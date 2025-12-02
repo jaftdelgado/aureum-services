@@ -24,7 +24,7 @@ func getenv(key, def string) string {
 
 func GetConfig() *Config {
 	port := getenv("PORT", ":50051")
-	assetURL := getenv("ASSET_SERVICE_URL", "http://assetservice.railway.internal:5000/assets")
+	assetURL := getenv("ASSET_SERVICE_URL", "")
 	courseURL := getenv("COURSE_SERVICE_URL", "")
 	portfolioURL := getenv("PORTFOLIO_SERVICE_URL", "")
 	intervalStr := getenv("TICK_INTERVAL_SECONDS", "4")

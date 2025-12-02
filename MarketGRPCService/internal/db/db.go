@@ -10,20 +10,16 @@ import (
 )
 
 func NewDB(cfg *config.Config) (*gorm.DB, error) {
-	if cfg.DBURL == "" {
-		return nil, fmt.Errorf("DBURL vacío, define MARKET_DATABASE_URL en las variables de entorno")
-	}
-
 	dsn := cfg.DBURL
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		return nil, fmt.Errorf("error al abrir conexión con la base: %w", err)
+		return nil, fmt.Errorf("error opening connection to the database: %w", err)
 	}
 
 	sqlDB, err := db.DB()
 	if err != nil {
-		return nil, fmt.Errorf("error al obtener sql.DB desde gorm: %w", err)
+		return nil, fmt.Errorf("error obtaining sql.DB from gorm: %w", err)
 	}
 
 	sqlDB.SetMaxIdleConns(10)
