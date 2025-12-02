@@ -64,7 +64,7 @@ def test_join_course_invalid_code(client):
     assert response.status_code == 404
 
 def test_join_course_duplicate(client):
-    create_payload = {"name": "Química", "professor_id": PROFESSOR_UUID}
+    create_payload = {"name": "Quimica", "professor_id": PROFESSOR_UUID}
     files = {'file': ('test.jpg', b'img', 'image/jpeg')}
     course = client.post(f"{COURSES_URL}/", data=create_payload, files=files).json()
     

@@ -37,19 +37,20 @@ def db():
 
 @pytest.fixture(scope="function")
 def mongo_client():
-    """Conecta a Mongo y limpia la colección de imágenes al final."""
+    """Conecta a Mongo y limpia la coleccion de imagenes al final."""
     client = MongoClient(MONGO_URI)
-    db = client.get_database()
+    test_db = client.get_database()
     
     class MockMongoDBClient:
+        db = test_db
         def get_collection(self):
-            return db["team_images"]
+            return self.db["team_images"]
 
     mongo_db.mongo_client = MockMongoDBClient()
     
-    yield db
+    yield test_db
     
-    db["team_images"].drop()
+    test_db["team_images"].drop()
     client.close()
 
 @pytest.fixture(scope="function")
