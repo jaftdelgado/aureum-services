@@ -21,17 +21,17 @@ func Run(portRaw string, h *handler.MarketHandler) error {
 
 	lis, err := net.Listen("tcp", address)
 	if err != nil {
-		return fmt.Errorf("no se pudo abrir el puerto %s (address: %s): %w", portRaw, address, err)
+		return fmt.Errorf("The port could not be opened %s (address: %s): %w", portRaw, address, err)
 	}
 
 	grpcServer := grpc.NewServer()
 
 	pb.RegisterMarketServiceServer(grpcServer, h)
 
-	log.Printf("MarketGRPCService escuchando en %s", address)
+	log.Printf("MarketGRPCService listening on %s", address)
 
 	if err := grpcServer.Serve(lis); err != nil {
-		return fmt.Errorf("falló grpcServer.Serve: %w", err)
+		return fmt.Errorf("failed grpcServer.Serve: %w", err)
 	}
 
 	return nil

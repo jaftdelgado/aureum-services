@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -70,6 +71,15 @@ type Membership struct {
 	TeamID       string    `json:"teamid"`
 	UserID       string    `json:"userid"`
 	JoinedAt     time.Time `json:"joinedat"`
+}
+
+type PortfolioTransactionRequest struct {
+	UserId   string  `json:"userId"`
+	AssetId  string  `json:"assetId"`
+	TeamId   string  `json:"teamId"`
+	Quantity float64 `json:"quantity"`
+	Price    float64 `json:"price"`
+	IsBuy    bool    `json:"isBuy"`
 }
 
 func NewMarketHandler(cfg *config.Config, dbConn *gorm.DB) *MarketHandler {
@@ -356,7 +366,8 @@ func (h *MarketHandler) BuyAsset(ctx context.Context, req *pb.BuyAssetRequest) (
 		Notifications:       notifications,
 	}
 
-	h.notifyPortfolioService(ctx)
+	h.notifyPortfolioService(ctx, userIDStr, assetIDStr, teamIDStr, qty, price, true)
+
 	return resp, nil
 }
 
@@ -450,20 +461,38 @@ func (h *MarketHandler) SellAsset(ctx context.Context, req *pb.SellAssetRequest)
 		Notifications:       notifications,
 	}
 
-	h.notifyPortfolioService(ctx)
+	h.notifyPortfolioService(ctx, userIDStr, assetIDStr, teamIDStr, qty, price, false)
 	return resp, nil
 
 }
 
-func (h *MarketHandler) notifyPortfolioService(ctx context.Context) {
+func (h *MarketHandler) notifyPortfolioService(ctx context.Context, userID, assetID, teamID string, qty, price float64, isBuy bool) {
+
+	payload := PortfolioTransactionRequest{
+		UserId:   userID,
+		AssetId:  assetID,
+		TeamId:   teamID,
+		Quantity: qty,
+		Price:    price,
+		IsBuy:    isBuy,
+	}
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		h.logger.Printf("error serializando json para PortfolioService: %v", err)
+		return
+	}
+
 	base := strings.TrimRight(h.cfg.PortfolioServiceURL, "/")
 	url := fmt.Sprintf("%s/api/portfolio/transaction", base)
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(body))
 	if err != nil {
 		h.logger.Printf("error creando request a PortfolioService: %v", err)
 		return
 	}
+
+	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := h.httpClient.Do(req)
 	if err != nil {
@@ -473,6 +502,8 @@ func (h *MarketHandler) notifyPortfolioService(ctx context.Context) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 400 {
-		h.logger.Printf("PortfolioService devolvió status %d", resp.StatusCode)
+		h.logger.Printf("PortfolioService devolvió error status %d", resp.StatusCode)
+	} else {
+		h.logger.Printf("PortfolioService actualizado correctamente (IsBuy=%v)", isBuy)
 	}
 }
