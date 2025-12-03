@@ -1,62 +1,74 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Grpc.Core;
-using Trading;
+using Trading; 
+using System.Text;
 
-[ApiController]
-[Route("api/lessons")]
-public class LessonsController : ControllerBase
+namespace ApiGateway.Controllers
 {
-    private readonly LeccionesService.LeccionesServiceClient _client;
-
-    public LessonsController(LeccionesService.LeccionesServiceClient client)
+    [ApiController]
+    [Route("api/lessons")]
+    public class LessonsController : ControllerBase
     {
-        _client = client;
-    }
+        private readonly LeccionesService.LeccionesServiceClient _client;
 
-    // GET: api/lessons/{id} (Detalles normales)
-    [HttpGet("{id}")]
-    [Authorize(AuthenticationSchemes = "SupabaseAuth")]
-    public async Task<IActionResult> GetDetails(string id)
-    {
-        try
+        public LessonsController(LeccionesService.LeccionesServiceClient client)
         {
-            var request = new LeccionRequest { IdLeccion = id };
-            var response = await _client.ObtenerDetallesAsync(request);
-            return Ok(response);
+            _client = client;
         }
-        catch (RpcException ex)
+
+        
+        [HttpGet("{id}")]
+        [Authorize(AuthenticationSchemes = "SupabaseAuth")]
+        public async Task<IActionResult> GetDetails(string id)
         {
-            return this.StatusCode((int)ex.StatusCode, ex.Status.Detail);
-        }
-    }
-
-    // GET: api/lessons/{id}/video (Streaming de Video)
-    // El Frontend pondrá esto en <video src="...">
-    [HttpGet("{id}/video")]
-    // [Authorize] <-- Opcional: A veces los tags <video> no envían headers de auth fácil. 
-    // Si falla el video, prueba quitando el Authorize temporalmente o pasando el token por query param.
-    public async Task GetVideo(string id)
-    {
-        var request = new LeccionRequest { IdLeccion = id };
-        using var call = _client.DescargarVideo(request);
-
-        Response.ContentType = "video/mp4"; // Le decimos al navegador que es video
-
-        try
-        {
-            await foreach (var chunk in call.ResponseStream.ReadAllAsync(HttpContext.RequestAborted))
+            try
             {
-                if (chunk.Contenido.Length > 0)
+                var request = new LeccionRequest { IdLeccion = id };
+                var response = await _client.ObtenerDetallesAsync(request);
+
+                return Ok(new
                 {
-                    await Response.Body.WriteAsync(chunk.Contenido.Memory);
-                    await Response.Body.FlushAsync();
-                }
+                    response.Id,
+                    response.Titulo,
+                    response.Descripcion,
+                    Miniatura = response.Miniatura.IsEmpty ? null : Convert.ToBase64String(response.Miniatura.ToByteArray())
+                });
+            }
+            catch (RpcException ex)
+            {
+                if (ex.StatusCode == StatusCode.NotFound) return NotFound("Lección no encontrada");
+                return StatusCode(500, $"Error gRPC: {ex.Status.Detail}");
             }
         }
-        catch (RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.Cancelled)
+
+        [HttpGet("{id}/video")]
+        public async Task GetVideo(string id)
         {
-            // Cliente cerró el video
+
+            var request = new LeccionRequest { IdLeccion = id };
+            using var call = _client.DescargarVideo(request);
+
+            Response.ContentType = "video/mp4";
+
+            try
+            {
+                await foreach (var chunk in call.ResponseStream.ReadAllAsync(HttpContext.RequestAborted))
+                {
+                    if (chunk.Contenido.Length > 0)
+                    {
+                        chunk.Contenido.WriteTo(Response.Body);
+                        await Response.Body.FlushAsync();
+                    }
+                }
+            }
+            catch (RpcException ex) when (ex.StatusCode == StatusCode.Cancelled)
+            {
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error streaming video: {ex.Message}");
+            }
         }
     }
 }

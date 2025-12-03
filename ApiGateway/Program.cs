@@ -11,7 +11,7 @@ using Grpc.Core;
 AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
 
 var marketUrl = Environment.GetEnvironmentVariable("MARKET_SERVICE_URL") ?? "http://marketservice.railway.internal:50051";
-var lessonsUrl = Environment.GetEnvironmentVariable("LESSONS_SERVICE_URL") ?? "http://lessonsservice.railway.internal:3000";
+var lessonsUrl = Environment.GetEnvironmentVariable("LESSONS_SERVICE_URL") ?? "http://lessonsservice.railway.internal:50051";
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -82,8 +82,7 @@ builder.Services.AddGrpcClient<Trading.LeccionesService.LeccionesServiceClient>(
 })
 .ConfigureHttpClient(client =>
 {
-    // --- FUERZA BRUTA HTTP/2 ---
-    // Esto le dice: "No uses HTTP/1.1, usa HTTP/2 directo desde el byte 0"
+    
     client.DefaultRequestVersion = new Version(2, 0);
     client.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher;
 });
