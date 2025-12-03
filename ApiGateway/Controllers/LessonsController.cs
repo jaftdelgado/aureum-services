@@ -57,7 +57,7 @@ namespace ApiGateway.Controllers
                 {
                     if (chunk.Contenido.Length > 0)
                     {
-                        chunk.Contenido.WriteTo(Response.Body);
+                        chunk.Contenido.WriteAsync(chunk.Contenido.Memory);
                         await Response.Body.FlushAsync();
                     }
                 }
