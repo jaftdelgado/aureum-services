@@ -37,7 +37,7 @@ namespace ApiGateway.Controllers
             }
             catch (RpcException ex)
             {
-                if (ex.StatusCode == StatusCode.NotFound) return NotFound("Lección no encontrada");
+                if (ex.StatusCode == Grpc.Core.StatusCode.NotFound) return NotFound("Lección no encontrada");
                 return StatusCode(500, $"Error gRPC: {ex.Status.Detail}");
             }
         }
@@ -62,7 +62,7 @@ namespace ApiGateway.Controllers
                     }
                 }
             }
-            catch (RpcException ex) when (ex.StatusCode == StatusCode.Cancelled)
+            catch (RpcException ex) when (ex.StatusCode == Grpc.Code.StatusCode.Cancelled)
             {
             }
             catch (Exception ex)
