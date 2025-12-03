@@ -62,7 +62,7 @@ namespace ApiGateway.Controllers
                     }
                 }
             }
-            catch (RpcException ex) when (ex.StatusCode == Grpc.Code.StatusCode.Cancelled)
+            catch (RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.Cancelled)
             {
             }
             catch (Exception ex)
