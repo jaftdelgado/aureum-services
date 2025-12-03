@@ -7,7 +7,7 @@ using System.Text;
 namespace ApiGateway.Controllers
 {
     [ApiController]
-    [Route("api/lessons")]
+    
     public class LessonsController : ControllerBase
     {
         private readonly LeccionesService.LeccionesServiceClient _client;
@@ -18,7 +18,7 @@ namespace ApiGateway.Controllers
         }
 
         
-        [HttpGet("{id:length(24)}")]
+        [HttpGet("api/lessons/{id}")]
         [Authorize(AuthenticationSchemes = "SupabaseAuth")]
         public async Task<IActionResult> GetDetails(string id)
         {
@@ -42,7 +42,7 @@ namespace ApiGateway.Controllers
             }
         }
 
-        [HttpGet("{id:length(24)}/video")]
+        [HttpGet("api/lessons/{id}/video")]
         public async Task GetVideo(string id)
         {
 
