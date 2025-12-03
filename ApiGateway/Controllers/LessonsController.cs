@@ -18,7 +18,7 @@ namespace ApiGateway.Controllers
         }
 
         
-        [HttpGet("api/lessons/{id}")]
+        [HttpGet("api/lessons/{id:length(24)}")]
         [Authorize(AuthenticationSchemes = "SupabaseAuth")]
         public async Task<IActionResult> GetDetails(string id)
         {
@@ -42,7 +42,7 @@ namespace ApiGateway.Controllers
             }
         }
 
-        [HttpGet("api/lessons/{id}/video")]
+        [HttpGet("api/lessons/{id:length(24)}/video")]
         public async Task GetVideo(string id)
         {
 
