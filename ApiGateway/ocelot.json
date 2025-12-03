@@ -378,6 +378,22 @@
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
       }
+    },
+{
+      "DownstreamPathTemplate": "/upload",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "lessonsservice.railway.internal",
+          "Port": 3000
+        }
+      ],
+      "UpstreamPathTemplate": "/api/cloud/upload", 
+      "UpstreamHttpMethod": [ "POST" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "SupabaseAuth",
+        "AllowedScopes": []
+      }
     }
   ],
   "GlobalConfiguration": {
