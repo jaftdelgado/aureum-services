@@ -100,11 +100,6 @@ jobs:
           MONGO_URI: mongodb://localhost:27017/teams_test_mongo
         run: pytest -v
 
-
-  # ------------------------------------------------------------------
-  # OTROS SERVICIOS (Comentados hasta que tengan tests)
-  # ------------------------------------------------------------------
-
   test-lessons-service:
     runs-on: ubuntu-latest
     
@@ -161,3 +156,26 @@ jobs:
 
       - name: Run Tests
         run: dotnet test PortfolioService.Tests/PortfolioService.Tests.csproj --no-restore --verbosity normal
+    
+  # ------------------------------------------------------------------
+  # TEST MARKET SERVICE (Go + SqlMock)
+  # ------------------------------------------------------------------
+  test-market-service:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.22'
+          cache: true
+          cache-dependency-path: MarketGRPCService/go.sum
+
+      - name: Install Dependencies
+        working-directory: ./MarketGRPCService
+        run: go mod download
+
+      - name: Run Tests
+        working-directory: ./MarketGRPCService
+        run: go test -v ./...
