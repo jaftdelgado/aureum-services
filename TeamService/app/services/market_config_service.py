@@ -12,17 +12,17 @@ from app.schemas.market_configuration import (
 class MarketConfigurationService:
 
     @staticmethod
-    def get_by_public_id(db: Session, public_id: UUID) -> MarketConfiguration | None:
+    def get_by_public_id(db: Session, publicid: UUID) -> MarketConfiguration | None:
         return (
             db.query(MarketConfiguration)
-            .filter(MarketConfiguration.publicid == public_id)
+            .filter(MarketConfiguration.publicid == publicid)
             .first()
         )
 
     @staticmethod
     def create(db: Session, data: MarketConfigCreate) -> MarketConfiguration:
         existing_config = db.query(MarketConfiguration).filter(
-            MarketConfiguration.public_id == config_dto.public_id
+            MarketConfiguration.publicid == config_dto.publicid
         ).first()
     
         if existing_config:
@@ -37,13 +37,13 @@ class MarketConfigurationService:
     @staticmethod
     def update(
         db: Session,
-        public_id: UUID,
+        publicid: UUID,
         data: MarketConfigUpdate
     ) -> MarketConfiguration | None:
 
         config = (
             db.query(MarketConfiguration)
-            .filter(MarketConfiguration.publicid == public_id)
+            .filter(MarketConfiguration.publicid == publicid)
             .first()
         )
 
