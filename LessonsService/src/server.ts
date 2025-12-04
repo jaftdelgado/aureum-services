@@ -147,14 +147,31 @@ const startServer = async () => {
             DescargarVideo: descargarVideoGrpc 
         });
 
-        // FIX: Escuchar en 0.0.0.0:50051 y ARRANCAR (start)
-        server.bindAsync(`0.0.0.0:${GRPC_PORT}`, grpc.ServerCredentials.createInsecure(), (err, port) => {
+        const credentials = grpc.ServerCredentials.createInsecure();
+
+        
+        
+        let boundCount = 0;
+        const onBind = (protocol: string, err: Error | null, port: number) => {
             if (err) {
-                console.error("Error fatal al iniciar gRPC:", err);
-                return;
+                console.error(`Error al iniciar gRPC en ${protocol}:`, err.message);
+            } else {
+                console.log(` Servidor gRPC corriendo en ${protocol} puerto ${port}`);
+                boundCount++;
             }
-            console.log(`--- Servidor gRPC corriendo en puerto ${port} ---`);
-            server.start(); // <--- ¡VITAL! NO BORRAR
+        };
+
+        
+        server.bindAsync(`0.0.0.0:${GRPC_PORT}`, credentials, (err, port) => {
+            onBind("IPv4", err, port);
+
+            
+            server.bindAsync(`[::]:${GRPC_PORT}`, credentials, (err2, port2) => {
+                onBind("IPv6", err2, port2);
+                
+                
+            if (boundCount > 0) server.start();
+            });
         });
 
         // 4. Iniciar servidor HTTP (Express)

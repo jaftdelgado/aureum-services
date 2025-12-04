@@ -308,21 +308,109 @@
         "AllowedScopes": []
       }
     },
-    // --- 5.e OBTENER IMAGEN DEL CURSO ---
+    // --- 4.a PORTFOLIO: TRANSACCIÓN (COMPRA/VENTA) ---
     {
-      "DownstreamPathTemplate": "/api/v1/courses/{publicId}/image",
+      "DownstreamPathTemplate": "/api/portfolio/transaction",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "courseservice.railway.internal",
-          "Port": 8000
+          "Host": "portfolioservice.railway.internal",
+          "Port": 8080
         }
       ],
-      "UpstreamPathTemplate": "/api/courses/{publicId}/image",
-      "UpstreamHttpMethod": [ "GET" ]
+      "UpstreamPathTemplate": "/api/portfolio/transaction",
+      "UpstreamHttpMethod": [ "POST" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "SupabaseAuth",
+        "AllowedScopes": []
+      }
+    },
+
+    // --- 4.b PORTFOLIO: VER POR CURSO (TEAM) ---
+    {
+      "DownstreamPathTemplate": "/api/portfolio/course/{courseId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "portfolioservice.railway.internal",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/portfolio/course/{courseId}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "SupabaseAuth",
+        "AllowedScopes": []
+      }
+    },
+
+    // --- 4.c PORTFOLIO: DETALLE DE UN ITEM ---
+    {
+      "DownstreamPathTemplate": "/api/portfolio/detail/{portfolioId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "portfolioservice.railway.internal",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/portfolio/detail/{portfolioId}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "SupabaseAuth",
+        "AllowedScopes": []
+      }
+    },
+
+    // --- 4.d PORTFOLIO: HISTORIAL DEL ESTUDIANTE ---
+    {
+      "DownstreamPathTemplate": "/api/portfolio/history/course/{courseId}/student/{studentId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "portfolioservice.railway.internal",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/portfolio/history/course/{courseId}/student/{studentId}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "SupabaseAuth",
+        "AllowedScopes": []
+      }
+    },
+{
+      "DownstreamPathTemplate": "/upload",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "lessonsservice.railway.internal",
+          "Port": 3000
+        }
+      ],
+      "UpstreamPathTemplate": "/api/cloud/upload", 
+      "UpstreamHttpMethod": [ "POST" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "SupabaseAuth",
+        "AllowedScopes": []
+      }
+    },
+    // --- 5.e OBTENER IMAGEN DEL CURSO ---
+{
+  "DownstreamPathTemplate": "/api/v1/courses/{publicId}/image",
+  "DownstreamScheme": "http",
+  "DownstreamHostAndPorts": [
+    {
+      "Host": "courseservice.railway.internal",
+      "Port": 8000
     }
+  ],
+  "UpstreamPathTemplate": "/api/courses/{publicId}/image",
+  "UpstreamHttpMethod": [ "GET" ]
+}
   ],
   "GlobalConfiguration": {
     "BaseUrl": "https://gateway-production.up.railway.app"
   }
+  
 }
