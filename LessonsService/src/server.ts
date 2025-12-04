@@ -93,7 +93,24 @@ const obtenerDetalles = async (call: any, callback: any) => {
         callback({ code: grpc.status.INTERNAL });
     }
 };
+const obtenerTodas = async (call: any, callback: any) => {
+    try {
+        console.log("Consultando todas las lecciones...");
+        const lecciones = await Lesson.find({}); 
+        
+        const listaProto = lecciones.map((leccion: any) => ({
+            id: leccion._id.toString(),
+            titulo: leccion.title || "Sin título",
+            descripcion: leccion.description || "",
+            miniatura: leccion.thumbnail
+        }));
 
+        callback(null, { lecciones: listaProto });
+    } catch (error) {
+        console.error("Error al obtener lecciones:", error);
+        callback({ code: grpc.status.INTERNAL });
+    }
+};
 const descargarVideoGrpc = async (call: any) => {
     try {
         console.log(`Solicitando video ID: ${call.request.id_leccion}`);
@@ -144,7 +161,8 @@ const startServer = async () => {
         const server = new grpc.Server();
         server.addService(tradingPackage.LeccionesService.service, { 
             ObtenerDetalles: obtenerDetalles,
-            DescargarVideo: descargarVideoGrpc 
+            DescargarVideo: descargarVideoGrpc,
+            ObtenerTodas: obtenerTodas
         });
 
         const credentials = grpc.ServerCredentials.createInsecure();
