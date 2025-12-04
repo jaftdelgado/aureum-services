@@ -6,6 +6,8 @@ from ..schemas.team import TeamCreateDTO, TeamResponseDTO
 from ..services import team_service
 from .. import mongo_db
 from uuid import UUID
+from fastapi.responses import Response
+from bson.objectid import ObjectId
 
 router = APIRouter(
     prefix="/api/v1/courses",
@@ -71,3 +73,29 @@ def get_by_professor(profile_id: UUID, db: Session = Depends(get_db)):
 @router.get("/student/{profile_id}", response_model=List[TeamResponseDTO])
 def get_by_student(profile_id: UUID, db: Session = Depends(get_db)):
     return team_service.get_student_courses(db, profile_id)
+
+@router.get("/{public_id}/image")
+def get_course_image(public_id: UUID, db: Session = Depends(get_db)):
+    course = team_service.get_course_by_public_id(db, public_id)
+    
+    if not course:
+        raise HTTPException(status_code=404, detail="Curso no encontrado")
+        
+    if not course.team_pic:
+        raise HTTPException(status_code=404, detail="Este curso no tiene imagen asignada")
+
+    try:
+        collection = mongo_db.mongo_client.get_collection()
+        image_doc = collection.find_one({"_id": ObjectId(course.team_pic)})
+
+        if not image_doc:
+            raise HTTPException(status_code=404, detail="Imagen no encontrada en Mongo")
+
+        return Response(
+            content=image_doc["image_data"], 
+            media_type=image_doc.get("content_type", "image/jpeg")
+        )
+
+    except Exception as e:
+        print(f"Error recuperando imagen del curso: {e}")
+        raise HTTPException(status_code=500, detail="Error interno al recuperar la imagen")
