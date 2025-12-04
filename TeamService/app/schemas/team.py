@@ -11,7 +11,7 @@ class TeamResponseDTO(BaseModel):
     public_id: UUID4
     name: str
     description: Optional[str]
-    professor_id: str
+    professor_id: Union[UUID, str]
     access_code: str 
     team_pic: Optional[str]
     created_at: datetime
