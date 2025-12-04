@@ -22,7 +22,7 @@ class MarketConfigurationService:
     @staticmethod
     def create(db: Session, data: MarketConfigCreate) -> MarketConfiguration:
         existing_config = db.query(MarketConfiguration).filter(
-            MarketConfiguration.publicid == config_dto.publicid
+            MarketConfiguration.publicid == data.publicid
         ).first()
     
         if existing_config:
