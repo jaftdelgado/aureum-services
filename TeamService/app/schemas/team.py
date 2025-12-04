@@ -1,5 +1,5 @@
 from pydantic import BaseModel, UUID4, Field
-from typing import Optional
+from typing import Optional, Union
 from datetime import datetime
 
 class TeamCreateDTO(BaseModel):
