@@ -379,7 +379,7 @@
         "AllowedScopes": []
       }
     },
-{
+    {
       "DownstreamPathTemplate": "/upload",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -396,18 +396,18 @@
       }
     },
     // --- 5.e OBTENER IMAGEN DEL CURSO ---
-{
-  "DownstreamPathTemplate": "/api/v1/courses/{publicId}/image",
-  "DownstreamScheme": "http",
-  "DownstreamHostAndPorts": [
     {
-      "Host": "courseservice.railway.internal",
-      "Port": 8000
+      "DownstreamPathTemplate": "/api/v1/courses/{publicId}/image",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "courseservice.railway.internal",
+          "Port": 8000
+        }
+      ],
+      "UpstreamPathTemplate": "/api/courses/{publicId}/image",
+      "UpstreamHttpMethod": [ "GET" ]
     }
-  ],
-  "UpstreamPathTemplate": "/api/courses/{publicId}/image",
-  "UpstreamHttpMethod": [ "GET" ]
-}
   ],
   "GlobalConfiguration": {
     "BaseUrl": "https://gateway-production.up.railway.app"
