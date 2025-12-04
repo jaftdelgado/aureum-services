@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from uuid import UUID
 from datetime import datetime
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, Union
 
 
 class TeamMembershipBase(BaseModel):
@@ -24,7 +24,7 @@ class TeamMembershipResponse(BaseModel):
     membershipid: int
     publicid: UUID
     teamid: UUID
-    userid: str
+    userid: Union[UUID, str]
     joinedat: datetime
 
     class Config:
