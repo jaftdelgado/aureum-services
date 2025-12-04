@@ -1,5 +1,5 @@
 from pydantic import BaseModel, UUID4, Field
-from typing import Optional
+from typing import Optional, Union
 from datetime import datetime
 
 class TeamCreateDTO(BaseModel):
@@ -11,7 +11,7 @@ class TeamResponseDTO(BaseModel):
     public_id: UUID4
     name: str
     description: Optional[str]
-    professor_id: str
+    professor_id: Union[UUID4, str]
     access_code: str 
     team_pic: Optional[str]
     created_at: datetime
