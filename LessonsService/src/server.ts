@@ -167,32 +167,18 @@ const startServer = async () => {
 
         const credentials = grpc.ServerCredentials.createInsecure();
 
-        
-        
-        let boundCount = 0;
-        const onBind = (protocol: string, err: Error | null, port: number) => {
-            if (err) {
-                console.error(`Error al iniciar gRPC en ${protocol}:`, err.message);
-            } else {
-                console.log(` Servidor gRPC corriendo en ${protocol} puerto ${port}`);
-                boundCount++;
-            }
-        };
-
-        
         server.bindAsync(`0.0.0.0:${GRPC_PORT}`, credentials, (err, port) => {
-            onBind("IPv4", err, port);
-
+            if (err) {
+                console.error(`Error fatal al iniciar gRPC:`, err);
+                return;
+            }
             
-            server.bindAsync(`[::]:${GRPC_PORT}`, credentials, (err2, port2) => {
-                onBind("IPv6", err2, port2);
-                
-                
-            if (boundCount > 0) server.start();
-            });
+            console.log(`Servidor gRPC corriendo en puerto ${port}`);
+            
+           
         });
 
-        // 4. Iniciar servidor HTTP (Express)
+        
         app.listen(HTTP_PORT, () => {
             console.log(`HTTP API corriendo en http://0.0.0.0:${HTTP_PORT}`);
         });
