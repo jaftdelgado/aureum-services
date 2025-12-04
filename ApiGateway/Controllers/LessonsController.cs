@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Grpc.Core;
 using Trading; 
 using System.Text;
+using Google.Protobuf;
 
 namespace ApiGateway.Controllers
 {
@@ -38,6 +39,32 @@ namespace ApiGateway.Controllers
             catch (RpcException ex)
             {
                 if (ex.StatusCode == Grpc.Core.StatusCode.NotFound) return NotFound("Lección no encontrada");
+                return StatusCode(500, $"Error gRPC: {ex.Status.Detail}");
+            }
+        }
+        [HttpGet("api/lessons")]
+        [Authorize(AuthenticationSchemes = "SupabaseAuth")] 
+        public async Task<IActionResult> GetAll()
+        {
+            try
+            {
+                
+                var response = await _client.ObtenerTodasAsync(new Empty());
+
+               
+                var lista = response.Lecciones.Select(l => new
+                {
+                    id = l.Id,
+                    title = l.Titulo,
+                    description = l.Descripcion,
+                  
+                    thumbnail = l.Miniatura.IsEmpty ? null : Convert.ToBase64String(l.Miniatura.ToByteArray())
+                });
+
+                return Ok(lista);
+            }
+            catch (RpcException ex)
+            {
                 return StatusCode(500, $"Error gRPC: {ex.Status.Detail}");
             }
         }
