@@ -19,9 +19,9 @@ router = APIRouter(
 )
 
 
-@router.get("/{public_id}", response_model=MarketConfigResponse)
-def get_config(public_id: UUID, db: Session = Depends(get_db)):
-    config = MarketConfigurationService.get_by_public_id(db, public_id)
+@router.get("/{publicid}", response_model=MarketConfigResponse)
+def get_config(publicid: UUID, db: Session = Depends(get_db)):
+    config = MarketConfigurationService.get_by_public_id(db, publicid)
     if not config:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -35,9 +35,9 @@ def create_config(data: MarketConfigCreate, db: Session = Depends(get_db)):
     return MarketConfigurationService.create(db, data)
 
 
-@router.put("/{public_id}", response_model=MarketConfigResponse)
-def update_config(public_id: UUID, data: MarketConfigUpdate, db: Session = Depends(get_db)):
-    updated = MarketConfigurationService.update(db, public_id, data)
+@router.put("/{publicid}", response_model=MarketConfigResponse)
+def update_config(publicid: UUID, data: MarketConfigUpdate, db: Session = Depends(get_db)):
+    updated = MarketConfigurationService.update(db, publicid, data)
     if not updated:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
