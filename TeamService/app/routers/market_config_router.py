@@ -20,8 +20,8 @@ router = APIRouter(
 
 
 @router.get("/{publicid}", response_model=MarketConfigResponse)
-def get_config(public_id: UUID, db: Session = Depends(get_db)):
-    config = MarketConfigurationService.get_by_public_id(db, public_id)
+def get_config(publicid: UUID, db: Session = Depends(get_db)):
+    config = MarketConfigurationService.get_by_public_id(db, publicid)
     if not config:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
