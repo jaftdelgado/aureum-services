@@ -14,7 +14,7 @@ from app.services.market_config_service import MarketConfigurationService
 
 
 router = APIRouter(
-    prefix="/market-config",
+    prefix="/api/market-config",
     tags=["Market Config"]
 )
 

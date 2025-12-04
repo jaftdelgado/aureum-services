@@ -388,7 +388,7 @@
           "Port": 3000
         }
       ],
-      "UpstreamPathTemplate": "/api/cloud/upload", 
+      "UpstreamPathTemplate": "/api/cloud/upload",
       "UpstreamHttpMethod": [ "POST" ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
@@ -407,6 +407,61 @@
       ],
       "UpstreamPathTemplate": "/api/courses/{publicId}/image",
       "UpstreamHttpMethod": [ "GET" ]
+    },
+    // --- 6. MARKET CONFIGURATION (TEAM SERVICE) ---
+
+    // 6.a Crear Configuración (POST)
+    {
+      "DownstreamPathTemplate": "/api/market-config",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "courseservice.railway.internal",
+          "Port": 8000
+        }
+      ],
+      "UpstreamPathTemplate": "/api/market-config",
+      "UpstreamHttpMethod": [ "POST" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "SupabaseAuth",
+        "AllowedScopes": []
+      }
+    },
+
+    // 6.b Obtener Configuración por Team (GET)
+    {
+      "DownstreamPathTemplate": "/api/market-config/{teamId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "courseservice.railway.internal",
+          "Port": 8000
+        }
+      ],
+      "UpstreamPathTemplate": "/api/market-config/{teamId}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "SupabaseAuth",
+        "AllowedScopes": []
+      }
+    },
+
+    // 6.c Actualizar Configuración (PUT)
+    {
+      "DownstreamPathTemplate": "/api/market-config/{teamId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "courseservice.railway.internal",
+          "Port": 8000
+        }
+      ],
+      "UpstreamPathTemplate": "/api/market-config/{teamId}",
+      "UpstreamHttpMethod": [ "PUT" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "SupabaseAuth",
+        "AllowedScopes": []
+      }
     }
   ],
   "GlobalConfiguration": {
