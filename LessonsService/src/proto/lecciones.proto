@@ -5,6 +5,7 @@ package trading;
 service LeccionesService {
   rpc ObtenerDetalles (LeccionRequest) returns (LeccionDetalles);
   rpc DescargarVideo (LeccionRequest) returns (stream VideoChunk);
+  rpc ObtenerTodas (Empty) returns (ListaLecciones);
 }
 
 message LeccionRequest {
@@ -19,4 +20,9 @@ message LeccionDetalles {
 }
 message VideoChunk {
   bytes contenido = 1; 
+}
+  message Empty {}
+
+message ListaLecciones {
+  repeated LeccionDetalles lecciones = 1;
 }
