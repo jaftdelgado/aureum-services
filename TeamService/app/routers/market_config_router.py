@@ -30,7 +30,7 @@ def get_config(public_id: UUID, db: Session = Depends(get_db)):
     return config
 
 
-@router.post("/", response_model=MarketConfigResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=MarketConfigResponse, status_code=status.HTTP_201_CREATED)
 def create_config(data: MarketConfigCreate, db: Session = Depends(get_db)):
     return MarketConfigurationService.create(db, data)
 

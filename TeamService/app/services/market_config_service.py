@@ -26,7 +26,7 @@ class MarketConfigurationService:
         ).first()
     
         if existing_config:
-        raise Exception("Configuration already exists for this team")
+            raise Exception("Configuration already exists for this team")
 
         new_config = MarketConfiguration(**data.dict())
         db.add(new_config)
