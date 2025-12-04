@@ -21,6 +21,13 @@ class MarketConfigurationService:
 
     @staticmethod
     def create(db: Session, data: MarketConfigCreate) -> MarketConfiguration:
+        existing_config = db.query(MarketConfiguration).filter(
+            MarketConfiguration.public_id == config_dto.public_id
+        ).first()
+    
+        if existing_config:
+        raise Exception("Configuration already exists for this team")
+
         new_config = MarketConfiguration(**data.dict())
         db.add(new_config)
         db.commit()
