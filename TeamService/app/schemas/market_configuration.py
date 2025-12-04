@@ -5,7 +5,7 @@ from typing import Optional
 
 
 class MarketConfigBase(BaseModel):
-    teamid: int
+    teamid: UUID
     initialcash: float
     currency: str
 
@@ -27,7 +27,7 @@ class MarketConfigCreate(MarketConfigBase):
 
 
 class MarketConfigUpdate(BaseModel):
-    teamid: Optional[int] = None
+    teamid: Optional[UUID] = None
     initialcash: Optional[float] = None
     currency: Optional[str] = None
 
