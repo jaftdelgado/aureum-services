@@ -71,13 +71,16 @@ builder.Services.AddGrpcClient<Trading.LeccionesService.LeccionesServiceClient>(
     .ConfigureChannel(options =>
 {
     
-    options.MaxReceiveMessageSize = 100 * 1024 * 1024; 
+    options.MaxReceiveMessageSize = null; 
 })
 .ConfigurePrimaryHttpMessageHandler(() =>
 {
     var handler = new SocketsHttpHandler
     {
         EnableMultipleHttp2Connections = true,
+        PooledConnectionIdleTimeout = Timeout.InfiniteTimeSpan,
+        KeepAlivePingDelay = TimeSpan.FromSeconds(60),
+        KeepAlivePingTimeout = TimeSpan.FromSeconds(30),
         SslOptions = new System.Net.Security.SslClientAuthenticationOptions
         {
             RemoteCertificateValidationCallback = delegate { return true; }
@@ -90,6 +93,7 @@ builder.Services.AddGrpcClient<Trading.LeccionesService.LeccionesServiceClient>(
     
     client.DefaultRequestVersion = new Version(2, 0);
     client.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher;
+    client.Timeout = Timeout.InfiniteTimeSpan;
 });
 
 builder.Services.AddOcelot();
