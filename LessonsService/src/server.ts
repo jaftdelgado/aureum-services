@@ -117,8 +117,8 @@ const obtenerTodas = async (call: any, callback: any) => {
 const descargarVideoGrpc = async (call: any) => {
     try {
         console.log(`Solicitando video ID: ${call.request.id_leccion}`);
-        const { id_leccion, start_byte } = call.request;
-        const leccion = await Lesson.findById(call.request.id_leccion);
+        const { id_leccion, start_byte, end_byte } = call.request;
+        const leccion = await Lesson.findById(id_leccion); 
 
         if (!leccion || !leccion.videoFileId) {
             console.log("Video no encontrado en BD");
@@ -126,9 +126,16 @@ const descargarVideoGrpc = async (call: any) => {
         }
 
         console.log(`Iniciando descarga de archivo: ${leccion.videoFileId}`);
-        const downloadStream = gridFSBucket.openDownloadStream(leccion.videoFileId as any);
-        start: Number(start_byte) || 0
 
+        const options: any = {
+            start: Number(start_byte) || 0
+        };
+
+        if (end_byte && Number(end_byte) > 0) {
+            options.end = Number(end_byte);
+        }
+
+        const downloadStream = gridFSBucket.openDownloadStream(leccion.videoFileId as any, options);
         
         downloadStream.on('data', (chunk) => {
             call.write({ contenido: chunk });
