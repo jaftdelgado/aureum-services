@@ -14,7 +14,8 @@ message LeccionRequest {
 
 message DescargaRequest {
   string id_leccion = 1;
-  int64 start_byte = 2; 
+  int64 start_byte = 2;
+  int64 end_byte = 3;
 }
 
 message LeccionDetalles {
