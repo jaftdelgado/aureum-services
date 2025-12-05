@@ -76,9 +76,7 @@ builder.Services.AddGrpcClient<Trading.LeccionesService.LeccionesServiceClient>(
 .ConfigurePrimaryHttpMessageHandler(() =>
 {
     var handler = new SocketsHttpHandler
-    {
-        EnableMultipleHttp2Connections = true
-    };
+    handler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
     return handler;
 })
 .ConfigureHttpClient(client =>
