@@ -64,24 +64,24 @@ builder.Services.AddGrpcClient<Market.MarketService.MarketServiceClient>(o =>
     o.HttpHandler = handler;
 });
 
+// --- INICIO DE LA CORRECCIÓN ---
 builder.Services.AddGrpcClient<Trading.LeccionesService.LeccionesServiceClient>(o =>
 {
     o.Address = new Uri(lessonsUrl); 
 })
-    .ConfigureChannel(options =>
+.ConfigureChannel(options =>
 {
-    
     options.MaxReceiveMessageSize = null; 
 })
 .ConfigurePrimaryHttpMessageHandler(() =>
 {
-    var handler = new SocketsHttpHandler
+   
+    var handler = new HttpClientHandler();
     handler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
     return handler;
 })
 .ConfigureHttpClient(client =>
 {
-    
     client.DefaultRequestVersion = new Version(2, 0);
     client.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher;
     client.Timeout = Timeout.InfiniteTimeSpan;
