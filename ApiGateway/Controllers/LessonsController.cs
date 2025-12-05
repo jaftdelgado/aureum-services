@@ -104,7 +104,8 @@ namespace ApiGateway.Controllers
                 var request = new DescargaRequest 
                 { 
                     IdLeccion = id, 
-                    StartByte = start 
+                    StartByte = start,
+                    EndByte = end
                 };
 
                 using var call = _client.DescargarVideo(request);
