@@ -17,7 +17,7 @@ router = APIRouter(
     description="Elimina una membresia especifica mediante su ID publico. Se utiliza para que un estudiante abandone un curso o un profesor elimine a un alumno.",
     responses={
         204: {"description": "Miembro eliminado exitosamente"},
-        404: {"description": "Membresía no encontrada"}
+        404: {"description": "Membresia no encontrada"}
     }
 )
 def delete_team_member(public_id: UUID, db: Session = Depends(get_db)):
@@ -30,8 +30,8 @@ def delete_team_member(public_id: UUID, db: Session = Depends(get_db)):
     summary="Unirse a un curso",
     description="Permite a un estudiante inscribirse en un curso usando un codigo de acceso.",
     responses={
-        201: {"description": "Inscripción exitosa"},
-        404: {"description": "Código de curso inválido"},
+        201: {"description": "Inscripcion exitosa"},
+        404: {"description": "Codigo de curso invalido"},
         409: {"description": "El estudiante ya pertenece a este curso"}
     }
 )
