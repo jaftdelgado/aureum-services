@@ -7,7 +7,6 @@ import multer from 'multer';
 import cors from 'cors';
 import { Readable } from 'stream';
 
-// Usa variables de entorno para flexibilidad en Railway
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://admin:admin1234@cluster0.5wusaqn.mongodb.net/trading_db?appName=Cluster0";
 const GRPC_PORT = "50051";
 // Forzamos 3000 para Express para no chocar con gRPC en Railway
@@ -82,12 +81,16 @@ const obtenerDetalles = async (call: any, callback: any) => {
     try {
         const leccion = await Lesson.findById(call.request.id_leccion);
         if (!leccion) return callback({ code: grpc.status.NOT_FOUND });
+
+        const files = await gridFSBucket.find({ _id: leccion.videoFileId }).toArray();
+        const fileSize = files.length > 0 ? files[0].length : 0;
         
         callback(null, {
             id: leccion._id.toString(),
             titulo: leccion.title,
             descripcion: leccion.description,
-            miniatura: leccion.thumbnail
+            miniatura: leccion.thumbnail,
+            total_bytes: fileSize
         });
     } catch (error) {
         callback({ code: grpc.status.INTERNAL });
@@ -114,6 +117,7 @@ const obtenerTodas = async (call: any, callback: any) => {
 const descargarVideoGrpc = async (call: any) => {
     try {
         console.log(`Solicitando video ID: ${call.request.id_leccion}`);
+        const { id_leccion, start_byte } = call.request;
         const leccion = await Lesson.findById(call.request.id_leccion);
 
         if (!leccion || !leccion.videoFileId) {
@@ -123,6 +127,7 @@ const descargarVideoGrpc = async (call: any) => {
 
         console.log(`Iniciando descarga de archivo: ${leccion.videoFileId}`);
         const downloadStream = gridFSBucket.openDownloadStream(leccion.videoFileId as any);
+        start: Number(start_byte) || 0
 
         
         downloadStream.on('data', (chunk) => {
