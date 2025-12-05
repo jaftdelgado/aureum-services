@@ -16,7 +16,7 @@ router = APIRouter(
 
 @router.get("/{public_id}", response_model=TeamResponseDTO,
     summary="Obtener detalle del curso",
-    description="Devuelve la información completa de un curso específico por su ID público.",
+    description="Devuelve la informacion completa de un curso especifico por su ID publico.",
     responses={404: {"description": "Curso no encontrado"}}
 )
 def get_course_detail(public_id: UUID, db: Session = Depends(get_db)):
@@ -82,14 +82,14 @@ def get_all(db: Session = Depends(get_db)):
 
 @router.get("/professor/{profile_id}", response_model=List[TeamResponseDTO],
     summary="Cursos de un profesor",
-    description="Lista todos los cursos creados por un profesor específico."
+    description="Lista todos los cursos creados por un profesor especifico."
 )
 def get_by_professor(profile_id: UUID, db: Session = Depends(get_db)):
     return team_service.get_professor_courses(db, profile_id)
 
 @router.get("/student/{profile_id}", response_model=List[TeamResponseDTO],
     summary="Cursos de un estudiante",
-    description="Lista todos los cursos en los que un estudiante está inscrito."
+    description="Lista todos los cursos en los que un estudiante esta inscrito."
 )
 def get_by_student(profile_id: UUID, db: Session = Depends(get_db)):
     return team_service.get_student_courses(db, profile_id)

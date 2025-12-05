@@ -21,7 +21,7 @@ router = APIRouter(
 
 @router.get("/{team_id}", response_model=MarketConfigResponse,
     summary="Obtener configuración de mercado",
-    description="Recupera las reglas del simulador (saldo inicial, comisiones, etc.) para un curso específico.",
+    description="Recupera las reglas del simulador (saldo inicial, comisiones, etc.) para un curso especifico.",
     responses={404: {"description": "Configuración no encontrada"}}
 )
 def get_config(publicid: UUID, db: Session = Depends(get_db)):
@@ -35,16 +35,16 @@ def get_config(publicid: UUID, db: Session = Depends(get_db)):
 
 
 @router.post("", response_model=MarketConfigResponse, status_code=status.HTTP_201_CREATED,
-    summary="Crear configuración inicial",
-    description="Establece los parámetros iniciales del simulador de mercado para un nuevo curso."
+    summary="Crear configuracion inicial",
+    description="Establece los parametros iniciales del simulador de mercado para un nuevo curso."
 )
 def create_config(data: MarketConfigCreate, db: Session = Depends(get_db)):
     return MarketConfigurationService.create(db, data)
 
 
 @router.put("/{config_id}", response_model=MarketConfigResponse,
-    summary="Actualizar configuración",
-    description="Modifica los parámetros del simulador de mercado."
+    summary="Actualizar configuracion",
+    description="Modifica los parametros del simulador de mercado."
 )
 def update_config(publicid: UUID, data: MarketConfigUpdate, db: Session = Depends(get_db)):
     updated = MarketConfigurationService.update(db, publicid, data)
