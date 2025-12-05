@@ -20,9 +20,9 @@ router = APIRouter(
 
 
 @router.get("/{team_id}", response_model=MarketConfigResponse,
-    summary="Obtener configuración de mercado",
+    summary="Obtener configuracion de mercado",
     description="Recupera las reglas del simulador (saldo inicial, comisiones, etc.) para un curso especifico.",
-    responses={404: {"description": "Configuración no encontrada"}}
+    responses={404: {"description": "Configuracion no encontrada"}}
 )
 def get_config(publicid: UUID, db: Session = Depends(get_db)):
     config = MarketConfigurationService.get_by_public_id(db, publicid)
