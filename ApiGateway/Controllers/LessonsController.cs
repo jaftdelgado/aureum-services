@@ -69,33 +69,63 @@ namespace ApiGateway.Controllers
             }
         }
 
-        [HttpGet("api/lessons/{id:length(24)}/video")]
+       [HttpGet("api/lessons/{id:length(24)}/video")]
         public async Task GetVideo(string id)
         {
-
-            var request = new LeccionRequest { IdLeccion = id };
-            using var call = _client.DescargarVideo(request);
-
-            Response.ContentType = "video/mp4";
-
-            try
+            try 
             {
+                var infoRequest = new LeccionRequest { IdLeccion = id };
+                var info = await _client.ObtenerDetallesAsync(infoRequest);
+                long totalLength = info.TotalBytes; 
+
+                long start = 0;
+                long end = totalLength - 1;
+                var rangeHeader = Request.Headers.Range.ToString();
+
+                if (!string.IsNullOrEmpty(rangeHeader))
+                {
+                    var range = rangeHeader.Replace("bytes=", "").Split('-');
+                    start = long.Parse(range[0]);
+                    if (range.Length > 1 && !string.IsNullOrEmpty(range[1]))
+                    {
+                        end = long.Parse(range[1]);
+                    }
+                }
+
+                if (end >= totalLength) end = totalLength - 1;
+                long contentLength = end - start + 1;
+
+                Response.StatusCode = 206; 
+                Response.ContentType = "video/mp4";
+                Response.Headers.Append("Content-Range", $"bytes {start}-{end}/{totalLength}");
+                Response.Headers.Append("Accept-Ranges", "bytes");
+                Response.ContentLength = contentLength;
+
+                var request = new DescargaRequest 
+                { 
+                    IdLeccion = id, 
+                    StartByte = start 
+                };
+
+                using var call = _client.DescargarVideo(request);
+
+                long bytesSent = 0;
                 await foreach (var chunk in call.ResponseStream.ReadAllAsync(HttpContext.RequestAborted))
                 {
                     if (chunk.Contenido.Length > 0)
                     {
-                        var bytes = chunk.Contenido.ToByteArray();
-                        await Response.Body.WriteAsync(bytes, 0, bytes.Length);
+                        var bytesToWrite = chunk.Contenido.ToByteArray();
+                        
+                        await Response.Body.WriteAsync(bytesToWrite, 0, bytesToWrite.Length);
                         await Response.Body.FlushAsync();
+                        
+                        bytesSent += bytesToWrite.Length;
                     }
                 }
             }
-            catch (RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.Cancelled)
-            {
-            }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error streaming video: {ex.Message}");
+                Console.WriteLine($"Streaming abortado o error: {ex.Message}");
             }
         }
     }
