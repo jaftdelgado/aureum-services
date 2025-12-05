@@ -77,14 +77,7 @@ builder.Services.AddGrpcClient<Trading.LeccionesService.LeccionesServiceClient>(
 {
     var handler = new SocketsHttpHandler
     {
-        EnableMultipleHttp2Connections = true,
-        PooledConnectionIdleTimeout = Timeout.InfiniteTimeSpan,
-        KeepAlivePingDelay = TimeSpan.FromSeconds(60),
-        KeepAlivePingTimeout = TimeSpan.FromSeconds(30),
-        SslOptions = new System.Net.Security.SslClientAuthenticationOptions
-        {
-            RemoteCertificateValidationCallback = delegate { return true; }
-        }
+        EnableMultipleHttp2Connections = true
     };
     return handler;
 })
