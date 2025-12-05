@@ -4,19 +4,24 @@ package trading;
 
 service LeccionesService {
   rpc ObtenerDetalles (LeccionRequest) returns (LeccionDetalles);
-  rpc DescargarVideo (LeccionRequest) returns (stream VideoChunk);
+  rpc DescargarVideo (DescargaRequest) returns (stream VideoChunk);
   rpc ObtenerTodas (Empty) returns (ListaLecciones);
 }
 
 message LeccionRequest {
   string id_leccion = 1;
 }
+message DescargaRequest {
+  string id_leccion = 1;
+  int64 start_byte = 2; 
+}
 
 message LeccionDetalles {
   string id = 1;
   string titulo = 2;
   string descripcion = 3;
-  bytes miniatura = 4; 
+  bytes miniatura = 4;
+  int64 total_bytes = 5;
 }
 message VideoChunk {
   bytes contenido = 1; 
