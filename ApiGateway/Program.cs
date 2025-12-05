@@ -68,6 +68,11 @@ builder.Services.AddGrpcClient<Trading.LeccionesService.LeccionesServiceClient>(
 {
     o.Address = new Uri(lessonsUrl); 
 })
+    .ConfigureChannel(options =>
+{
+    
+    options.MaxReceiveMessageSize = 100 * 1024 * 1024; 
+})
 .ConfigurePrimaryHttpMessageHandler(() =>
 {
     var handler = new SocketsHttpHandler
