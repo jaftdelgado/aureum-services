@@ -12,14 +12,24 @@ router = APIRouter(
     tags=["Profiles"]
 )
 
-@router.post("/batch", response_model=List[ProfileResponseDTO])
+@router.post("/batch", response_model=List[ProfileResponseDTO],
+    summary="Obtener múltiples perfiles",
+    description="Recupera una lista de perfiles basada en una lista de IDs proporcionados. Útil para cargar datos de compañeros de clase.",
+)
 def get_profiles_batch(
     batch_data: ProfileBatchRequestDTO,
     db: Session = Depends(get_db)
 ):
     return profile_repository.get_profiles_by_ids(db, batch_data.profile_ids)
 
-@router.get("/{auth_id}", response_model=ProfileResponseDTO)
+@router.get("/{auth_id}", response_model=ProfileResponseDTO,
+    summary="Obtener perfil de usuario",
+    description="Obtiene los detalles del perfil de un usuario específico usando su Auth ID.",
+    responses={
+        200: {"description": "Perfil encontrado"},
+        404: {"description": "Perfil no existe"}
+    }
+)
 def get_user_profile(auth_id: str, db: Session = Depends(get_db)):
     profile = profile_repository.get_profile_by_auth_id(db, auth_id=auth_id)
     
@@ -31,7 +41,14 @@ def get_user_profile(auth_id: str, db: Session = Depends(get_db)):
     
     return profile
 
-@router.post("", response_model=ProfileResponseDTO, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=ProfileResponseDTO, status_code=status.HTTP_201_CREATED,
+    summary="Registrar nuevo perfil",
+    description="Crea un perfil inicial para un usuario recién registrado. Valida que el username sea único.",
+    responses={
+        201: {"description": "Perfil creado exitosamente"},
+        409: {"description": "El usuario ya tiene perfil o el username está en uso"}
+    }
+)
 def register_user_profile(
     profile_data: ProfileCreateDTO, 
     db: Session = Depends(get_db)
@@ -60,7 +77,10 @@ def register_user_profile(
             detail="Error interno al registrar el perfil."
         )
 
-@router.patch("/{auth_id}", response_model=ProfileResponseDTO)
+@router.patch("/{auth_id}", response_model=ProfileResponseDTO,
+    summary="Actualizar perfil",
+    description="Actualiza parcialmente los datos del perfil (bio, nombre, etc).",
+)
 def update_user_profile(
     auth_id: str, 
     profile_update: ProfileUpdateDTO,
@@ -71,7 +91,10 @@ def update_user_profile(
         raise HTTPException(status_code=404, detail="Perfil no encontrado")
     return updated_profile
 
-@router.post("/{auth_id}/avatar", response_model=ProfileResponseDTO)
+@router.post("/{auth_id}/avatar", response_model=ProfileResponseDTO,
+    summary="Subir avatar",
+    description="Sube una imagen de perfil y la almacena en MongoDB, actualizando la referencia en el perfil.",
+)
 async def upload_avatar(
     auth_id: str,
     file: UploadFile = File(...),
@@ -103,14 +126,24 @@ async def upload_avatar(
         print(f"Error subiendo imagen: {e}")
         raise HTTPException(status_code=500, detail="Error al subir la imagen")
 
-@router.delete("/{auth_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{auth_id}", status_code=status.HTTP_204_NO_CONTENT,
+    summary="Eliminar cuenta",
+    description="Elimina permanentemente el perfil del usuario y sus datos asociados.",
+)
 def delete_user_profile(auth_id: str, db: Session = Depends(get_db)):
     success = profile_repository.delete_profile(db, auth_id)
     if not success:
         raise HTTPException(status_code=404, detail="Perfil no encontrado")
     return None
 
-@router.get("/{auth_id}/avatar")
+@router.get("/{auth_id}/avatar",
+    summary="Obtener imagen de avatar",
+    description="Devuelve el archivo de imagen del avatar directamente (streaming de bytes) desde MongoDB.",
+    responses={
+        200: {"description": "Imagen encontrada", "content": {"image/jpeg": {}}},
+        404: {"description": "Usuario o imagen no encontrados"}
+    }
+)
 def get_avatar(auth_id: str, db: Session = Depends(get_db)):
     print(f"📷 Solicitando avatar para: {auth_id}")
     

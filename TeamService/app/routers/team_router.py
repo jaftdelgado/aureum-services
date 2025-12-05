@@ -14,14 +14,25 @@ router = APIRouter(
     tags=["Courses"]
 )
 
-@router.get("/{public_id}", response_model=TeamResponseDTO)
+@router.get("/{public_id}", response_model=TeamResponseDTO,
+    summary="Obtener detalle del curso",
+    description="Devuelve la informacion completa de un curso especifico por su ID publico.",
+    responses={404: {"description": "Curso no encontrado"}}
+)
 def get_course_detail(public_id: UUID, db: Session = Depends(get_db)):
     course = team_service.get_course_by_public_id(db, public_id)
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
     return course
 
-@router.post("", response_model=TeamResponseDTO, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=TeamResponseDTO, status_code=status.HTTP_201_CREATED,
+    summary="Crear nuevo curso",
+    description="Permite a un profesor crear un curso nuevo, incluyendo la subida de una imagen de portada.",
+    responses={
+        201: {"description": "Curso creado exitosamente"},
+        500: {"description": "Error al procesar la imagen o guardar en BD"}
+    }
+)
 async def create_new_course(
     name: str = Form(...),
     description: str = Form(None),
@@ -62,19 +73,35 @@ async def create_new_course(
         print(f"Error Postgres: {e}")
         raise HTTPException(status_code=500, detail="Error al crear el curso en base de datos")
 
-@router.get("", response_model=List[TeamResponseDTO])
+@router.get("", response_model=List[TeamResponseDTO],
+    summary="Listar todos los cursos",
+    description="Obtiene un listado de todos los cursos disponibles en la plataforma."
+)
 def get_all(db: Session = Depends(get_db)):
     return team_service.get_all_courses(db)
 
-@router.get("/professor/{profile_id}", response_model=List[TeamResponseDTO])
+@router.get("/professor/{profile_id}", response_model=List[TeamResponseDTO],
+    summary="Cursos de un profesor",
+    description="Lista todos los cursos creados por un profesor especifico."
+)
 def get_by_professor(profile_id: UUID, db: Session = Depends(get_db)):
     return team_service.get_professor_courses(db, profile_id)
 
-@router.get("/student/{profile_id}", response_model=List[TeamResponseDTO])
+@router.get("/student/{profile_id}", response_model=List[TeamResponseDTO],
+    summary="Cursos de un estudiante",
+    description="Lista todos los cursos en los que un estudiante esta inscrito."
+)
 def get_by_student(profile_id: UUID, db: Session = Depends(get_db)):
     return team_service.get_student_courses(db, profile_id)
 
-@router.get("/{public_id}/image")
+@router.get("/{public_id}/image",
+    summary="Obtener imagen del curso",
+    description="Sirve la imagen de portada del curso directamente desde MongoDB.",
+    responses={
+        200: {"description": "Imagen retornada", "content": {"image/jpeg": {}}},
+        404: {"description": "Curso o imagen no encontrada"}
+    }
+)
 def get_course_image(public_id: UUID, db: Session = Depends(get_db)):
     course = team_service.get_course_by_public_id(db, public_id)
     
