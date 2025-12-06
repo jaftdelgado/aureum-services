@@ -73,6 +73,7 @@ namespace PortfolioService.Controllers
 
                 result.Add(new PortfolioDto
                 {
+                    UserId = item.UserId,
                     PortfolioId = item.PortfolioId,
                     AssetId = item.AssetId,
                     Quantity = item.Quantity,
@@ -122,6 +123,7 @@ namespace PortfolioService.Controllers
 
             var detail = new PortfolioDto
             {
+                UserId = item.UserId,
                 PortfolioId = item.PortfolioId,
                 AssetId = item.AssetId,
                 Quantity = item.Quantity,
