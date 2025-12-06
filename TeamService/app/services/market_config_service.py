@@ -8,7 +8,6 @@ from app.schemas.market_configuration import (
     MarketConfigUpdate,
 )
 
-
 class MarketConfigurationService:
 
     @staticmethod
