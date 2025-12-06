@@ -23,11 +23,11 @@ namespace ApiGateway.Controllers
         public async Task<IActionResult> GetDetails(string id)
         {
            
-            var profileType = User.Claims.FirstOrDefault(c => c.Type == "profile_type")?.Value;
+            var role = User.Claims.FirstOrDefault(c => c.Type == "user_role")?.Value;
             
-            if (string.IsNullOrEmpty(profileType) || profileType != "student")
+            if (string.IsNullOrEmpty(role) || role != "student")
             {
-                return StatusCode(403, "Acceso denegado: Solo los estudiantes pueden ver los detalles de las lecciones.");
+                return StatusCode(403, "Acceso denegado: Solo los estudiantes pueden ver los detalles.");
             }
 
             try
@@ -54,9 +54,9 @@ namespace ApiGateway.Controllers
         [Authorize(AuthenticationSchemes = "SupabaseAuth")] 
         public async Task<IActionResult> GetAll()
         {
-            var profileType = User.Claims.FirstOrDefault(c => c.Type == "profile_type")?.Value;
+           var role = User.Claims.FirstOrDefault(c => c.Type == "user_role")?.Value;
             
-            if (string.IsNullOrEmpty(profileType) || profileType != "student")
+            if (string.IsNullOrEmpty(role) || role != "student")
             {
                 return StatusCode(403, "Acceso denegado: Solo los estudiantes pueden listar las lecciones.");
             }
@@ -85,9 +85,9 @@ namespace ApiGateway.Controllers
        [Authorize(AuthenticationSchemes = "SupabaseAuth")] 
         public async Task GetVideo(string id)
         {
-            var profileType = User.Claims.FirstOrDefault(c => c.Type == "profile_type")?.Value;
+           var role = User.Claims.FirstOrDefault(c => c.Type == "user_role")?.Value;
             
-            if (string.IsNullOrEmpty(profileType) || profileType != "student")
+            if (string.IsNullOrEmpty(role) || role != "student")
             {
                 Response.StatusCode = 403;
                 await Response.Body.FlushAsync();
