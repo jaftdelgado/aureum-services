@@ -5,7 +5,7 @@ from datetime import datetime
 class TeamCreateDTO(BaseModel):
     name: str = Field(..., min_length=3, max_length=48)
     description: Optional[str] = Field(None, max_length=128)
-    professor_id: str
+    professor_id: Optional[str]
 
 class TeamResponseDTO(BaseModel):
     public_id: UUID4
