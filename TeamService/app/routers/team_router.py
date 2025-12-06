@@ -8,7 +8,6 @@ from .. import mongo_db
 from uuid import UUID
 from fastapi.responses import Response
 from bson.objectid import ObjectId
-from ..deps import get_current_user_claims, require_professor
 
 router = APIRouter(
     prefix="/api/v1/courses",
@@ -37,13 +36,11 @@ def get_course_detail(public_id: UUID, db: Session = Depends(get_db)):
 async def create_new_course(
     name: str = Form(...),
     description: str = Form(None),
+    professor_id: str = Form(...),
     file: UploadFile = File(...),
-    db: Session = Depends(get_db)
-    current_user: dict = Depends(require_professor)
+    db: Session = Depends(get_db),
 ):
     mongo_id = None
-
-    professor_id = current_user["id"]
 
     try:
         if file:
