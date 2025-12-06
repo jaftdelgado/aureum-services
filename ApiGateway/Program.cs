@@ -6,20 +6,28 @@ using System.Text;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net.Http;
-using Microsoft.Extensions.Caching.Memory;
 using Grpc.Core;
 using System.Security.Claims;
+using System.Text.Json;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.Extensions.Caching.Memory;
+
+JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
 AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+
+var builder = WebApplication.CreateBuilder(args);
 
 var marketUrl = Environment.GetEnvironmentVariable("MARKET_SERVICE_URL") ?? "http://marketservice.railway.internal:50051";
 var lessonsUrl = Environment.GetEnvironmentVariable("LESSONS_SERVICE_URL") ?? "http://lessonsservice.railway.internal:50051";
 var userServiceUrl = Environment.GetEnvironmentVariable("USER_SERVICE_URL") ?? "http://aureum-services.railway.internal:8001";
-var builder = WebApplication.CreateBuilder(args);
+var supabaseSecret = Environment.GetEnvironmentVariable("SUPABASE_JWT_SECRET") ?? "CLAVE_TEMPORAL_PARA_LOCAL_123456789";
+
+Console.WriteLine($"[Gateway Config] UserService URL: {userServiceUrl}");
 
 builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
-
-var supabaseSecret = Environment.GetEnvironmentVariable("SUPABASE_JWT_SECRET") ?? "CLAVE_TEMPORAL_PARA_LOCAL_123456789";
+builder.Logging.SetMinimumLevel(LogLevel.Debug);
+builder.Logging.AddConsole();
 var bytes = Encoding.UTF8.GetBytes(supabaseSecret);
 
 builder.Services.AddCors(options =>
@@ -30,10 +38,13 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.AddControllers();
 builder.Services.AddMemoryCache();
+
 builder.Services.AddHttpClient("UserServiceClient", client =>
 {
     client.BaseAddress = new Uri(userServiceUrl);
+    client.Timeout = TimeSpan.FromSeconds(5);
 });
 
 builder.Services.AddAuthentication(options =>
@@ -55,128 +66,79 @@ builder.Services.AddAuthentication(options =>
 
     options.Events = new JwtBearerEvents
     {
+        OnAuthenticationFailed = context =>
+        {
+            Console.WriteLine($"[Auth Error] Token inválido: {context.Exception.Message}");
+            return Task.CompletedTask;
+        },
         OnTokenValidated = async context =>
         {
-            var identity = context.Principal.Identity as ClaimsIdentity;
-            var userId = identity?.FindFirst("sub")?.Value;
+            Console.WriteLine(">>> [DEBUG] OnTokenValidated EJECUTADO <<<");
+            
+            var identity = context.Principal?.Identity as ClaimsIdentity;
+
+            var userId = identity?.FindFirst("sub")?.Value 
+                      ?? identity?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (!string.IsNullOrEmpty(userId))
             {
-                var cache = context.HttpContext.RequestServices.GetRequiredService<IMemoryCache>();
-                var httpClientFactory = context.HttpContext.RequestServices.GetRequiredService<IHttpClientFactory>();
-
-                var cacheKey = $"user_role_{userId}";
-
-                if (!cache.TryGetValue(cacheKey, out string role))
+                Console.WriteLine($">>> [DEBUG] Usuario autenticado: {userId}");
+                
+                
+                string role = "student"; 
+                
+                try 
                 {
-                    try
+                    using var client = new HttpClient();
+                    client.BaseAddress = new Uri(userServiceUrl);
+                    client.Timeout = TimeSpan.FromSeconds(2); 
+                    
+                    Console.WriteLine($">>> [DEBUG] Consultando rol en: {userServiceUrl}/api/users/profiles/{userId}");
+                    var response = await client.GetAsync($"/api/users/profiles/{userId}");
+                    
+                    if (response.IsSuccessStatusCode)
                     {
-                        var client = httpClientFactory.CreateClient("UserServiceClient");
-
-                        var response = await client.GetAsync($"/api/users/profiles/{userId}");
-
-                        if (response.IsSuccessStatusCode)
+                        var content = await response.Content.ReadAsStringAsync();
+                        using var doc = JsonDocument.Parse(content);
+                        if (doc.RootElement.TryGetProperty("role", out var r))
                         {
-                            var content = await response.Content.ReadAsStringAsync();
-                            using var doc = JsonDocument.Parse(content);
-
-                            if (doc.RootElement.TryGetProperty("role", out var roleElement))
-                            {
-                                role = roleElement.GetString();
-
-                                var cacheEntryOptions = new MemoryCacheEntryOptions()
-                                    .SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
-
-                                cache.Set(cacheKey, role, cacheEntryOptions);
-                            }
+                            role = r.GetString() ?? "student";
+                            Console.WriteLine($">>> [DEBUG] ROL REAL OBTENIDO: {role}");
                         }
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        Console.WriteLine($"Error obteniendo rol para {userId}: {ex.Message}");
+                        Console.WriteLine($">>> [DEBUG] Error HTTP {response.StatusCode} del UserService");
                     }
                 }
-
-                if (!string.IsNullOrEmpty(role))
+                catch (Exception ex)
                 {
-                    identity.AddClaim(new Claim("user_role", role));
+                     Console.WriteLine($">>> [DEBUG] Excepción conectando: {ex.Message}");
+                }
 
+                if (identity != null)
+                {
+                    identity.AddClaim(new Claim("user_role", role)); 
                     identity.AddClaim(new Claim(ClaimTypes.Role, role));
+                    
+                    Console.WriteLine($">>> [DEBUG] Claims inyectados: user_role={role}");
                 }
             }
-        }
-    };
-});
-
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = "SupabaseAuth";
-    options.DefaultChallengeScheme = "SupabaseAuth";
-})
-.AddJwtBearer("SupabaseAuth", options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(bytes),
-        ValidateIssuer = false,
-        ValidateAudience = false,
-        ValidateLifetime = true,
-        ClockSkew = TimeSpan.Zero
-    };
-
-    options.Events = new JwtBearerEvents
-    {
-        OnTokenValidated = context =>
-        {
-            var identity = context.Principal.Identity as ClaimsIdentity;
-            var userMetadataClaim = identity?.FindFirst("user_metadata");
-
-            if (userMetadataClaim != null)
+            else
             {
-                try
-                {
-                    using var doc = JsonDocument.Parse(userMetadataClaim.Value);
-                    var root = doc.RootElement;
-
-                    if (root.TryGetProperty("role", out var roleElement))
-                    {
-                        var roleValue = roleElement.GetString();
-                        if (!string.IsNullOrEmpty(roleValue))
-                        {
-                            identity.AddClaim(new Claim("user_role", roleValue));
-                        }
-                    }
-                }
-                catch
-                {
-                }
+                Console.WriteLine(">>> [DEBUG] No se encontró 'sub' en el token.");
             }
-
-            return Task.CompletedTask;
         }
     };
 });
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("ProfessorOnly", policy =>
-        policy.RequireClaim("user_role", "professor", "teacher"));
-
-    options.AddPolicy("StudentOnly", policy =>
-        policy.RequireClaim("user_role", "student"));
-
-    options.AddPolicy("AuthenticatedUser", policy =>
-        policy.RequireAuthenticatedUser());
+    options.AddPolicy("ProfessorOnly", policy => policy.RequireClaim("user_role", "professor", "teacher"));
+    options.AddPolicy("StudentOnly", policy => policy.RequireClaim("user_role", "student"));
 });
 
-builder.Services.AddControllers();
-
-builder.Services.AddGrpcClient<Market.MarketService.MarketServiceClient>(o =>
-{
-    o.Address = new Uri(marketUrl);
-})
-.ConfigureChannel(o =>
+HttpMessageHandler CreateGrpcHandler()
 {
     var handler = new SocketsHttpHandler
     {
@@ -185,47 +147,31 @@ builder.Services.AddGrpcClient<Market.MarketService.MarketServiceClient>(o =>
         KeepAlivePingTimeout = TimeSpan.FromSeconds(30),
         EnableMultipleHttp2Connections = true
     };
-    o.HttpHandler = handler;
-});
+    return handler;
+}
 
-// --- INICIO DE LA CORRECCIÓN ---
+builder.Services.AddGrpcClient<Market.MarketService.MarketServiceClient>(o =>
+{
+    o.Address = new Uri(marketUrl);
+})
+.ConfigurePrimaryHttpMessageHandler(CreateGrpcHandler);
+
 builder.Services.AddGrpcClient<Trading.LeccionesService.LeccionesServiceClient>(o =>
 {
-    o.Address = new Uri(lessonsUrl); 
+    o.Address = new Uri(lessonsUrl);
 })
-.ConfigureChannel(options =>
-{
-    options.MaxReceiveMessageSize = null; 
-})
-.ConfigurePrimaryHttpMessageHandler(() =>
-{
-   
-    var handler = new HttpClientHandler();
-    handler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
-    return handler;
-})
-.ConfigureHttpClient(client =>
-{
-    client.DefaultRequestVersion = new Version(2, 0);
-    client.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher;
-    client.Timeout = Timeout.InfiniteTimeSpan;
-});
+.ConfigurePrimaryHttpMessageHandler(CreateGrpcHandler)
+.ConfigureChannel(options => options.MaxReceiveMessageSize = null);
 
 builder.Services.AddOcelot();
 
 var app = builder.Build();
 
 app.UseCors("PermitirTodo");
-
 app.UseRouting();
-
 app.UseAuthentication();
 app.UseAuthorization();
-
-app.UseEndpoints(endpoints =>
-{
-    endpoints.MapControllers();
-});
+app.MapControllers();
 
 await app.UseOcelot();
 
