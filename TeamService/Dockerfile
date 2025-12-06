@@ -2,6 +2,7 @@ FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV DATABASE_URL="postgresql://neondb_owner:npg_ituqK73oXFCm@ep-ancient-sun-adco2rsb-pooler.c-2.us-east-1.aws.neon.tech/teamsdb?sslmode=require&channel_binding=require"
 
 WORKDIR /app
 

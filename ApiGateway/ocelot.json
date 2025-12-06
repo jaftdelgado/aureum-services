@@ -11,7 +11,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/users/profiles/{authId}/avatar",
-      "UpstreamHttpMethod": [ "GET" ]
+      "UpstreamHttpMethod": ["GET"]
     },
     // --- 1. USER SERVICE ---
     {
@@ -24,7 +24,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/users/profiles",
-      "UpstreamHttpMethod": [ "POST", "GET" ]
+      "UpstreamHttpMethod": ["POST", "GET"]
     },
 
     // --- 1.b USER SERVICE ---
@@ -38,7 +38,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/users/profiles/{authId}",
-      "UpstreamHttpMethod": [ "GET" ],
+      "UpstreamHttpMethod": ["GET"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -56,7 +56,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/users/profiles/{authId}",
-      "UpstreamHttpMethod": [ "PATCH" ],
+      "UpstreamHttpMethod": ["PATCH"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -74,7 +74,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/users/profiles/{authId}/avatar",
-      "UpstreamHttpMethod": [ "POST" ],
+      "UpstreamHttpMethod": ["POST"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -92,7 +92,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/users/profiles/{authId}",
-      "UpstreamHttpMethod": [ "DELETE" ],
+      "UpstreamHttpMethod": ["DELETE"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -109,7 +109,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/users/profiles/batch",
-      "UpstreamHttpMethod": [ "POST" ],
+      "UpstreamHttpMethod": ["POST"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -129,7 +129,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/assets",
-      "UpstreamHttpMethod": [ "GET", "POST" ],
+      "UpstreamHttpMethod": ["GET", "POST"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -147,7 +147,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/assets/{id}",
-      "UpstreamHttpMethod": [ "GET" ],
+      "UpstreamHttpMethod": ["GET"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -165,7 +165,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/team-assets",
-      "UpstreamHttpMethod": [ "POST" ],
+      "UpstreamHttpMethod": ["POST"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -186,7 +186,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/team-assets/team/{teamId}",
-      "UpstreamHttpMethod": [ "GET" ],
+      "UpstreamHttpMethod": ["GET"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -204,7 +204,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/portfolio",
-      "UpstreamHttpMethod": [ "GET", "POST" ],
+      "UpstreamHttpMethod": ["GET", "POST"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -221,7 +221,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/courses",
-      "UpstreamHttpMethod": [ "POST" ],
+      "UpstreamHttpMethod": ["POST"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -241,7 +241,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/courses",
-      "UpstreamHttpMethod": [ "GET" ],
+      "UpstreamHttpMethod": ["GET"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -262,7 +262,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/courses/professor/{id}",
-      "UpstreamHttpMethod": [ "GET" ],
+      "UpstreamHttpMethod": ["GET"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -283,7 +283,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/courses/student/{id}",
-      "UpstreamHttpMethod": [ "GET" ],
+      "UpstreamHttpMethod": ["GET"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -303,7 +303,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/memberships/join",
-      "UpstreamHttpMethod": [ "POST" ],
+      "UpstreamHttpMethod": ["POST"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -323,7 +323,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/courses/{identifier}/students",
-      "UpstreamHttpMethod": [ "GET" ],
+      "UpstreamHttpMethod": ["GET"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -343,7 +343,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/portfolio/transaction",
-      "UpstreamHttpMethod": [ "POST" ],
+      "UpstreamHttpMethod": ["POST"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -361,7 +361,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/portfolio/course/{courseId}",
-      "UpstreamHttpMethod": [ "GET" ],
+      "UpstreamHttpMethod": ["GET"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -379,7 +379,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/portfolio/detail/{portfolioId}",
-      "UpstreamHttpMethod": [ "GET" ],
+      "UpstreamHttpMethod": ["GET"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -397,7 +397,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/portfolio/history/course/{courseId}/student/{studentId}",
-      "UpstreamHttpMethod": [ "GET" ],
+      "UpstreamHttpMethod": ["GET"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -413,7 +413,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/cloud/upload",
-      "UpstreamHttpMethod": [ "POST" ],
+      "UpstreamHttpMethod": ["POST"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -430,7 +430,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/courses/{publicId}/image",
-      "UpstreamHttpMethod": [ "GET" ]
+      "UpstreamHttpMethod": ["GET"]
     },
     // --- 6. MARKET CONFIGURATION (TEAM SERVICE) ---
 
@@ -445,7 +445,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/market-config",
-      "UpstreamHttpMethod": [ "POST" ],
+      "UpstreamHttpMethod": ["POST"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -454,7 +454,7 @@
 
     // 6.b Obtener Configuración por Team (GET)
     {
-      "DownstreamPathTemplate": "/api/market-config/{teamId}",
+      "DownstreamPathTemplate": "/api/market-config/{team_id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -462,8 +462,8 @@
           "Port": 8000
         }
       ],
-      "UpstreamPathTemplate": "/api/market-config/{teamId}",
-      "UpstreamHttpMethod": [ "GET" ],
+      "UpstreamPathTemplate": "/api/market-config/{team_id}",
+      "UpstreamHttpMethod": ["GET"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -472,7 +472,7 @@
 
     // 6.c Actualizar Configuración (PUT)
     {
-      "DownstreamPathTemplate": "/api/market-config/{teamId}",
+      "DownstreamPathTemplate": "/api/market-config/{team_id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -480,8 +480,8 @@
           "Port": 8000
         }
       ],
-      "UpstreamPathTemplate": "/api/market-config/{teamId}",
-      "UpstreamHttpMethod": [ "PUT" ],
+      "UpstreamPathTemplate": "/api/market-config/{team_id}",
+      "UpstreamHttpMethod": ["PUT"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -491,5 +491,4 @@
   "GlobalConfiguration": {
     "BaseUrl": "https://gateway-production.up.railway.app"
   }
-  
 }

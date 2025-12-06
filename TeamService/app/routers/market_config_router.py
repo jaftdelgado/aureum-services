@@ -11,13 +11,13 @@ router = APIRouter(
     tags=["Market Config"]
 )
 
-@router.get("/{teamId}", response_model=MarketConfigResponse,
+@router.get("/{team_id}", response_model=MarketConfigResponse,
     summary="Obtener configuracion de mercado",
-    description="Recupera las reglas del simulador (saldo inicial, comisiones, etc.) para un curso especifico.",
+    description="Recupera las reglas del simulador para un curso especifico.",
     responses={404: {"description": "Configuracion no encontrada"}}
 )
-def get_config(teamId: UUID, db: Session = Depends(get_db)):
-    config = MarketConfigurationService.get_by_public_id(db, teamId)
+def get_config(team_id: UUID, db: Session = Depends(get_db)):
+    config = MarketConfigurationService.get_by_team_id(db, team_id)
     if not config:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -30,14 +30,20 @@ def get_config(teamId: UUID, db: Session = Depends(get_db)):
     description="Establece los parametros iniciales del simulador de mercado para un nuevo curso."
 )
 def create_config(data: MarketConfigCreate, db: Session = Depends(get_db)):
+    existing = MarketConfigurationService.get_by_team_id(db, data.team_id)
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Market config already exists for this team"
+        )
     return MarketConfigurationService.create(db, data)
 
-@router.put("/{teamId}", response_model=MarketConfigResponse,
+@router.put("/{team_id}", response_model=MarketConfigResponse,
     summary="Actualizar configuracion",
     description="Modifica los parametros del simulador de mercado."
 )
-def update_config(teamId: UUID, data: MarketConfigUpdate, db: Session = Depends(get_db)):
-    updated = MarketConfigurationService.update(db, teamId, data)
+def update_config(team_id: UUID, data: MarketConfigUpdate, db: Session = Depends(get_db)):
+    updated = MarketConfigurationService.update(db, team_id, data)
     if not updated:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

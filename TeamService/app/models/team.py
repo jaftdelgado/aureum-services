@@ -22,21 +22,8 @@ class Team(Base):
     
     created_at = Column("createdat", DateTime(timezone=True), server_default=func.now())
 
-    market_configuration = relationship(
-        "MarketConfiguration",
-        uselist=False,
-        back_populates="team",
-        cascade="all, delete-orphan"
-    )
-
     memberships = relationship(
         "TeamMembership",
-        back_populates="team",
-        cascade="all, delete"
-    )
-
-    team_assets = relationship(
-        "TeamAsset",
         back_populates="team",
         cascade="all, delete"
     )
