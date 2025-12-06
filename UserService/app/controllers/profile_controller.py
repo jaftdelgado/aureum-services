@@ -7,6 +7,7 @@ from ..schemas import ProfileResponseDTO, ProfileCreateDTO, ProfileUpdateDTO, Pr
 from ..database import get_db
 from bson.objectid import ObjectId
 from typing import List
+from ..deps import get_current_user_claims
 
 router = APIRouter(
     tags=["Profiles"]
@@ -85,7 +86,10 @@ def update_user_profile(
     auth_id: str, 
     profile_update: ProfileUpdateDTO,
     db: Session = Depends(get_db)
+    current_user: dict = Depends(get_current_user_claims)
 ):
+    if current_user["id"] != auth_id:
+        raise HTTPException(status_code=403, detail="No tienes permiso para editar este perfil")
     updated_profile = profile_repository.update_profile(db, auth_id, profile_update)
     if not updated_profile:
         raise HTTPException(status_code=404, detail="Perfil no encontrado")
