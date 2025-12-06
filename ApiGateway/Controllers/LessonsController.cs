@@ -4,11 +4,11 @@ using Grpc.Core;
 using Trading; 
 using System.Text;
 using Google.Protobuf;
+using System.Linq; // Necesario para Linq
 
 namespace ApiGateway.Controllers
 {
     [ApiController]
-    
     public class LessonsController : ControllerBase
     {
         private readonly LeccionesService.LeccionesServiceClient _client;
@@ -18,11 +18,18 @@ namespace ApiGateway.Controllers
             _client = client;
         }
 
-        
         [HttpGet("api/lessons/{id:length(24)}")]
         [Authorize(AuthenticationSchemes = "SupabaseAuth")]
         public async Task<IActionResult> GetDetails(string id)
         {
+           
+            var profileType = User.Claims.FirstOrDefault(c => c.Type == "profile_type")?.Value;
+            
+            if (string.IsNullOrEmpty(profileType) || profileType != "student")
+            {
+                return StatusCode(403, "Acceso denegado: Solo los estudiantes pueden ver los detalles de las lecciones.");
+            }
+
             try
             {
                 var request = new LeccionRequest { IdLeccion = id };
@@ -42,22 +49,27 @@ namespace ApiGateway.Controllers
                 return StatusCode(500, $"Error gRPC: {ex.Status.Detail}");
             }
         }
+
         [HttpGet("api/lessons")]
         [Authorize(AuthenticationSchemes = "SupabaseAuth")] 
         public async Task<IActionResult> GetAll()
         {
+            var profileType = User.Claims.FirstOrDefault(c => c.Type == "profile_type")?.Value;
+            
+            if (string.IsNullOrEmpty(profileType) || profileType != "student")
+            {
+                return StatusCode(403, "Acceso denegado: Solo los estudiantes pueden listar las lecciones.");
+            }
+
             try
             {
-                
                 var response = await _client.ObtenerTodasAsync(new Empty());
-
                
                 var lista = response.Lecciones.Select(l => new
                 {
                     id = l.Id,
                     title = l.Titulo,
                     description = l.Descripcion,
-                  
                     thumbnail = l.Miniatura.IsEmpty ? null : Convert.ToBase64String(l.Miniatura.ToByteArray())
                 });
 
@@ -70,8 +82,18 @@ namespace ApiGateway.Controllers
         }
 
        [HttpGet("api/lessons/{id:length(24)}/video")]
+       [Authorize(AuthenticationSchemes = "SupabaseAuth")] 
         public async Task GetVideo(string id)
         {
+            var profileType = User.Claims.FirstOrDefault(c => c.Type == "profile_type")?.Value;
+            
+            if (string.IsNullOrEmpty(profileType) || profileType != "student")
+            {
+                Response.StatusCode = 403;
+                await Response.Body.FlushAsync();
+                return;
+            }
+
             try 
             {
                 var infoRequest = new LeccionRequest { IdLeccion = id };
@@ -110,17 +132,13 @@ namespace ApiGateway.Controllers
 
                 using var call = _client.DescargarVideo(request);
 
-                long bytesSent = 0;
                 await foreach (var chunk in call.ResponseStream.ReadAllAsync(HttpContext.RequestAborted))
                 {
                     if (chunk.Contenido.Length > 0)
                     {
                         var bytesToWrite = chunk.Contenido.ToByteArray();
-                        
                         await Response.Body.WriteAsync(bytesToWrite, 0, bytesToWrite.Length);
                         await Response.Body.FlushAsync();
-                        
-                        bytesSent += bytesToWrite.Length;
                     }
                 }
             }
