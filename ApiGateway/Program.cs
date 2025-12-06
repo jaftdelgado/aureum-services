@@ -174,5 +174,21 @@ app.UseAuthorization();
 app.MapControllers();
 
 await app.UseOcelot();
+// Agrega esto en Program.cs antes de app.Run();
+app.Lifetime.ApplicationStarted.Register(() =>
+{
+    var endpointSources = app.Services.GetServices<Microsoft.AspNetCore.Routing.EndpointDataSource>();
+    Console.WriteLine(">>> ENDPOINTS DETECTADOS <<<");
+    foreach (var source in endpointSources)
+    {
+        foreach (var endpoint in source.Endpoints)
+        {
+            if (endpoint is Microsoft.AspNetCore.Routing.RouteEndpoint routeEndpoint)
+            {
+                Console.WriteLine($"   - {routeEndpoint.RoutePattern.RawText} -> {routeEndpoint.DisplayName}");
+            }
+        }
+    }
+});
 
 app.Run();
