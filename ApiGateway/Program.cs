@@ -6,6 +6,7 @@ using System.Text;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net.Http;
+using Microsoft.Extensions.Caching.Memory;
 using Grpc.Core;
 using System.Security.Claims;
 
@@ -13,7 +14,7 @@ AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport
 
 var marketUrl = Environment.GetEnvironmentVariable("MARKET_SERVICE_URL") ?? "http://marketservice.railway.internal:50051";
 var lessonsUrl = Environment.GetEnvironmentVariable("LESSONS_SERVICE_URL") ?? "http://lessonsservice.railway.internal:50051";
-
+var userServiceUrl = Environment.GetEnvironmentVariable("USER_SERVICE_URL") ?? "http://aureum-services.railway.internal:8001";
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
@@ -27,6 +28,84 @@ builder.Services.AddCors(options =>
     {
         policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
     });
+});
+
+builder.Services.AddMemoryCache();
+builder.Services.AddHttpClient("UserServiceClient", client =>
+{
+    client.BaseAddress = new Uri(userServiceUrl);
+});
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = "SupabaseAuth";
+    options.DefaultChallengeScheme = "SupabaseAuth";
+})
+.AddJwtBearer("SupabaseAuth", options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(bytes),
+        ValidateIssuer = false,
+        ValidateAudience = false,
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
+    };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnTokenValidated = async context =>
+        {
+            var identity = context.Principal.Identity as ClaimsIdentity;
+            var userId = identity?.FindFirst("sub")?.Value;
+
+            if (!string.IsNullOrEmpty(userId))
+            {
+                var cache = context.HttpContext.RequestServices.GetRequiredService<IMemoryCache>();
+                var httpClientFactory = context.HttpContext.RequestServices.GetRequiredService<IHttpClientFactory>();
+
+                var cacheKey = $"user_role_{userId}";
+
+                if (!cache.TryGetValue(cacheKey, out string role))
+                {
+                    try
+                    {
+                        var client = httpClientFactory.CreateClient("UserServiceClient");
+
+                        var response = await client.GetAsync($"/api/users/profiles/{userId}");
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            var content = await response.Content.ReadAsStringAsync();
+                            using var doc = JsonDocument.Parse(content);
+
+                            if (doc.RootElement.TryGetProperty("role", out var roleElement))
+                            {
+                                role = roleElement.GetString();
+
+                                var cacheEntryOptions = new MemoryCacheEntryOptions()
+                                    .SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
+
+                                cache.Set(cacheKey, role, cacheEntryOptions);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error obteniendo rol para {userId}: {ex.Message}");
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(role))
+                {
+                    identity.AddClaim(new Claim("user_role", role));
+
+                    identity.AddClaim(new Claim(ClaimTypes.Role, role));
+                }
+            }
+        }
+    };
 });
 
 builder.Services.AddAuthentication(options =>
