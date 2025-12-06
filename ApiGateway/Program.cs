@@ -23,8 +23,6 @@ var lessonsUrl = Environment.GetEnvironmentVariable("LESSONS_SERVICE_URL") ?? "h
 var userServiceUrl = Environment.GetEnvironmentVariable("USER_SERVICE_URL") ?? "http://aureum-services.railway.internal:8001";
 var supabaseSecret = Environment.GetEnvironmentVariable("SUPABASE_JWT_SECRET") ?? "CLAVE_TEMPORAL_PARA_LOCAL_123456789";
 
-Console.WriteLine($"[Gateway Config] UserService URL: {userServiceUrl}");
-
 builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
 builder.Logging.SetMinimumLevel(LogLevel.Debug);
 builder.Logging.AddConsole();
@@ -68,12 +66,10 @@ builder.Services.AddAuthentication(options =>
     {
         OnAuthenticationFailed = context =>
         {
-            Console.WriteLine($"[Auth Error] Token inválido: {context.Exception.Message}");
             return Task.CompletedTask;
         },
         OnTokenValidated = async context =>
         {
-            Console.WriteLine(">>> [DEBUG] OnTokenValidated EJECUTADO <<<");
             
             var identity = context.Principal?.Identity as ClaimsIdentity;
 
@@ -82,8 +78,6 @@ builder.Services.AddAuthentication(options =>
 
             if (!string.IsNullOrEmpty(userId))
             {
-                Console.WriteLine($">>> [DEBUG] Usuario autenticado: {userId}");
-                
                 
                 string role = "student"; 
                 
@@ -93,7 +87,6 @@ builder.Services.AddAuthentication(options =>
                     client.BaseAddress = new Uri(userServiceUrl);
                     client.Timeout = TimeSpan.FromSeconds(2); 
                     
-                    Console.WriteLine($">>> [DEBUG] Consultando rol en: {userServiceUrl}/api/v1/profiles/{userId}");
                     var response = await client.GetAsync($"/api/v1/profiles/{userId}");
                     
                     if (response.IsSuccessStatusCode)
@@ -103,17 +96,14 @@ builder.Services.AddAuthentication(options =>
                         if (doc.RootElement.TryGetProperty("role", out var r))
                         {
                             role = r.GetString() ?? "student";
-                            Console.WriteLine($">>> [DEBUG] ROL REAL OBTENIDO: {role}");
                         }
                     }
                     else
                     {
-                        Console.WriteLine($">>> [DEBUG] Error HTTP {response.StatusCode} del UserService");
                     }
                 }
                 catch (Exception ex)
                 {
-                     Console.WriteLine($">>> [DEBUG] Excepción conectando: {ex.Message}");
                 }
 
                 if (identity != null)
@@ -121,12 +111,10 @@ builder.Services.AddAuthentication(options =>
                     identity.AddClaim(new Claim("user_role", role)); 
                     identity.AddClaim(new Claim(ClaimTypes.Role, role));
                     
-                    Console.WriteLine($">>> [DEBUG] Claims inyectados: user_role={role}");
                 }
             }
             else
             {
-                Console.WriteLine(">>> [DEBUG] No se encontró 'sub' en el token.");
             }
         }
     };
@@ -173,22 +161,18 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-await app.UseOcelot();
-// Agrega esto en Program.cs antes de app.Run();
-app.Lifetime.ApplicationStarted.Register(() =>
-{
-    var endpointSources = app.Services.GetServices<Microsoft.AspNetCore.Routing.EndpointDataSource>();
-    Console.WriteLine(">>> ENDPOINTS DETECTADOS <<<");
-    foreach (var source in endpointSources)
+app.MapWhen(ctx =>
+       ctx.Request.Path.StartsWithSegments("/api/users")
+    || ctx.Request.Path.StartsWithSegments("/api/assets")
+    || ctx.Request.Path.StartsWithSegments("/api/team-assets")
+    || ctx.Request.Path.StartsWithSegments("/api/portfolio")
+    || ctx.Request.Path.StartsWithSegments("/api/courses")
+    || ctx.Request.Path.StartsWithSegments("/api/memberships")
+    || ctx.Request.Path.StartsWithSegments("/api/market-config")
+    || ctx.Request.Path.StartsWithSegments("/api/cloud"),
+    ocelotBranch =>
     {
-        foreach (var endpoint in source.Endpoints)
-        {
-            if (endpoint is Microsoft.AspNetCore.Routing.RouteEndpoint routeEndpoint)
-            {
-                Console.WriteLine($"   - {routeEndpoint.RoutePattern.RawText} -> {routeEndpoint.DisplayName}");
-            }
-        }
-    }
-});
+        ocelotBranch.UseOcelot().Wait();
+    });
 
 app.Run();
