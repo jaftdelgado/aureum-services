@@ -93,8 +93,8 @@ builder.Services.AddAuthentication(options =>
                     client.BaseAddress = new Uri(userServiceUrl);
                     client.Timeout = TimeSpan.FromSeconds(2); 
                     
-                    Console.WriteLine($">>> [DEBUG] Consultando rol en: {userServiceUrl}/api/users/profiles/{userId}");
-                    var response = await client.GetAsync($"/api/users/profiles/{userId}");
+                    Console.WriteLine($">>> [DEBUG] Consultando rol en: {userServiceUrl}/api/v1/profiles/{userId}");
+                    var response = await client.GetAsync($"/api/v1/profiles/{userId}");
                     
                     if (response.IsSuccessStatusCode)
                     {
