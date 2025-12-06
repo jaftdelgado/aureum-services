@@ -113,6 +113,9 @@
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "user_role": "professor"
       }
     },
     // --- 2. ASSET SERVICE ---
@@ -166,6 +169,9 @@
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "user_role": "professor"
       }
     },
 
@@ -219,6 +225,9 @@
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "user_role": "professor"
       }
     },
     // --- 5.b GET ALL COURSES ---
@@ -236,6 +245,9 @@
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "user_role": "professor"
       }
     },
 
@@ -254,6 +266,9 @@
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "user_role": "professor"
       }
     },
 
@@ -272,6 +287,9 @@
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "user_role": "student"
       }
     },
     // --- UNIRSE A CURSO ---
@@ -289,6 +307,9 @@
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "user_role": "student"
       }
     },
     // --- GET STUDENTS IN COURSE ---
@@ -306,6 +327,9 @@
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "user_role": "professor"
       }
     },
     // --- 4.a PORTFOLIO: TRANSACCIÓN (COMPRA/VENTA) ---

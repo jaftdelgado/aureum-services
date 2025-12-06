@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net.Http;
 using Grpc.Core;
+using System.Security.Claims;
 
 AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
 
@@ -44,6 +45,50 @@ builder.Services.AddAuthentication(options =>
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero
     };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnTokenValidated = context =>
+        {
+            var identity = context.Principal.Identity as ClaimsIdentity;
+            var userMetadataClaim = identity?.FindFirst("user_metadata");
+
+            if (userMetadataClaim != null)
+            {
+                try
+                {
+                    using var doc = JsonDocument.Parse(userMetadataClaim.Value);
+                    var root = doc.RootElement;
+
+                    if (root.TryGetProperty("role", out var roleElement))
+                    {
+                        var roleValue = roleElement.GetString();
+                        if (!string.IsNullOrEmpty(roleValue))
+                        {
+                            identity.AddClaim(new Claim("user_role", roleValue));
+                        }
+                    }
+                }
+                catch
+                {
+                }
+            }
+
+            return Task.CompletedTask;
+        }
+    };
+});
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("ProfessorOnly", policy =>
+        policy.RequireClaim("user_role", "professor", "teacher"));
+
+    options.AddPolicy("StudentOnly", policy =>
+        policy.RequireClaim("user_role", "student"));
+
+    options.AddPolicy("AuthenticatedUser", policy =>
+        policy.RequireAuthenticatedUser());
 });
 
 builder.Services.AddControllers();
