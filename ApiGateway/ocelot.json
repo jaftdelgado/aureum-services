@@ -347,9 +347,6 @@
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
-      },
-      "RouteClaimsRequirement": {
-        "user_role": "professor"
       }
     },
     // --- 4.a PORTFOLIO: TRANSACCIÓN (COMPRA/VENTA) ---
