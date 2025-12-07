@@ -245,9 +245,6 @@
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
-      },
-      "RouteClaimsRequirement": {
-        "user_role": "professor"
       }
     },
     // --- 5.b GET ALL COURSES ---
