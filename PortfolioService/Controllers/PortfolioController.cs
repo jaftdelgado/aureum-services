@@ -146,7 +146,7 @@ namespace PortfolioService.Controllers
            
             var movements = await _marketContext.Movements
                                     .Include(m => m.Transaction)
-                                    .Where(m => m.UserId == studentId)
+                                   .Where(m => m.UserId == studentId && m.PublicId == courseId)
                                     .OrderByDescending(m => m.CreatedDate)
                                     .ToListAsync();
 
@@ -285,7 +285,7 @@ namespace PortfolioService.Controllers
             
             var movement = new Movement
             {
-                PublicId = Guid.NewGuid(),
+                PublicId = dto.TeamId,
                 UserId = dto.UserId,
                 AssetId = dto.AssetId,
                 Quantity = (decimal)dto.Quantity,
