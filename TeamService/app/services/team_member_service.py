@@ -6,23 +6,13 @@ from app.models.team_membership import TeamMembership
 from app.schemas.team_membership import JoinCourseDTO
 
 class TeamMemberService:
-    @staticmethod
-    def delete_member(db: Session, public_id: UUID) -> bool:
+async def remove_student_by_ids(self, team_id: str, student_id: str):
+        membership = await self.repository.get_by_team_and_student(team_id, student_id)
+        
+        if not membership:
+            raise HTTPException(status_code=404, detail="Member not found in this team")
 
-        member = (
-            db.query(TeamMembership)
-            .filter(TeamMembership.publicid == public_id)
-            .first()
-        )
-
-        if not member:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"TeamMembership con UUID {public_id} no encontrado"
-            )
-
-        db.delete(member)
-        db.commit()
+        await self.repository.delete(membership["_id"]) 
         return True
 
 def get_students_by_course(db: Session, team_public_id: UUID):

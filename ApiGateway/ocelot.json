@@ -230,6 +230,26 @@
         "user_role": "professor"
       }
     },
+    // --- BORRAR MIEMBRO DE CURSO---
+    {
+      "DownstreamPathTemplate": "/teams/{teamId}/members/{userId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "courseservice.railway.internal",
+          "Port": 8000
+        }
+      ],
+      "UpstreamPathTemplate": "/teams/{teamId}/members/{userId}",
+      "UpstreamHttpMethod": [ "DELETE" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "SupabaseAuth",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "user_role": "professor"
+      }
+    },
     // --- 5.b GET ALL COURSES ---
     {
       "DownstreamPathTemplate": "/api/v1/courses/",

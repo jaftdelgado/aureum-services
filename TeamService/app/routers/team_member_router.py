@@ -12,19 +12,16 @@ router = APIRouter(
     tags=["Memberships"]
 )
 
-@router.delete("/{public_id}", status_code=status.HTTP_204_NO_CONTENT,
+@router.delete("/teams/{team_id}/members/{student_id}", status_code=status.HTTP_204_NO_CONTENT,
     summary="Eliminar miembro o salir del curso",
-    description="Elimina una membresia especifica mediante su ID publico. Se utiliza para que un estudiante abandone un curso o un profesor elimine a un alumno.",
+    description="Elimina una membresia especifica. Se utiliza para que un profesor elimine a un alumno.",
     responses={
         204: {"description": "Miembro eliminado exitosamente"},
         404: {"description": "Membresia no encontrada"}
     }
 )
-def delete_team_member(public_id: UUID, db: Session = Depends(get_db)):
-    try:
-        TeamMemberService.delete_member(db, public_id)
-    except HTTPException as e:
-        raise e
+async def remove_team_member(team_id: str, student_id: str):
+    await team_member_service.remove_student_by_ids(team_id, student_id)
 
 @router.post("/join", response_model=TeamMembershipResponse, status_code=status.HTTP_201_CREATED,
     summary="Unirse a un curso",
