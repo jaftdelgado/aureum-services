@@ -240,7 +240,7 @@
           "Port": 8000
         }
       ],
-      "UpstreamPathTemplate": "/teams/{teamId}/members/{userId}",
+      "UpstreamPathTemplate": "/api/courses/{teamId}/members/{userId}",
       "UpstreamHttpMethod": [ "DELETE" ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
