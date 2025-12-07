@@ -20,8 +20,13 @@ router = APIRouter(
         404: {"description": "Membresia no encontrada"}
     }
 )
-async def remove_team_member(team_id: str, student_id: str):
-    await team_member_service.remove_student_by_ids(team_id, student_id)
+def remove_team_member(
+    team_id: UUID, 
+    student_id: UUID, 
+    db: Session = Depends(get_db)
+):
+    TeamMemberService.remove_student_by_ids(db, team_id, student_id)
+    return
 
 @router.post("/join", response_model=TeamMembershipResponse, status_code=status.HTTP_201_CREATED,
     summary="Unirse a un curso",
