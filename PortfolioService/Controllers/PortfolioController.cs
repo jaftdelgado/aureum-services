@@ -143,28 +143,21 @@ namespace PortfolioService.Controllers
         [HttpGet("history/course/{courseId}/student/{studentId}")]
         public async Task<ActionResult<IEnumerable<HistoryDto>>> GetHistory(Guid courseId, Guid studentId)
         {
-           
             var movements = await _marketContext.Movements
                                     .Include(m => m.Transaction)
                                    .Where(m => m.UserId == studentId && m.PublicId == courseId)
                                     .OrderByDescending(m => m.CreatedDate)
                                     .ToListAsync();
-
             if (movements == null || !movements.Any())
             {
-                
                 return Ok(new List<HistoryDto>());
             }
-
             var resultList = new List<HistoryDto>();
             var client = _httpClientFactory.CreateClient();
             var baseUrl = GetAssetServiceUrl(); 
 
-
-
             foreach (var mov in movements)
             {
-                
                 string name = "Desconocido";
                 string symbol = "---";
 
@@ -175,7 +168,6 @@ namespace PortfolioService.Controllers
 
                     if (response != null)
                     {
-                        
                         name = response.Name ?? "Sin Nombre";
                         symbol = response.Symbol ?? "---";
                     }
@@ -188,20 +180,19 @@ namespace PortfolioService.Controllers
 
                 decimal price = mov.Transaction?.TransactionPrice ?? 0;
                 bool isBuy = mov.Transaction?.IsBuy ?? false;
+                decimal pnl = mov.Transaction?.RealizedPnl ?? 0;
 
                 resultList.Add(new HistoryDto
                 {
                     MovementId = mov.PublicId,
                     AssetId = mov.AssetId,
-
-                    
                     AssetName = name,
                     AssetSymbol = symbol,
-
                     Quantity = mov.Quantity,
                     Price = price,
                     TotalAmount = mov.Quantity * price,
                     Type = isBuy ? "Compra" : "Venta",
+                    RealizedPnl = pnl,
                     Date = mov.CreatedDate
                 });
             }
@@ -222,7 +213,8 @@ namespace PortfolioService.Controllers
                                                        && p.AssetId == dto.AssetId
                                                        && p.TeamId == dto.TeamId);
 
-            
+
+            decimal realizedPnl = 0;
             if (item == null)
             {
                 if (!dto.IsBuy)
@@ -263,7 +255,8 @@ namespace PortfolioService.Controllers
                         item.AvgPrice = (currentTotalCost + newPurchaseCost) / finalQuantity;
                     }
                     item.Quantity = finalQuantity;
-                    item.IsActive = true; 
+                    item.IsActive = true;
+                    realizedPnl = 0;
                 }
                 else
                 {
@@ -271,6 +264,8 @@ namespace PortfolioService.Controllers
                     if (item.Quantity < dto.Quantity)
                         return BadRequest(new { message = "Fondos insuficientes." });
 
+                    decimal avgPriceDecimal = (decimal)item.AvgPrice;
+                    realizedPnl = (dto.Price - avgPriceDecimal) * (decimal)dto.Quantity;
                     item.Quantity -= dto.Quantity;
 
                     if (item.Quantity <= 0.000001)
@@ -295,6 +290,7 @@ namespace PortfolioService.Controllers
                     PublicId = Guid.NewGuid(),
                     TransactionPrice = dto.Price,
                     IsBuy = dto.IsBuy,
+                    RealizedPnl = realizedPnl,
                     CreatedDate = DateTime.UtcNow
                 }
             };

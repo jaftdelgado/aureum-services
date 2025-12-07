@@ -12,7 +12,8 @@
         public decimal Quantity { get; set; }
         public decimal Price { get; set; }
         public decimal TotalAmount { get; set; } 
-        public string Type { get; set; } 
+        public string Type { get; set; }
+        public decimal RealizedPnl { get; set; }
         public DateTime Date { get; set; }
     }
 }
