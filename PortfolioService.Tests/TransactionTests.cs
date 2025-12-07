@@ -1,10 +1,11 @@
-﻿using System.Net;
-using System.Net.Http.Json;
-using FluentAssertions;
+﻿using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using PortfolioService.Data;
-using PortfolioService.Models;
 using PortfolioService.Dtos;
+using PortfolioService.Models;
+using System.Net;
+using System.Net.Http.Json;
 using Xunit;
 
 namespace PortfolioService.Tests
@@ -38,7 +39,7 @@ namespace PortfolioService.Tests
                     TeamId = teamId,
                     Quantity = 10,
                     AvgPrice = 100,
-                    CurrentValue = 1000, 
+                    CurrentValue = 1000,
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
@@ -52,7 +53,7 @@ namespace PortfolioService.Tests
                 AssetId = assetId,
                 TeamId = teamId,
                 Quantity = 10,
-                Price = 200, 
+                Price = 200,
                 IsBuy = true
             };
 
@@ -66,7 +67,7 @@ namespace PortfolioService.Tests
                 var item = context.PortfolioItems.FirstOrDefault(p => p.UserId == userId && p.AssetId == assetId);
 
                 item.Should().NotBeNull();
-                item.Quantity.Should().Be(20); 
+                item.Quantity.Should().Be(20);
 
                 item.AvgPrice.Should().Be(150);
             }
@@ -103,7 +104,7 @@ namespace PortfolioService.Tests
                 AssetId = assetId,
                 TeamId = teamId,
                 Quantity = 3,
-                Price = 120m, 
+                Price = 120m,
                 IsBuy = false
             };
 
@@ -117,7 +118,56 @@ namespace PortfolioService.Tests
                 var item = context.PortfolioItems.First(p => p.UserId == userId && p.AssetId == assetId);
 
                 item.Quantity.Should().Be(7);
-                item.AvgPrice.Should().Be(100); 
+                item.AvgPrice.Should().Be(100);
+            }
+        }
+        [Fact]
+        public async Task SellAsset_ShouldCalculateRealizedPnl()
+        {
+            var userId = Guid.NewGuid();
+            var assetId = Guid.NewGuid();
+            var teamId = Guid.NewGuid();
+
+            using (var scope = _factory.Services.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<PortfolioContext>();
+                context.PortfolioItems.Add(new PortfolioItem
+                {
+                    UserId = userId,
+                    AssetId = assetId,
+                    TeamId = teamId,
+                    Quantity = 10,
+                    AvgPrice = 100,
+                    CurrentValue = 1000,
+                    IsActive = true
+                });
+                await context.SaveChangesAsync();
+            }
+
+            var transaction = new PortfolioTransactionDto
+            {
+                UserId = userId,
+                AssetId = assetId,
+                TeamId = teamId,
+                Quantity = 5,
+                Price = 150m,
+                IsBuy = false
+            };
+
+            var response = await _client.PostAsJsonAsync("/api/portfolio/transaction", transaction);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            using (var scope = _factory.Services.CreateScope())
+            {
+                var marketContext = scope.ServiceProvider.GetRequiredService<MarketContext>();
+                var movement = await marketContext.Movements
+                                .Include(m => m.Transaction)
+                                .OrderByDescending(m => m.CreatedDate)
+                                .FirstOrDefaultAsync(m => m.UserId == userId && m.AssetId == assetId);
+
+                movement.Should().NotBeNull();
+                movement!.Transaction.Should().NotBeNull();
+                movement.Transaction!.RealizedPnl.Should().Be(250m);
             }
         }
     }
