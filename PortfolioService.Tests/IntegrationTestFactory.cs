@@ -58,6 +58,7 @@ namespace PortfolioService.Tests
                             movementid INT NOT NULL,
                             transactionprice DECIMAL NOT NULL,
                             isbuy BOOLEAN NOT NULL,
+                            realizedpnl DECIMAL NOT NULL DEFAULT 0,
                             createddate TIMESTAMP NOT NULL,
                             CONSTRAINT fk_transactions_movements FOREIGN KEY (movementid) REFERENCES public.movements(movementid)
                         );
