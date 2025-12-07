@@ -12,6 +12,8 @@ namespace PortfolioService.Models
 
         [Column("publicid")]
         public Guid PublicId { get; set; }
+        [Column("teamid")]
+        public Guid TeamId { get; set; }
 
         [Column("userid")]
         public Guid UserId { get; set; }
