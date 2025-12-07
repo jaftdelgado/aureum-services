@@ -213,7 +213,10 @@ namespace PortfolioService.Controllers
         [HttpPost("transaction")] 
         public async Task<IActionResult> RegisterSmartTransaction([FromBody] PortfolioTransactionDto dto)
         {
-           
+           if (dto.UserId == Guid.Empty || dto.TeamId == Guid.Empty || dto.AssetId == Guid.Empty)
+    {
+        return BadRequest(new { message = "Los IDs no pueden estar vacíos. Verifica los nombres de las propiedades en tu JSON." });
+    }
             var item = await _portfolioContext.PortfolioItems
                                 .FirstOrDefaultAsync(p => p.UserId == dto.UserId
                                                        && p.AssetId == dto.AssetId
