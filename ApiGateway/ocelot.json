@@ -399,6 +399,23 @@
         "AllowedScopes": []
       }
     },
+// --- 4.e PORTFOLIO: ACTUALIZAR WALLET (PUT) ---
+    {
+      "DownstreamPathTemplate": "/api/portfolio/wallet",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "portfolioservice.railway.internal",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/portfolio/wallet",
+      "UpstreamHttpMethod": ["PUT"],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "SupabaseAuth",
+        "AllowedScopes": []
+      }
+    },
 
     // --- 4.d PORTFOLIO: HISTORIAL DEL ESTUDIANTE ---
     {
