@@ -25,8 +25,8 @@ def get_members_by_team_id(db: Session, team_id: UUID):
 def get_by_team_and_student(db: Session, team_public_id: UUID, user_id: UUID):
     return (
         db.query(TeamMembership)
-        .join(Team, Team.id == TeamMembership.team_id)
+        .join(Team, Team.team_id == TeamMembership.teamid) 
         .filter(Team.public_id == team_public_id)
-        .filter(TeamMembership.user_id == user_id)
+        .filter(TeamMembership.userid == str(user_id)) 
         .first()
     )
