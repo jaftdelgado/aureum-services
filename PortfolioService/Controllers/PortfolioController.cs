@@ -345,5 +345,47 @@ namespace PortfolioService.Controllers
 
             return CreatedAtAction(nameof(GetByCourse), new { courseId = item.TeamId }, item);
         }
+        [HttpPut("wallet")]
+        public async Task<IActionResult> UpdateWallet([FromBody] WalletDto dto)
+        {
+            if (dto.MembershipId == Guid.Empty)
+            {
+                return BadRequest(new { message = "El MembershipId es obligatorio." });
+            }
+
+            var wallet = await _portfolioContext.UserWallets
+                                .FirstOrDefaultAsync(w => w.MembershipId == dto.MembershipId);
+
+            if (wallet == null)
+            {
+                wallet = new UserWallet
+                {
+                    PublicId = Guid.NewGuid(),
+                    MembershipId = dto.MembershipId,
+                    CashBalance = dto.CashBalance,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                _portfolioContext.UserWallets.Add(wallet);
+            }
+            else
+            {
+                wallet.CashBalance = dto.CashBalance;
+                wallet.UpdatedAt = DateTime.UtcNow;
+
+                _portfolioContext.UserWallets.Update(wallet);
+            }
+
+            try
+            {
+                await _portfolioContext.SaveChangesAsync();
+                return Ok(new { message = "Wallet actualizada correctamente", walletId = wallet.PublicId, balance = wallet.CashBalance });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error actualizando la wallet", error = ex.Message });
+            }
+        }
     }
 }
