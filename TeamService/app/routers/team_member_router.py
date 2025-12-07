@@ -25,7 +25,7 @@ def remove_team_member(
     student_id: UUID, 
     db: Session = Depends(get_db)
 ):
-    team_member_service.remove_student_by_ids(db, team_id, student_id)
+    team_member_service.TeamMemberService.remove_student_by_ids(db, team_id, student_id)
     return
 
 @router.post("/join", response_model=TeamMembershipResponse, status_code=status.HTTP_201_CREATED,
