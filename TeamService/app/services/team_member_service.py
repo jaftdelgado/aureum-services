@@ -13,7 +13,7 @@ class TeamMemberService:
         if not membership:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="El estudiante no es miembro de este equipo"
+                detail="El estudiante no es miembro de este equipo (o el equipo no existe)"
             )
 
         db.delete(membership)
