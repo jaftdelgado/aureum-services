@@ -232,7 +232,7 @@
     },
     // --- BORRAR MIEMBRO DE CURSO---
     {
-      "DownstreamPathTemplate": "/teams/{teamId}/members/{userId}",
+      "DownstreamPathTemplate": "/api/v1/memberships/teams/{teamId}/members/{userId}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
