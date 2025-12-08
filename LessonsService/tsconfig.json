@@ -2,6 +2,7 @@
   "compilerOptions": {
     "target": "es2018",
     "module": "commonjs",
+    "rootDir": "./src",
     "lib": ["es2018", "esnext.asynciterable"],
     "skipLibCheck": true,
     "sourceMap": true,
@@ -24,6 +25,6 @@
     "baseUrl": ".",
     "types": ["node", "jest"]
   },
-  "exclude": ["node_modules"],
-  "include": ["src/**/*", "tests/**/*"]
+  "exclude": ["node_modules", "tests"], 
+  "include": ["src/**/*"]
 }
