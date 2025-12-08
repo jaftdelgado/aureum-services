@@ -11,6 +11,8 @@ using System.Security.Claims;
 using System.Text.Json;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.Extensions.Caching.Memory;
+using ApiGateway.Services;          
+using ApiGateway.Services.External;
 
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
@@ -150,6 +152,8 @@ builder.Services.AddGrpcClient<Trading.LeccionesService.LeccionesServiceClient>(
 })
 .ConfigurePrimaryHttpMessageHandler(CreateGrpcHandler)
 .ConfigureChannel(options => options.MaxReceiveMessageSize = null);
+builder.Services.AddScoped<ILessonsGateway, LessonsGrpcGateway>();
+builder.Services.AddScoped<ILessonsService, LessonsService>();
 
 builder.Services.AddOcelot();
 
