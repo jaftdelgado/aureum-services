@@ -34,7 +34,8 @@ namespace PortfolioService.Tests
 
                 var movement = new Movement
                 {
-                    PublicId = courseId, 
+                    PublicId = Guid.NewGuid(), 
+                    TeamId = courseId,
                     UserId = studentId,
                     AssetId = assetId,
                     Quantity = 5,

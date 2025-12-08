@@ -67,8 +67,7 @@ namespace PortfolioService.Tests
                 var item = context.PortfolioItems.FirstOrDefault(p => p.UserId == userId && p.AssetId == assetId);
 
                 item.Should().NotBeNull();
-                item.Quantity.Should().Be(20);
-
+                item!.Quantity.Should().Be(20);
                 item.AvgPrice.Should().Be(150);
             }
         }
@@ -115,12 +114,14 @@ namespace PortfolioService.Tests
             using (var scope = _factory.Services.CreateScope())
             {
                 var context = scope.ServiceProvider.GetRequiredService<PortfolioContext>();
-                var item = context.PortfolioItems.First(p => p.UserId == userId && p.AssetId == assetId);
+                var item = context.PortfolioItems.FirstOrDefault(p => p.UserId == userId && p.AssetId == assetId);
 
-                item.Quantity.Should().Be(7);
+                item.Should().NotBeNull();
+                item!.Quantity.Should().Be(7);
                 item.AvgPrice.Should().Be(100);
             }
         }
+
         [Fact]
         public async Task SellAsset_ShouldCalculateRealizedPnl()
         {
