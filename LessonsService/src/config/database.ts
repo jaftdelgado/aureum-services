@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 
 export let gridFSBucket: mongoose.mongo.GridFSBucket;
-
 export const connectDatabase = async () => {
     try {
         const uri = process.env.MONGO_URI || "mongodb+srv://admin:admin1234@cluster0.5wusaqn.mongodb.net/trading_db?appName=Cluster0";
