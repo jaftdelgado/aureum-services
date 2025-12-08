@@ -21,7 +21,7 @@ namespace ApiGateway.Controllers
             return !string.IsNullOrEmpty(role) && role == "student";
         }
 
-        [HttpGet("api/lessons/{id:length(24)}")]
+       [HttpGet("api/lessons/{id:length(24)}")]
         [Authorize(AuthenticationSchemes = "SupabaseAuth")]
         public async Task<IActionResult> GetDetails(string id)
         {
@@ -32,7 +32,7 @@ namespace ApiGateway.Controllers
                 var result = await _lessonsService.GetLessonByIdAsync(id);
                 return Ok(result);
             }
-            catch (RpcException ex) when (ex.StatusCode == StatusCode.NotFound)
+            catch (RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.NotFound)
             {
                 return NotFound("Lección no encontrada");
             }
