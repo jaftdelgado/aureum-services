@@ -7,7 +7,7 @@ import {
   Min,
   IsUUID,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class GetAssetsDto {
@@ -86,5 +86,9 @@ export class GetAssetsDto {
   @IsOptional()
   @IsArray()
   @IsUUID('4', { each: true })
+  @Transform(({ value }) => {
+    if (!value) return [] as string[];
+    return Array.isArray(value) ? (value as string[]) : [value as string];
+  })
   selectedAssetIds?: string[];
 }
