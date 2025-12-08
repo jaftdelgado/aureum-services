@@ -1,37 +1,31 @@
 import mongoose from 'mongoose';
 import { Readable } from 'stream';
+import { Lesson } from '../src/models/Lesson';
+import { LessonService } from '../src/services/lesson.service';
+import { connectDatabase, gridFSBucket } from '../src/config/database'; 
 
-// 1. Definimos el esquema temporalmente aquí para la prueba
-// (Idealmente exportarías esto de tu server.ts, pero para no modificar tu código actual, lo replicamos)
-const lessonSchema = new mongoose.Schema({
-    title: String,
-    description: String,
-    thumbnail: Buffer,
-    videoFileId: mongoose.Types.ObjectId
-});
-const Lesson = mongoose.model('LessonTest', lessonSchema);
+const TEST_MONGO_URI = "mongodb://localhost:27017/lessons_test_db";
 
-// URI: En GitHub Actions usaremos el servicio 'mongo', en local 'localhost'
-const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/lessons_test_db";
-
-let gridFSBucket: mongoose.mongo.GridFSBucket;
+const lessonService = new LessonService();
 
 describe('LessonsService - Integration Tests', () => {
 
     // --- ANTES DE TODO: CONECTAR ---
     beforeAll(async () => {
-        await mongoose.connect(MONGO_URI);
-        // Inicializamos el bucket de videos
-        gridFSBucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db!, { bucketName: 'videos' });
+        // Forzamos la URI de prueba en las variables de entorno antes de conectar
+        process.env.MONGO_URI = TEST_MONGO_URI;
+        
+        // Usamos tu función de configuración real para conectar
+        // Esto asegura que 'gridFSBucket' se inicialice correctamente dentro de tu app
+        await connectDatabase();
     });
 
     // --- DESPUÉS DE CADA TEST: LIMPIAR ---
     afterEach(async () => {
-        const collections = mongoose.connection.collections;
-        for (const key in collections) {
-            await collections[key].deleteMany({});
-        }
-        // Limpiar archivos de GridFS es más complejo, para pruebas rápidas borramos la colección de archivos
+        // Limpiamos la colección de lecciones
+        await Lesson.deleteMany({});
+
+        // Limpiamos los archivos de GridFS (Videos)
         if (mongoose.connection.db) {
             await mongoose.connection.db.collection('videos.files').deleteMany({});
             await mongoose.connection.db.collection('videos.chunks').deleteMany({});
@@ -44,46 +38,47 @@ describe('LessonsService - Integration Tests', () => {
         await mongoose.connection.close();
     });
 
-  
-    test('Debe subir un video a GridFS y guardar la Lección', async () => {
-        
-        const videoContent = Buffer.from("Este es un video simulado en bytes");
+    
+    test('Debe subir un video y crear la lección usando el Service', async () => {
         const videoName = "video_prueba.mp4";
+        const videoContent = Buffer.from("Contenido simulado del video");
+
+        // 1. Probamos el método getUploadStream del servicio
+        const uploadStream = lessonService.getUploadStream(videoName);
         
-       
-        const uploadStream = gridFSBucket.openUploadStream(videoName);
+        // Simulamos la subida (pipe)
         const readable = new Readable();
         readable.push(videoContent);
         readable.push(null);
         readable.pipe(uploadStream);
 
-        
         await new Promise((resolve, reject) => {
             uploadStream.on('finish', resolve);
             uploadStream.on('error', reject);
         });
 
-        const videoId = uploadStream.id;
+        // 2. Probamos el método createLesson del servicio
+        const nuevaLeccion = await lessonService.createLesson(
+            "Curso Refactorizado",
+            "Descripción desde el test",
+            Buffer.from("imagen_miniatura"),
+            uploadStream.id
+        );
 
-       
-        const nuevaLeccion = new Lesson({
-            title: "Curso de Testing",
-            description: "Aprendiendo Jest con Mongo",
-            videoFileId: videoId
-        });
-        const guardada = await nuevaLeccion.save();
-
-        
-        expect(guardada._id).toBeDefined();
-        expect(guardada.title).toBe("Curso de Testing");
-        expect(guardada.videoFileId).toEqual(videoId);
+        // Verificaciones
+        expect(nuevaLeccion).toBeDefined();
+        expect(nuevaLeccion._id).toBeDefined();
+        expect(nuevaLeccion.title).toBe("Curso Refactorizado");
+        // Verificamos que el ID del video se guardó correctamente
+        expect(nuevaLeccion.videoFileId.toString()).toBe(uploadStream.id.toString());
     });
 
     
-    test('Debe recuperar el stream del video correctamente', async () => {
-        
+    test('Debe recuperar el stream del video usando el Service', async () => {
+        // Preparación: Subimos un archivo "a mano" para tener algo que descargar
         const contenidoOriginal = "Bytes del video para descargar";
         const uploadStream = gridFSBucket.openUploadStream("download_test.mp4");
+        
         const readable = new Readable();
         readable.push(Buffer.from(contenidoOriginal));
         readable.push(null);
@@ -92,9 +87,10 @@ describe('LessonsService - Integration Tests', () => {
         await new Promise((resolve) => uploadStream.on('finish', resolve));
         const fileId = uploadStream.id;
 
+        // --- ACT: Probamos el método getDownloadStream del servicio ---
+        const downloadStream = lessonService.getDownloadStream(fileId, 0);
         
-        const downloadStream = gridFSBucket.openDownloadStream(fileId);
-        
+        // Leemos el stream que nos devolvió el servicio
         const chunks: Buffer[] = [];
         for await (const chunk of downloadStream) {
             chunks.push(chunk);
@@ -102,7 +98,16 @@ describe('LessonsService - Integration Tests', () => {
         
         const bufferDescargado = Buffer.concat(chunks);
         
-        
         expect(bufferDescargado.toString()).toBe(contenidoOriginal);
+    });
+
+    test('Debe obtener todas las lecciones', async () => {
+        await Lesson.create({ title: "L1", description: "D1", videoFileId: new mongoose.Types.ObjectId() });
+        await Lesson.create({ title: "L2", description: "D2", videoFileId: new mongoose.Types.ObjectId() });
+
+        const lecciones = await lessonService.getAllLessons();
+
+        expect(lecciones).toHaveLength(2);
+        expect(lecciones[0].title).toBeDefined();
     });
 });
