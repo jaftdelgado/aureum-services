@@ -1,54 +1,18 @@
 from sqlalchemy.orm import Session
 from uuid import UUID
-
-from app.models.market_configuration import MarketConfiguration
-
-from app.schemas.market_configuration import (
-    MarketConfigCreate,
-    MarketConfigUpdate,
-)
-
+from app.schemas.market_configuration import MarketConfigCreate, MarketConfigUpdate
+from app.repositories.market_config_repository import MarketConfigRepository
 
 class MarketConfigurationService:
 
     @staticmethod
-    def get_by_public_id(db: Session, publicid: UUID) -> MarketConfiguration | None:
-        return (
-            db.query(MarketConfiguration)
-            .filter(MarketConfiguration.publicid == publicid)
-            .first()
-        )
+    def get_by_team_id(db: Session, team_id: UUID):
+        return MarketConfigRepository.get_by_team_id(db, team_id)
 
     @staticmethod
-    def create(db: Session, data: MarketConfigCreate) -> MarketConfiguration:
-        new_config = MarketConfiguration(**data.dict())
-        db.add(new_config)
-        db.commit()
-        db.refresh(new_config)
-        return new_config
+    def create(db: Session, data: MarketConfigCreate):
+        return MarketConfigRepository.create(db, data)
 
     @staticmethod
-    def update(
-        db: Session,
-        publicid: UUID,
-        data: MarketConfigUpdate
-    ) -> MarketConfiguration | None:
-
-        config = (
-            db.query(MarketConfiguration)
-            .filter(MarketConfiguration.publicid == publicid)
-            .first()
-        )
-
-        if not config:
-            return None
-
-        update_data = data.dict(exclude_unset=True)
-
-        for key, value in update_data.items():
-            setattr(config, key, value)
-
-        db.commit()
-        db.refresh(config)
-
-        return config
+    def update(db: Session, team_id: UUID, data: MarketConfigUpdate):
+        return MarketConfigRepository.update(db, team_id, data)

@@ -4,7 +4,7 @@ using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using PortfolioService.Data;
 using PortfolioService.Models;
-using PortfolioService.Dtos; 
+using PortfolioService.Dtos;
 using Xunit;
 
 namespace PortfolioService.Tests
@@ -22,31 +22,30 @@ namespace PortfolioService.Tests
         }
 
         [Fact]
-        public async Task GetHistory_ShouldReturnTransactions_WhenExists()
+        public async Task GetHistory_ShouldReturnTransactions_WithPnl()
         {
-            
             var studentId = Guid.NewGuid();
-            var courseId = Guid.NewGuid(); 
+            var courseId = Guid.NewGuid();
             var assetId = Guid.NewGuid();
 
-            
             using (var scope = _factory.Services.CreateScope())
             {
                 var marketContext = scope.ServiceProvider.GetRequiredService<MarketContext>();
 
                 var movement = new Movement
                 {
-                    PublicId = Guid.NewGuid(),
+                    PublicId = Guid.NewGuid(), 
+                    TeamId = courseId,
                     UserId = studentId,
                     AssetId = assetId,
-                    Quantity = 10,
+                    Quantity = 5,
                     CreatedDate = DateTime.UtcNow,
-                    
                     Transaction = new Transaction
                     {
                         PublicId = Guid.NewGuid(),
-                        TransactionPrice = 150.00m, 
-                        IsBuy = true,
+                        TransactionPrice = 200.00m,
+                        IsBuy = false, 
+                        RealizedPnl = 500.00m, 
                         CreatedDate = DateTime.UtcNow
                     }
                 };
@@ -55,10 +54,7 @@ namespace PortfolioService.Tests
                 await marketContext.SaveChangesAsync();
             }
 
-           
             var response = await _client.GetAsync($"/api/portfolio/history/course/{courseId}/student/{studentId}");
-
-           
             response.StatusCode.Should().Be(HttpStatusCode.OK);
 
             var historyList = await response.Content.ReadFromJsonAsync<List<HistoryDto>>();
@@ -66,15 +62,11 @@ namespace PortfolioService.Tests
             historyList.Should().NotBeNull();
             historyList.Should().HaveCount(1);
 
-            var item = historyList.First();
+            var item = historyList!.First();
             item.AssetId.Should().Be(assetId);
-            item.Quantity.Should().Be(10);
-            item.Price.Should().Be(150.00m);
-            item.Type.Should().Be("Compra"); 
-            item.TotalAmount.Should().Be(1500.00m); 
-
-           
-            item.AssetName.Should().Be("Desconocido");
+            item.Price.Should().Be(200.00m);
+            item.Type.Should().Be("Venta");
+            item.RealizedPnl.Should().Be(500.00m); 
         }
 
         [Fact]
@@ -87,7 +79,7 @@ namespace PortfolioService.Tests
             response.StatusCode.Should().Be(HttpStatusCode.OK);
 
             var content = await response.Content.ReadAsStringAsync();
-            content.Should().Be("[]"); 
+            content.Should().Be("[]");
         }
     }
 }

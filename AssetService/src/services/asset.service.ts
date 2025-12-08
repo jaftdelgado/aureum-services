@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Asset } from '@entities/asset.entity';
 import { AssetCategory } from '@entities/assetCategory.entity';
-import { CreateAssetDto } from '@dtos/create-asset.dto';
 import { GetAssetsDto } from '@dtos/get-assets.dto';
 import { PaginatedResult } from '@utils/pagination.util';
 
@@ -17,7 +16,9 @@ export class AssetService {
     private readonly categoryRepository: Repository<AssetCategory>,
   ) {}
 
-  async getAssets(dto: GetAssetsDto): Promise<PaginatedResult<Asset>> {
+  async getAssets(
+    dto: GetAssetsDto & { selectedAssetIds?: string[] },
+  ): Promise<PaginatedResult<Asset>> {
     const {
       page = 1,
       limit = 10,
@@ -27,6 +28,7 @@ export class AssetService {
       categoryId,
       orderByBasePrice,
       orderByAssetName,
+      selectedAssetIds = [],
     } = dto;
 
     const query = this.assetRepository
@@ -60,6 +62,16 @@ export class AssetService {
       query.orderBy('rank', 'DESC');
     }
 
+    if (selectedAssetIds.length) {
+      query
+        .addSelect(
+          `CASE WHEN asset.publicId IN (:...selectedAssetIds) THEN 0 ELSE 1 END`,
+          'is_selected',
+        )
+        .setParameter('selectedAssetIds', selectedAssetIds)
+        .addOrderBy('is_selected', 'ASC');
+    }
+
     const order: Record<string, 'ASC' | 'DESC'> = {};
     if (orderByBasePrice) order.basePrice = orderByBasePrice;
     if (orderByAssetName) order.assetName = orderByAssetName;
@@ -68,7 +80,11 @@ export class AssetService {
       query.addOrderBy(`asset.${key}`, value);
     });
 
-    if (!search && Object.keys(order).length === 0)
+    if (
+      !search &&
+      Object.keys(order).length === 0 &&
+      selectedAssetIds.length === 0
+    )
       query.orderBy('asset.assetId', 'DESC');
 
     const [data, total] = await query
@@ -88,7 +104,6 @@ export class AssetService {
     };
   }
 
-  // GET by publicId
   async findOneByPublicId(publicId: string): Promise<Asset> {
     const asset = await this.assetRepository.findOne({
       where: { publicId },
@@ -102,26 +117,5 @@ export class AssetService {
     }
 
     return asset;
-  }
-
-  // POST create
-  async create(dto: CreateAssetDto): Promise<Asset> {
-    const asset = this.assetRepository.create(dto);
-
-    if (dto.categoryId) {
-      const category = await this.categoryRepository.findOneBy({
-        categoryId: dto.categoryId,
-      });
-
-      if (!category) {
-        throw new NotFoundException(
-          `La categoría con ID ${dto.categoryId} no existe`,
-        );
-      }
-
-      asset.category = category;
-    }
-
-    return this.assetRepository.save(asset);
   }
 }

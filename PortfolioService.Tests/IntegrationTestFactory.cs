@@ -4,14 +4,25 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.PostgreSql;
-using System.Linq;
-using System.Threading.Tasks;
-using Xunit;
-using PortfolioService;
 using PortfolioService.Data;
+using PortfolioService.Services.External; 
+using PortfolioService.Dtos;
 
 namespace PortfolioService.Tests
 {
+    public class MockAssetGateway : IAssetGateway
+    {
+        public Task<AssetExternalDto> GetAssetInfoAsync(Guid assetId)
+        {
+            return Task.FromResult(new AssetExternalDto
+            {
+                Id = assetId,
+                Name = "Test Asset",
+                Symbol = "TST"
+            });
+        }
+    }
+
     public class IntegrationTestFactory : WebApplicationFactory<Program>, IAsyncLifetime
     {
         private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder()
@@ -33,6 +44,11 @@ namespace PortfolioService.Tests
                 if (descriptorMarket != null) services.Remove(descriptorMarket);
                 services.AddDbContext<MarketContext>(options => options.UseNpgsql(_dbContainer.GetConnectionString()));
 
+                var descriptorGateway = services.SingleOrDefault(d => d.ServiceType == typeof(IAssetGateway));
+                if (descriptorGateway != null) services.Remove(descriptorGateway);
+                services.AddScoped<IAssetGateway, MockAssetGateway>();
+
+                // 4. Inicializar Base de Datos
                 var sp = services.BuildServiceProvider();
                 using (var scope = sp.CreateScope())
                 {
@@ -48,6 +64,7 @@ namespace PortfolioService.Tests
                             movementid SERIAL PRIMARY KEY,
                             publicid UUID NOT NULL,
                             userid UUID NOT NULL,
+                            teamid UUID NOT NULL,
                             assetid UUID NOT NULL,
                             quantity DECIMAL NOT NULL,
                             createddate TIMESTAMP NOT NULL
@@ -58,6 +75,7 @@ namespace PortfolioService.Tests
                             movementid INT NOT NULL,
                             transactionprice DECIMAL NOT NULL,
                             isbuy BOOLEAN NOT NULL,
+                            realizedpnl DECIMAL NOT NULL DEFAULT 0,
                             createddate TIMESTAMP NOT NULL,
                             CONSTRAINT fk_transactions_movements FOREIGN KEY (movementid) REFERENCES public.movements(movementid)
                         );

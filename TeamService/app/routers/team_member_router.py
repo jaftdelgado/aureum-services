@@ -12,19 +12,21 @@ router = APIRouter(
     tags=["Memberships"]
 )
 
-@router.delete("/{public_id}", status_code=status.HTTP_204_NO_CONTENT,
+@router.delete("/teams/{team_id}/members/{student_id}", status_code=status.HTTP_204_NO_CONTENT,
     summary="Eliminar miembro o salir del curso",
-    description="Elimina una membresia especifica mediante su ID publico. Se utiliza para que un estudiante abandone un curso o un profesor elimine a un alumno.",
+    description="Elimina una membresia especifica. Se utiliza para que un profesor elimine a un alumno.",
     responses={
         204: {"description": "Miembro eliminado exitosamente"},
         404: {"description": "Membresia no encontrada"}
     }
 )
-def delete_team_member(public_id: UUID, db: Session = Depends(get_db)):
-    try:
-        TeamMemberService.delete_member(db, public_id)
-    except HTTPException as e:
-        raise e
+def remove_team_member(
+    team_id: UUID, 
+    student_id: UUID, 
+    db: Session = Depends(get_db)
+):
+    team_member_service.TeamMemberService.remove_student_by_ids(db, team_id, student_id)
+    return
 
 @router.post("/join", response_model=TeamMembershipResponse, status_code=status.HTTP_201_CREATED,
     summary="Unirse a un curso",
@@ -47,11 +49,11 @@ def get_course_students(team_public_id: UUID, db: Session = Depends(get_db)):
     return team_member_service.get_students_by_course(db, team_public_id)
 
 @router.get("/teams/{team_id}/members/{student_id}", response_model=TeamMembershipResponse,
-    summary="Obtener membresía específica",
-    description="Obtiene el UUID de la relación a partir del ID del curso y del estudiante.",
+    summary="Obtener membresÃ­a especÃ­fica",
+    description="Obtiene el UUID de la relaciÃ³n a partir del ID del curso y del estudiante.",
     responses={
-        200: {"description": "Membresía encontrada"},
-        404: {"description": "Membresía no encontrada"}
+        200: {"description": "MembresÃ­a encontrada"},
+        404: {"description": "MembresÃ­a no encontrada"}
     }
 )
 def get_team_membership(

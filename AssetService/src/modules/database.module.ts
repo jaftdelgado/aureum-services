@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Asset } from '@entities/asset.entity';
-import { CustomAsset } from '@entities/customAsset.entity';
 import { AssetCategory } from '@entities/assetCategory.entity';
 import { TeamAsset } from '@entities/teamAsset.entity';
+import { Movement } from '@entities/movement.entity';
 
 @Module({
   imports: [
@@ -11,7 +11,7 @@ import { TeamAsset } from '@entities/teamAsset.entity';
       name: 'assetsConnection',
       type: 'postgres',
       url: process.env.ASSETS_DB_URL,
-      entities: [Asset, CustomAsset, AssetCategory],
+      entities: [Asset, AssetCategory],
       synchronize: false,
       ssl: { rejectUnauthorized: false },
     }),
@@ -20,7 +20,7 @@ import { TeamAsset } from '@entities/teamAsset.entity';
       name: 'marketConnection',
       type: 'postgres',
       url: process.env.MARKET_DB_URL,
-      entities: [TeamAsset],
+      entities: [TeamAsset, Movement],
       synchronize: false,
       ssl: { rejectUnauthorized: false },
     }),

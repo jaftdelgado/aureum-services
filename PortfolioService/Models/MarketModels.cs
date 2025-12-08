@@ -12,6 +12,8 @@ namespace PortfolioService.Models
 
         [Column("publicid")]
         public Guid PublicId { get; set; }
+        [Column("teamid")]
+        public Guid TeamId { get; set; }
 
         [Column("userid")]
         public Guid UserId { get; set; }
@@ -47,6 +49,9 @@ namespace PortfolioService.Models
 
         [Column("isbuy")]
         public bool IsBuy { get; set; }
+
+        [Column("realizedpnl")]
+        public decimal RealizedPnl { get; set; }
 
         [Column("createddate")]
         public DateTime CreatedDate { get; set; }

@@ -11,7 +11,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/users/profiles/{authId}/avatar",
-      "UpstreamHttpMethod": [ "GET" ]
+      "UpstreamHttpMethod": ["GET"]
     },
     // --- 1. USER SERVICE ---
     {
@@ -24,7 +24,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/users/profiles",
-      "UpstreamHttpMethod": [ "POST", "GET" ]
+      "UpstreamHttpMethod": ["POST", "GET"]
     },
 
     // --- 1.b USER SERVICE ---
@@ -38,7 +38,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/users/profiles/{authId}",
-      "UpstreamHttpMethod": [ "GET" ],
+      "UpstreamHttpMethod": ["GET"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -56,7 +56,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/users/profiles/{authId}",
-      "UpstreamHttpMethod": [ "PATCH" ],
+      "UpstreamHttpMethod": ["PATCH"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -74,7 +74,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/users/profiles/{authId}/avatar",
-      "UpstreamHttpMethod": [ "POST" ],
+      "UpstreamHttpMethod": ["POST"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -92,7 +92,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/users/profiles/{authId}",
-      "UpstreamHttpMethod": [ "DELETE" ],
+      "UpstreamHttpMethod": ["DELETE"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -109,7 +109,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/users/profiles/batch",
-      "UpstreamHttpMethod": [ "POST" ],
+      "UpstreamHttpMethod": ["POST"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -129,7 +129,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/assets",
-      "UpstreamHttpMethod": [ "GET", "POST" ],
+      "UpstreamHttpMethod": ["GET", "POST"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -138,7 +138,7 @@
 
     // --- 3. ASSET SERVICE ---
     {
-      "DownstreamPathTemplate": "/assets/{id}",
+      "DownstreamPathTemplate": "/assets/{publicId}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -146,17 +146,17 @@
           "Port": 3000
         }
       ],
-      "UpstreamPathTemplate": "/api/assets/{id}",
-      "UpstreamHttpMethod": [ "GET" ],
+      "UpstreamPathTemplate": "/api/assets/{publicId}",
+      "UpstreamHttpMethod": ["GET"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
       }
     },
 
-    // --- 4. TEAM ASSETS (Asociar Activos a Equipos) ---
+    // --- TEAM ASSETS: Sincronizar assets de un equipo (POST) ---
     {
-      "DownstreamPathTemplate": "/team-assets",
+      "DownstreamPathTemplate": "/team-assets/sync",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -164,8 +164,8 @@
           "Port": 3000
         }
       ],
-      "UpstreamPathTemplate": "/api/team-assets",
-      "UpstreamHttpMethod": [ "POST" ],
+      "UpstreamPathTemplate": "/api/team-assets/sync",
+      "UpstreamHttpMethod": ["POST"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -175,7 +175,7 @@
       }
     },
 
-    // --- 5. TEAM ASSETS (Ver activos de un equipo) ---
+    // --- TEAM ASSETS: Obtener por equipo ---
     {
       "DownstreamPathTemplate": "/team-assets/team/{teamId}",
       "DownstreamScheme": "http",
@@ -186,7 +186,24 @@
         }
       ],
       "UpstreamPathTemplate": "/api/team-assets/team/{teamId}",
-      "UpstreamHttpMethod": [ "GET" ],
+      "UpstreamHttpMethod": ["GET"],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "SupabaseAuth",
+        "AllowedScopes": []
+      }
+    },
+    // --- TEAM ASSETS: Obtener por publicId ---
+    {
+      "DownstreamPathTemplate": "/team-assets/{publicId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "assetservice.railway.internal",
+          "Port": 3000
+        }
+      ],
+      "UpstreamPathTemplate": "/api/team-assets/{publicId}",
+      "UpstreamHttpMethod": ["GET"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -204,7 +221,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/portfolio",
-      "UpstreamHttpMethod": [ "GET", "POST" ],
+      "UpstreamHttpMethod": ["GET", "POST"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -221,13 +238,30 @@
         }
       ],
       "UpstreamPathTemplate": "/api/courses",
-      "UpstreamHttpMethod": [ "POST" ],
+      "UpstreamHttpMethod": ["POST"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
       },
       "RouteClaimsRequirement": {
         "user_role": "professor"
+      }
+    },
+    // --- BORRAR MIEMBRO DE CURSO---
+    {
+      "DownstreamPathTemplate": "/api/v1/memberships/teams/{teamId}/members/{userId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "courseservice.railway.internal",
+          "Port": 8000
+        }
+      ],
+      "UpstreamPathTemplate": "/api/courses/{teamId}/members/{userId}",
+      "UpstreamHttpMethod": ["DELETE"],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "SupabaseAuth",
+        "AllowedScopes": []
       }
     },
     // --- OBTENER MEMBRESÍA ESPECÍFICA (GET) ---
@@ -258,7 +292,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/courses",
-      "UpstreamHttpMethod": [ "GET" ],
+      "UpstreamHttpMethod": ["GET"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -279,7 +313,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/courses/professor/{id}",
-      "UpstreamHttpMethod": [ "GET" ],
+      "UpstreamHttpMethod": ["GET"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -300,7 +334,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/courses/student/{id}",
-      "UpstreamHttpMethod": [ "GET" ],
+      "UpstreamHttpMethod": ["GET"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -320,7 +354,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/memberships/join",
-      "UpstreamHttpMethod": [ "POST" ],
+      "UpstreamHttpMethod": ["POST"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -340,13 +374,10 @@
         }
       ],
       "UpstreamPathTemplate": "/api/courses/{identifier}/students",
-      "UpstreamHttpMethod": [ "GET" ],
+      "UpstreamHttpMethod": ["GET"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
-      },
-      "RouteClaimsRequirement": {
-        "user_role": "professor"
       }
     },
     // --- 4.a PORTFOLIO: TRANSACCIÓN (COMPRA/VENTA) ---
@@ -360,7 +391,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/portfolio/transaction",
-      "UpstreamHttpMethod": [ "POST" ],
+      "UpstreamHttpMethod": ["POST"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -378,7 +409,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/portfolio/course/{courseId}",
-      "UpstreamHttpMethod": [ "GET" ],
+      "UpstreamHttpMethod": ["GET"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -396,7 +427,24 @@
         }
       ],
       "UpstreamPathTemplate": "/api/portfolio/detail/{portfolioId}",
-      "UpstreamHttpMethod": [ "GET" ],
+      "UpstreamHttpMethod": ["GET"],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "SupabaseAuth",
+        "AllowedScopes": []
+      }
+    },
+    // --- 4.e PORTFOLIO: ACTUALIZAR WALLET (PUT) ---
+    {
+      "DownstreamPathTemplate": "/api/portfolio/wallet",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "portfolioservice.railway.internal",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/portfolio/wallet",
+      "UpstreamHttpMethod": ["PUT"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -414,7 +462,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/portfolio/history/course/{courseId}/student/{studentId}",
-      "UpstreamHttpMethod": [ "GET" ],
+      "UpstreamHttpMethod": ["GET"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -430,7 +478,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/cloud/upload",
-      "UpstreamHttpMethod": [ "POST" ],
+      "UpstreamHttpMethod": ["POST"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -447,7 +495,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/courses/{publicId}/image",
-      "UpstreamHttpMethod": [ "GET" ]
+      "UpstreamHttpMethod": ["GET"]
     },
     // --- 6. MARKET CONFIGURATION (TEAM SERVICE) ---
 
@@ -462,7 +510,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/market-config",
-      "UpstreamHttpMethod": [ "POST" ],
+      "UpstreamHttpMethod": ["POST"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -471,7 +519,7 @@
 
     // 6.b Obtener Configuración por Team (GET)
     {
-      "DownstreamPathTemplate": "/api/market-config/{teamId}",
+      "DownstreamPathTemplate": "/api/market-config/{team_id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -479,8 +527,8 @@
           "Port": 8000
         }
       ],
-      "UpstreamPathTemplate": "/api/market-config/{teamId}",
-      "UpstreamHttpMethod": [ "GET" ],
+      "UpstreamPathTemplate": "/api/market-config/{team_id}",
+      "UpstreamHttpMethod": ["GET"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -489,7 +537,7 @@
 
     // 6.c Actualizar Configuración (PUT)
     {
-      "DownstreamPathTemplate": "/api/market-config/{teamId}",
+      "DownstreamPathTemplate": "/api/market-config/{team_id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -497,8 +545,8 @@
           "Port": 8000
         }
       ],
-      "UpstreamPathTemplate": "/api/market-config/{teamId}",
-      "UpstreamHttpMethod": [ "PUT" ],
+      "UpstreamPathTemplate": "/api/market-config/{team_id}",
+      "UpstreamHttpMethod": ["PUT"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -508,5 +556,4 @@
   "GlobalConfiguration": {
     "BaseUrl": "https://gateway-production.up.railway.app"
   }
-  
 }
