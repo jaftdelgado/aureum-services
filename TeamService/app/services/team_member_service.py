@@ -54,7 +54,7 @@ def get_membership_detail(db: Session, team_public_id: UUID, student_id: UUID):
     if not membership:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, 
-            detail="Membresía no encontrada para este estudiante en el curso especificado."
+            detail="Membresia no encontrada para este estudiante en el curso especificado."
         )
     
     return membership
