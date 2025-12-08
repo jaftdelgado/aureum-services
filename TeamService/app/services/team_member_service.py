@@ -47,3 +47,14 @@ def join_course_by_code(db: Session, join_data: JoinCourseDTO):
         )
 
     return team_member_repository.create_membership(db, course.public_id, join_data.user_id)
+
+def get_membership_detail(db: Session, team_public_id: UUID, student_id: UUID):
+    membership = team_member_repository.get_by_team_and_student(db, team_public_id, student_id)
+    
+    if not membership:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="Membresía no encontrada para este estudiante en el curso especificado."
+        )
+    
+    return membership

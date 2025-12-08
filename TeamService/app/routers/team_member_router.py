@@ -47,3 +47,18 @@ def join_course(join_data: JoinCourseDTO, db: Session = Depends(get_db)):
 )
 def get_course_students(team_public_id: UUID, db: Session = Depends(get_db)):
     return team_member_service.get_students_by_course(db, team_public_id)
+
+@router.get("/teams/{team_id}/members/{student_id}", response_model=TeamMembershipResponse,
+    summary="Obtener membresía específica",
+    description="Obtiene el UUID de la relación a partir del ID del curso y del estudiante.",
+    responses={
+        200: {"description": "Membresía encontrada"},
+        404: {"description": "Membresía no encontrada"}
+    }
+)
+def get_team_membership(
+    team_id: UUID, 
+    student_id: UUID, 
+    db: Session = Depends(get_db)
+):
+    return team_member_service.get_membership_detail(db, team_id, student_id)

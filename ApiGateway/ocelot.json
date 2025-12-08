@@ -264,6 +264,23 @@
         "AllowedScopes": []
       }
     },
+    // --- OBTENER MEMBRESÍA ESPECÍFICA (GET) ---
+    {
+      "DownstreamPathTemplate": "/api/v1/memberships/teams/{teamId}/members/{studentId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "courseservice.railway.internal",
+          "Port": 8000
+        }
+      ],
+      "UpstreamPathTemplate": "/api/memberships/teams/{teamId}/members/{studentId}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "SupabaseAuth",
+        "AllowedScopes": []
+      }
+    },
     // --- 5.b GET ALL COURSES ---
     {
       "DownstreamPathTemplate": "/api/v1/courses/",
