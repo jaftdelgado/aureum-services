@@ -208,7 +208,7 @@
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
       }
-    }
+    },
 
     // --- 4. PORTFOLIO SERVICE (C#) ---
     {
