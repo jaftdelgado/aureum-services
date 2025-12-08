@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PortfolioService.Data;
+using PortfolioService.Services;
+using PortfolioService.Services.External;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +18,8 @@ builder.Services.AddDbContext<MarketContext>(options =>
     options.UseNpgsql(marketConnectionString));
 
 builder.Services.AddHttpClient();
+builder.Services.AddScoped<IAssetGateway, AssetGateway>();
+builder.Services.AddScoped<IPortfolioManagementService, PortfolioManagementService>();
 
 builder.Services.AddCors(options =>
 {

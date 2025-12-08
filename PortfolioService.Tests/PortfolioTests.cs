@@ -1,8 +1,7 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
-using PortfolioService.Dtos; 
-using PortfolioService.Models;
+using PortfolioService.Dtos;
 using Xunit;
 
 namespace PortfolioService.Tests
@@ -35,9 +34,9 @@ namespace PortfolioService.Tests
             {
                 UserId = Guid.NewGuid(),
                 AssetId = Guid.NewGuid(),
-                TeamId = Guid.NewGuid(), 
+                TeamId = Guid.NewGuid(),
                 Quantity = 10,
-                AvgPrice = 100.00, 
+                AvgPrice = 100.00,
                 Notes = "Test Integration"
             };
 
@@ -75,21 +74,18 @@ namespace PortfolioService.Tests
             content.Should().NotBeNull();
             content.Should().HaveCount(1);
 
-            var item = content.First();
+            var item = content!.First(); 
             item.Quantity.Should().Be(10);
             item.AvgPrice.Should().Be(150.50);
-           
-            
+            item.AssetSymbol.Should().Be("TST");
         }
 
         [Fact]
         public async Task CreateWithMissingData_ShouldReturnBadRequest()
         {
-            
             var invalidItem = new
             {
                 Quantity = 10
-                
             };
 
             var response = await _client.PostAsJsonAsync("/api/portfolio", invalidItem);
