@@ -4,7 +4,7 @@
   "description": "",
   "main": "server.ts",
   "scripts": {
-    "build": "tsc && cp -r src/proto dist",
+    "build": "rm -rf dist && tsc && cp -r src/proto dist",
     "start": "node dist/server.js",
     "dev": "nodemon src/server.ts",
     "test": "jest"
