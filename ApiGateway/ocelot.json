@@ -138,7 +138,7 @@
 
     // --- 3. ASSET SERVICE ---
     {
-      "DownstreamPathTemplate": "/assets/{id}",
+      "DownstreamPathTemplate": "/assets/{publicId}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -146,7 +146,7 @@
           "Port": 3000
         }
       ],
-      "UpstreamPathTemplate": "/api/assets/{id}",
+      "UpstreamPathTemplate": "/api/assets/{publicId}",
       "UpstreamHttpMethod": ["GET"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
@@ -154,9 +154,9 @@
       }
     },
 
-    // --- 4. TEAM ASSETS (Asociar Activos a Equipos) ---
+    // --- TEAM ASSETS: Sincronizar assets de un equipo (POST) ---
     {
-      "DownstreamPathTemplate": "/team-assets",
+      "DownstreamPathTemplate": "/team-assets/sync",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -164,7 +164,7 @@
           "Port": 3000
         }
       ],
-      "UpstreamPathTemplate": "/api/team-assets",
+      "UpstreamPathTemplate": "/api/team-assets/sync",
       "UpstreamHttpMethod": ["POST"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
@@ -175,7 +175,7 @@
       }
     },
 
-    // --- 5. TEAM ASSETS (Ver activos de un equipo) ---
+    // --- TEAM ASSETS: Obtener por equipo ---
     {
       "DownstreamPathTemplate": "/team-assets/team/{teamId}",
       "DownstreamScheme": "http",
@@ -192,6 +192,23 @@
         "AllowedScopes": []
       }
     },
+    // --- TEAM ASSETS: Obtener por publicId ---
+    {
+      "DownstreamPathTemplate": "/team-assets/{publicId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "assetservice.railway.internal",
+          "Port": 3000
+        }
+      ],
+      "UpstreamPathTemplate": "/api/team-assets/{publicId}",
+      "UpstreamHttpMethod": ["GET"],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "SupabaseAuth",
+        "AllowedScopes": []
+      }
+    }
 
     // --- 4. PORTFOLIO SERVICE (C#) ---
     {
@@ -241,7 +258,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/courses/{teamId}/members/{userId}",
-      "UpstreamHttpMethod": [ "DELETE" ],
+      "UpstreamHttpMethod": ["DELETE"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "SupabaseAuth",
         "AllowedScopes": []
@@ -399,7 +416,7 @@
         "AllowedScopes": []
       }
     },
-// --- 4.e PORTFOLIO: ACTUALIZAR WALLET (PUT) ---
+    // --- 4.e PORTFOLIO: ACTUALIZAR WALLET (PUT) ---
     {
       "DownstreamPathTemplate": "/api/portfolio/wallet",
       "DownstreamScheme": "http",
