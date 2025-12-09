@@ -10,7 +10,7 @@ message MarketRequest {
 }
 
 message MarketAsset {
-  int32 id = 1;
+  string id = 1;
   string symbol = 2;
   string name = 3;
   double price = 4;
