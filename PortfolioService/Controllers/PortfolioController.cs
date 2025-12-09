@@ -96,5 +96,17 @@ namespace PortfolioService.Controllers
             }
             return Ok(new { message = result.Message, walletId = result.WalletId, balance = result.Balance });
         }
+        [HttpGet("history/team/{teamId}")]
+        public async Task<ActionResult<PaginatedResponseDto<HistoryDto>>> GetTeamHistory(
+                    Guid teamId,
+                    [FromQuery] int page = 1,
+                    [FromQuery] int pageSize = 10)
+        {
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 10;
+            if (pageSize > 100) pageSize = 100;
+            var result = await _portfolioService.GetTeamHistoryAsync(teamId, page, pageSize);
+            return Ok(result);
+        }
     }
 }

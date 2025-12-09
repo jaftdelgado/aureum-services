@@ -16,6 +16,7 @@ namespace PortfolioService.Services
         Task<(bool Success, string Message)> DeletePortfolioItemAsync(int portfolioId);
         Task<PortfolioItem> CreatePortfolioItemAsync(PortfolioItem item);
         Task<(bool Success, string Message, Guid? WalletId, decimal? Balance)> UpdateWalletAsync(WalletDto dto);
+        Task<PaginatedResponseDto<HistoryDto>> GetTeamHistoryAsync(Guid teamId, int page, int pageSize);
     }
 
     public class PortfolioManagementService : IPortfolioManagementService
@@ -286,6 +287,60 @@ namespace PortfolioService.Services
             {
                 return (false, $"Error actualizando la wallet: {ex.Message}", null, null);
             }
+        }
+        public async Task<PaginatedResponseDto<HistoryDto>> GetTeamHistoryAsync(Guid teamId, int page, int pageSize)
+        {
+            var query = _marketContext.Movements
+                                    .Include(m => m.Transaction)
+                                    .Where(m => m.TeamId == teamId);
+            var totalItems = await query.CountAsync();
+            var movements = await query
+                                    .OrderByDescending(m => m.CreatedDate)
+                                    .Skip((page - 1) * pageSize)
+                                    .Take(pageSize)
+                                    .ToListAsync();
+
+            if (!movements.Any())
+            {
+                return new PaginatedResponseDto<HistoryDto>
+                {
+                    Items = new List<HistoryDto>(),
+                    TotalItems = 0,
+                    Page = page,
+                    PageSize = pageSize
+                };
+            }
+            var tasks = movements.Select(async mov =>
+            {
+                var assetInfo = await _assetGateway.GetAssetInfoAsync(mov.AssetId);
+
+                decimal price = mov.Transaction?.TransactionPrice ?? 0;
+                bool isBuy = mov.Transaction?.IsBuy ?? false;
+                decimal pnl = mov.Transaction?.RealizedPnl ?? 0;
+
+                return new HistoryDto
+                {
+                    MovementId = mov.PublicId,
+                    AssetId = mov.AssetId,
+                    AssetName = assetInfo?.Name ?? "Unknown", 
+                    AssetSymbol = assetInfo?.Symbol ?? "???",
+                    Quantity = mov.Quantity,
+                    Price = price,
+                    TotalAmount = mov.Quantity * price,
+                    Type = isBuy ? "Compra" : "Venta",
+                    RealizedPnl = pnl,
+                    Date = mov.CreatedDate
+                };
+            });
+            var resultItems = await Task.WhenAll(tasks);
+
+            return new PaginatedResponseDto<HistoryDto>
+            {
+                Items = resultItems,
+                TotalItems = totalItems,
+                Page = page,
+                PageSize = pageSize
+            };
         }
     }
 }
