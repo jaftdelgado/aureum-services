@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PortfolioService.Data;
 using PortfolioService.Dtos;
-using PortfolioService.Dtos.PortfolioService.Dtos;
 using PortfolioService.Models;
 using PortfolioService.Services.External;
 
