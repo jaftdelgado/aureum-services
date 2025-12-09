@@ -97,6 +97,12 @@ namespace PortfolioService.Dtos
         /// Nombre completo o comercial del activo (ej. "Apple Inc.", "Bitcoin").
         /// </summary>
         [JsonPropertyName("assetName")]
+        public string Name { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Símbolo o "ticker" bursátil que identifica al activo en el mercado (ej. "AAPL", "BTC").
+        /// </summary>
+        [JsonPropertyName("assetSymbol")]
         public string Symbol { get; set; } = string.Empty;
     }
 }
