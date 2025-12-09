@@ -1,34 +1,55 @@
 syntax = "proto3";
-
 package trading;
 
+// Servicio: LeccionesService
+// Define la interfaz de comunicación gRPC para el dominio de contenido educativo.
+// Este servicio maneja la recuperación de metadatos y la transmisión eficiente
+// de video (streaming) hacia otros microservicios o el API Gateway.
 service LeccionesService {
+  
+  // Obtiene la ficha técnica completa de una lección.
+  // Retorna error gRPC 'NOT_FOUND' si el ID no existe en MongoDB.
   rpc ObtenerDetalles (LeccionRequest) returns (LeccionDetalles);
+  
+  // Inicia la transmisión del archivo de video mediante Server-Side Streaming.
+  // Soporta "Range Requests" (bytes parciales) para permitir adelantar/retroceder
+  // en reproductores de video sin descargar todo el archivo.
   rpc DescargarVideo (DescargaRequest) returns (stream VideoChunk);
+  
+  // Recupera el catálogo completo de lecciones disponibles.
+  // Útil para vistas de índice o galerías en el frontend.
   rpc ObtenerTodas (Empty) returns (ListaLecciones);
 }
 
+// Mensajes de Solicitud (Requests)
+// Identificador único para operaciones puntuales.
 message LeccionRequest {
-  string id_leccion = 1;
+  string id_leccion = 1; 
 }
+// Parámetros para la descarga de video por segmentos.
 message DescargaRequest {
-  string id_leccion = 1;
-  int64 start_byte = 2;
-  int64 end_byte = 3;
+  string id_leccion = 1; 
+  int64 start_byte = 2; 
+  int64 end_byte = 3;    
 }
+// Mensaje utilitario vacío para RPCs que no requieren parámetros de entrada.
+message Empty {}
 
+// Mensajes de Respuesta (Responses)
+// Objeto de transferencia con los metadatos de la lección.
 message LeccionDetalles {
-  string id = 1;
-  string titulo = 2;
-  string descripcion = 3;
-  bytes miniatura = 4;
-  int64 total_bytes = 5;
+  string id = 1;           
+  string titulo = 2;       
+  string descripcion = 3;  
+  bytes miniatura = 4;     
+  int64 total_bytes = 5;  
 }
+// Bloque de datos binarios del video.
+// Se envía como una secuencia (stream) de mensajes hasta completar la solicitud.
 message VideoChunk {
   bytes contenido = 1; 
 }
-  message Empty {}
-
+// Contenedor para listados masivos.
 message ListaLecciones {
-  repeated LeccionDetalles lecciones = 1;
+  repeated LeccionDetalles lecciones = 1; 
 }
