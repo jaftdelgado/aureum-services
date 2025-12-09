@@ -397,7 +397,7 @@ func (h *MarketHandler) BuyAsset(ctx context.Context, req *pb.BuyAssetRequest) (
 	resp := &pb.BuyAssetResponse{
 		MovementPublicId:    mov.PublicID.String(),
 		TransactionPublicId: trx.PublicID.String(),
-		TransactionPrice:    price,
+		TransactionPrice:    -price,
 		Quantity:            qty,
 		Notifications:       notifications,
 	}
@@ -494,7 +494,7 @@ func (h *MarketHandler) SellAsset(ctx context.Context, req *pb.SellAssetRequest)
 	resp := &pb.SellAssetResponse{
 		MovementPublicId:    mov.PublicID.String(),
 		TransactionPublicId: trx.PublicID.String(),
-		TransactionPrice:    -price,
+		TransactionPrice:    price,
 		Quantity:            qty,
 		Notifications:       notifications,
 	}
