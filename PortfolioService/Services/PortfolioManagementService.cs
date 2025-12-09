@@ -1,21 +1,84 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PortfolioService.Data;
 using PortfolioService.Dtos;
+using PortfolioService.Dtos.PortfolioService.Dtos;
 using PortfolioService.Models;
 using PortfolioService.Services.External;
 
 
 namespace PortfolioService.Services
-{
+{/// <summary>
+ /// Define la lógica de negocio principal para la gestión de portafolios, transacciones y balances.
+ /// </summary>
     public interface IPortfolioManagementService
     {
+        /// <summary>
+        /// Obtiene el listado de activos que conforman el portafolio de un curso o equipo.
+        /// Incluye cálculos de valor actual y PnL (Ganancia/Pérdida) en tiempo real.
+        /// </summary>
+        /// <param name="courseId">Identificador único del curso o equipo (TeamId).</param>
+        /// <returns>Una colección de DTOs con el estado actual de cada activo en el portafolio.</returns>
         Task<IEnumerable<PortfolioDto>> GetPortfolioByCourseAsync(Guid courseId);
+
+        /// <summary>
+        /// Recupera el historial de movimientos (compras/ventas) de un estudiante específico en un curso.
+        /// </summary>
+        /// <param name="courseId">Identificador del curso.</param>
+        /// <param name="studentId">Identificador del estudiante.</param>
+        /// <returns>Lista cronológica de las transacciones realizadas.</returns>
         Task<IEnumerable<HistoryDto>> GetHistoryAsync(Guid courseId, Guid studentId);
+
+        /// <summary>
+        /// Obtiene los detalles profundos de un ítem específico del portafolio por su ID interno.
+        /// </summary>
+        /// <param name="portfolioId">Clave primaria (int) del registro en la tabla PortfolioItems.</param>
+        /// <returns>
+        /// Un objeto <see cref="PortfolioDto"/> si se encuentra; de lo contrario, <c>null</c>.
+        /// </returns>
         Task<PortfolioDto?> GetPortfolioDetailAsync(int portfolioId);
+
+        /// <summary>
+        /// Procesa una transacción de compra o venta, aplicando validaciones de fondos y lógica de promedio de costos.
+        /// </summary>
+        /// <param name="dto">Datos de la transacción (Usuario, Activo, Cantidad, Precio, Tipo).</param>
+        /// <returns>
+        /// Una tupla que contiene:
+        /// <br/>- <c>Success</c>: Indica si la operación fue exitosa.
+        /// <br/>- <c>Message</c>: Explicación del resultado o error.
+        /// <br/>- <c>CurrentQuantity</c>: La cantidad final del activo tras la operación.
+        /// </returns>
         Task<(bool Success, string Message, double CurrentQuantity)> ProcessTransactionAsync(PortfolioTransactionDto dto);
+
+        /// <summary>
+        /// Elimina físicamente un registro del portafolio.
+        /// </summary>
+        /// <param name="portfolioId">ID del ítem a eliminar.</param>
+        /// <returns>Tupla indicando éxito y mensaje de confirmación.</returns>
         Task<(bool Success, string Message)> DeletePortfolioItemAsync(int portfolioId);
+
+        /// <summary>
+        /// Crea un nuevo ítem en el portafolio directamente (usado para inicialización o administración).
+        /// </summary>
+        /// <param name="item">Entidad <see cref="PortfolioItem"/> a insertar.</param>
+        /// <returns>El ítem creado con sus datos actualizados (Ids, fechas).</returns>
         Task<PortfolioItem> CreatePortfolioItemAsync(PortfolioItem item);
+
+        /// <summary>
+        /// Actualiza o crea la billetera (Wallet) de un usuario asociada a una membresía.
+        /// </summary>
+        /// <param name="dto">Datos del nuevo balance.</param>
+        /// <returns>
+        /// Una tupla con el estado de éxito, mensaje, y los datos actualizados de la wallet (ID y Balance).
+        /// </returns>
         Task<(bool Success, string Message, Guid? WalletId, decimal? Balance)> UpdateWalletAsync(WalletDto dto);
+
+        /// <summary>
+        /// Obtiene el historial de transacciones de todo un equipo con paginación.
+        /// </summary>
+        /// <param name="teamId">Identificador del equipo.</param>
+        /// <param name="page">Número de página actual (inicia en 1).</param>
+        /// <param name="pageSize">Cantidad de registros por página.</param>
+        /// <returns>Objeto paginado que incluye la lista de historiales y el conteo total.</returns>
         Task<PaginatedResponseDto<HistoryDto>> GetTeamHistoryAsync(Guid teamId, int page, int pageSize);
     }
 
