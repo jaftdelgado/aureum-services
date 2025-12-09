@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -43,9 +44,10 @@ type Asset struct {
 }
 
 type assetState struct {
-	asset        Asset
-	teamAssetID  int
-	currentPrice float64
+	asset         Asset
+	teamAssetID   int
+	currentPrice  float64
+	assetPublicID string
 }
 
 type MarketHandler struct {
@@ -82,7 +84,20 @@ type PortfolioTransactionRequest struct {
 	IsBuy    bool    `json:"isBuy"`
 }
 
+var (
+	teamStreams = make(map[string]*TeamStream)
+	mu          sync.Mutex
+)
+
+type TeamStream struct {
+	States      []*assetState
+	Subscribers map[pb.MarketService_CheckMarketServer]bool
+	Ticker      *time.Ticker
+	Cancel      context.CancelFunc
+}
+
 func NewMarketHandler(cfg *config.Config, dbConn *gorm.DB) *MarketHandler {
+
 	return &MarketHandler{
 		cfg: cfg,
 		db:  dbConn,
@@ -93,12 +108,12 @@ func NewMarketHandler(cfg *config.Config, dbConn *gorm.DB) *MarketHandler {
 	}
 }
 
-// Llama al microservicio AssetService y obtiene la lista de activos para un team
 func (h *MarketHandler) fetchAssets(ctx context.Context, teamPublicID string) ([]RemoteTeamAsset, error) {
 	base := strings.TrimRight(h.cfg.AssetServiceURL, "/")
 	url := fmt.Sprintf("%s/team-assets/team/%s", base, teamPublicID)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+
 	if err != nil {
 		return nil, fmt.Errorf("crear request a AssetService: %w", err)
 	}
@@ -130,13 +145,11 @@ func nextPrice(prev float64, a Asset) float64 {
 		vol = 0.01 // por si viene 0, que se mueva un poco
 	}
 
-	// random entre -1 y 1
 	r := (rand.Float64() * 2) - 1
 	change := r * vol
 
 	newPrice := prev * (1 + change)
 
-	// Respetar límites
 	if a.MaxPrice > 0 && newPrice > a.MaxPrice {
 		newPrice = a.MaxPrice
 	}
@@ -171,65 +184,26 @@ func (h *MarketHandler) persistPrice(ctx context.Context, teamAssetID int, price
 	return nil
 }
 
-func (h *MarketHandler) CheckMarket(req *pb.MarketRequest, stream pb.MarketService_CheckMarketServer) error {
-	ctx := stream.Context()
-
-	teamID := req.GetTeamPublicId()
-
-	remoteAssets, err := h.fetchAssets(ctx, teamID)
-	if err != nil {
-		return status.Errorf(codes.Internal, "no se pudo obtener activos: %v", err)
-	}
-	if len(remoteAssets) == 0 {
-		return status.Error(codes.NotFound, "no hay activos en el sistema")
-	}
-
-	rand.Seed(time.Now().UnixNano())
-
-	states := make([]*assetState, 0, len(remoteAssets))
-	for _, ta := range remoteAssets {
-		price := ta.CurrentPrice
-		if price <= 0 {
-			price = ta.Asset.BasePrice
-		}
-
-		states = append(states, &assetState{
-			asset:        ta.Asset,
-			teamAssetID:  int(ta.TeamAssetID),
-			currentPrice: price,
-		})
-	}
-
-	interval := h.cfg.TickInterval
-	if req.GetIntervalSeconds() > 0 {
-		interval = time.Duration(req.GetIntervalSeconds()) * time.Second
-	}
-
-	ticker := time.NewTicker(interval)
-	defer ticker.Stop()
-
+func (h *MarketHandler) runGlobalTicker(ts *TeamStream, ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return
 
-		case t := <-ticker.C:
-			for _, s := range states {
+		case t := <-ts.Ticker.C:
+			for _, s := range ts.States {
 				s.currentPrice = nextPrice(s.currentPrice, s.asset)
-
-				if err := h.persistPrice(ctx, s.teamAssetID, s.currentPrice); err != nil {
-					h.logger.Printf("error guardando precio para teamAssetID=%d: %v", s.teamAssetID, err)
-				}
+				_ = h.persistPrice(context.Background(), s.teamAssetID, s.currentPrice)
 			}
 
 			resp := &pb.MarketResponse{
 				TimestampUnixMillis: t.UnixMilli(),
-				Assets:              make([]*pb.MarketAsset, 0, len(states)),
+				Assets:              make([]*pb.MarketAsset, 0, len(ts.States)),
 			}
 
-			for _, s := range states {
+			for _, s := range ts.States {
 				resp.Assets = append(resp.Assets, &pb.MarketAsset{
-					Id:         int32(s.asset.AssetID),
+					Id:         s.assetPublicID,
 					Symbol:     s.asset.AssetSymbol,
 					Name:       s.asset.AssetName,
 					Price:      s.currentPrice,
@@ -238,11 +212,75 @@ func (h *MarketHandler) CheckMarket(req *pb.MarketRequest, stream pb.MarketServi
 				})
 			}
 
-			if err := stream.Send(resp); err != nil {
-				return err
+			mu.Lock()
+			for subscriber := range ts.Subscribers {
+				_ = subscriber.Send(resp)
 			}
+			mu.Unlock()
 		}
 	}
+}
+
+func (h *MarketHandler) CheckMarket(req *pb.MarketRequest, stream pb.MarketService_CheckMarketServer) error {
+	ctx := stream.Context()
+	teamID := req.GetTeamPublicId()
+
+	mu.Lock()
+	ts, exists := teamStreams[teamID]
+
+	if !exists {
+		remoteAssets, err := h.fetchAssets(ctx, teamID)
+		if err != nil {
+			mu.Unlock()
+			return status.Errorf(codes.Internal, "no se pudo obtener activos: %v", err)
+		}
+
+		states := make([]*assetState, 0, len(remoteAssets))
+		for _, ta := range remoteAssets {
+			price := ta.CurrentPrice
+			if price <= 0 {
+				price = ta.Asset.BasePrice
+			}
+
+			states = append(states, &assetState{
+				asset:         ta.Asset,
+				teamAssetID:   int(ta.TeamAssetID),
+				currentPrice:  price,
+				assetPublicID: ta.AssetID,
+			})
+		}
+
+		ticker := time.NewTicker(h.cfg.TickInterval)
+		ctx2, cancel := context.WithCancel(context.Background())
+
+		ts = &TeamStream{
+			States:      states,
+			Subscribers: make(map[pb.MarketService_CheckMarketServer]bool),
+			Ticker:      ticker,
+			Cancel:      cancel,
+		}
+
+		teamStreams[teamID] = ts
+
+		go h.runGlobalTicker(ts, ctx2)
+	}
+
+	ts.Subscribers[stream] = true
+	mu.Unlock()
+
+	<-ctx.Done()
+
+	mu.Lock()
+	delete(ts.Subscribers, stream)
+
+	if len(ts.Subscribers) == 0 {
+		ts.Cancel()
+		ts.Ticker.Stop()
+		delete(teamStreams, teamID)
+	}
+	mu.Unlock()
+
+	return nil
 }
 
 func (h *MarketHandler) fetchTeamMemberships(ctx context.Context, teamPublicID string) ([]Membership, error) {
@@ -298,7 +336,6 @@ func (h *MarketHandler) BuyAsset(ctx context.Context, req *pb.BuyAssetRequest) (
 		return nil, status.Errorf(codes.InvalidArgument, "asset_public_id inválido: %v", err)
 	}
 
-	// ====== 1. Persistir Movement + Transaction en una transacción de BD ======
 	tx := h.db.WithContext(ctx).Begin()
 	if tx.Error != nil {
 		return nil, status.Errorf(codes.Internal, "no se pudo iniciar transacción: %v", tx.Error)
@@ -324,7 +361,7 @@ func (h *MarketHandler) BuyAsset(ctx context.Context, req *pb.BuyAssetRequest) (
 
 	trx := &db.Transaction{
 		MovementID:       mov.MovementID,
-		TransactionPrice: price,
+		TransactionPrice: -price,
 		IsBuy:            true,
 		CreatedDate:      now,
 	}
@@ -337,19 +374,20 @@ func (h *MarketHandler) BuyAsset(ctx context.Context, req *pb.BuyAssetRequest) (
 		return nil, status.Errorf(codes.Internal, "no se pudo confirmar transacción: %v", err)
 	}
 
-	// ====== 2. Obtener alumnos del team para enviar alerta lógica ======
 	memberships, err := h.fetchTeamMemberships(ctx, teamIDStr)
 	if err != nil {
-		// No rompemos la compra, solo logueamos y devolvemos sin notificaciones
 		h.logger.Printf("error obteniendo memberships para team %s: %v", teamIDStr, err)
 		memberships = nil
 	}
 
-	// Mensaje de alerta
 	alertMsg := fmt.Sprintf("El usuario %s compró el activo %s", userIDStr, assetIDStr)
 
 	notifications := make([]*pb.BuyAssetNotification, 0, len(memberships))
 	for _, m := range memberships {
+		if m.UserID == userIDStr {
+			continue
+		}
+
 		notifications = append(notifications, &pb.BuyAssetNotification{
 			UserPublicId: m.UserID,
 			Message:      alertMsg,
@@ -395,7 +433,6 @@ func (h *MarketHandler) SellAsset(ctx context.Context, req *pb.SellAssetRequest)
 		return nil, status.Errorf(codes.InvalidArgument, "asset_public_id inválido: %v", err)
 	}
 
-	// === 1. Persist Movement + Transaction ===
 	tx := h.db.WithContext(ctx).Begin()
 	if tx.Error != nil {
 		return nil, status.Errorf(codes.Internal, "no se pudo iniciar transacción: %v", tx.Error)
@@ -421,7 +458,7 @@ func (h *MarketHandler) SellAsset(ctx context.Context, req *pb.SellAssetRequest)
 
 	trx := &db.Transaction{
 		MovementID:       mov.MovementID,
-		TransactionPrice: -price,
+		TransactionPrice: price,
 		IsBuy:            false,
 		CreatedDate:      now,
 	}
@@ -434,7 +471,6 @@ func (h *MarketHandler) SellAsset(ctx context.Context, req *pb.SellAssetRequest)
 		return nil, status.Errorf(codes.Internal, "no se pudo confirmar transacción: %v", err)
 	}
 
-	// === 2. Obtener miembros del team para enviar alertas ===
 	memberships, err := h.fetchTeamMemberships(ctx, teamIDStr)
 	if err != nil {
 		h.logger.Printf("error obteniendo memberships para team %s: %v", teamIDStr, err)
@@ -445,6 +481,10 @@ func (h *MarketHandler) SellAsset(ctx context.Context, req *pb.SellAssetRequest)
 
 	notifications := make([]*pb.BuyAssetNotification, 0, len(memberships))
 	for _, m := range memberships {
+		if m.UserID == userIDStr {
+			continue
+		}
+
 		notifications = append(notifications, &pb.BuyAssetNotification{
 			UserPublicId: m.UserID,
 			Message:      alertMsg,
