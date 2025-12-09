@@ -75,7 +75,7 @@ func (x *MarketRequest) GetTeamPublicId() string {
 
 type MarketAsset struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Symbol        string                 `protobuf:"bytes,2,opt,name=symbol,proto3" json:"symbol,omitempty"`
 	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
 	Price         float64                `protobuf:"fixed64,4,opt,name=price,proto3" json:"price,omitempty"`
@@ -115,11 +115,11 @@ func (*MarketAsset) Descriptor() ([]byte, []int) {
 	return file_proto_market_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *MarketAsset) GetId() int32 {
+func (x *MarketAsset) GetId() string {
 	if x != nil {
 		return x.Id
 	}
-	return 0
+	return ""
 }
 
 func (x *MarketAsset) GetSymbol() string {
@@ -574,7 +574,7 @@ const file_proto_market_proto_rawDesc = "" +
 	"\x10interval_seconds\x18\x01 \x01(\x05R\x0fintervalSeconds\x12$\n" +
 	"\x0eteam_public_id\x18\x02 \x01(\tR\fteamPublicId\"\x9e\x01\n" +
 	"\vMarketAsset\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x16\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x16\n" +
 	"\x06symbol\x18\x02 \x01(\tR\x06symbol\x12\x12\n" +
 	"\x04name\x18\x03 \x01(\tR\x04name\x12\x14\n" +
 	"\x05price\x18\x04 \x01(\x01R\x05price\x12\x1d\n" +
