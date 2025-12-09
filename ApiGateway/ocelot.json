@@ -484,6 +484,26 @@
         "AllowedScopes": []
       }
     },
+// --- 4.f PORTFOLIO: HISTORIAL DEL EQUIPO (Paginado) ---
+    {
+      "DownstreamPathTemplate": "/api/portfolio/history/team/{teamId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "portfolioservice.railway.internal",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/portfolio/history/team/{teamId}",
+      "UpstreamHttpMethod": ["GET"],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "SupabaseAuth",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "user_role": "professor"
+      }
+    },
     // --- 5.e OBTENER IMAGEN DEL CURSO ---
     {
       "DownstreamPathTemplate": "/api/v1/courses/{publicId}/image",
