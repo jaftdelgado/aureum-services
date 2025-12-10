@@ -27,6 +27,7 @@ builder.Services.AddDbContext<MarketContext>(options =>
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<IAssetGateway, AssetGateway>();
 builder.Services.AddScoped<IPortfolioManagementService, PortfolioManagementService>();
+builder.Services.AddScoped<ICourseGateway, CourseGateway>();
 
 builder.Services.AddCors(options =>
 {

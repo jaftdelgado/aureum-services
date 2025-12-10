@@ -79,22 +79,40 @@ namespace PortfolioService.Services
         /// <param name="pageSize">Cantidad de registros por página.</param>
         /// <returns>Objeto paginado que incluye la lista de historiales y el conteo total.</returns>
         Task<PaginatedResponseDto<HistoryDto>> GetTeamHistoryAsync(Guid teamId, int page, int pageSize);
+        /// <summary>
+        /// Obtiene las billeteras de todos los alumnos de un equipo, paginadas.
+        /// </summary>
+        Task<PaginatedResponseDto<WalletDto>> GetTeamWalletsAsync(Guid teamId, int page, int pageSize);
+
+        /// <summary>
+        /// Obtiene todos los activos (portfolios) de un equipo, paginados.
+        /// </summary>
+        Task<PaginatedResponseDto<PortfolioDto>> GetTeamPortfoliosPaginatedAsync(Guid teamId, int page, int pageSize);
+
+        /// <summary>
+        /// Obtiene la cantidad exacta que un usuario tiene de un activo específico.
+        /// </summary>
+        Task<AssetQuantityDto> GetAssetQuantityAsync(Guid teamId, Guid userId, Guid assetId);
     }
+
 
     public class PortfolioManagementService : IPortfolioManagementService
     {
         private readonly PortfolioContext _portfolioContext;
         private readonly MarketContext _marketContext;
         private readonly IAssetGateway _assetGateway;
+        private readonly ICourseGateway _courseGateway;
 
         public PortfolioManagementService(
-            PortfolioContext portfolioContext,
-            MarketContext marketContext,
-            IAssetGateway assetGateway)
+                PortfolioContext portfolioContext,
+                MarketContext marketContext,
+                IAssetGateway assetGateway,
+                ICourseGateway courseGateway)
         {
             _portfolioContext = portfolioContext;
             _marketContext = marketContext;
             _assetGateway = assetGateway;
+            _courseGateway = courseGateway;
         }
         public async Task<IEnumerable<PortfolioDto>> GetPortfolioByCourseAsync(Guid courseId)
         {
@@ -384,7 +402,7 @@ namespace PortfolioService.Services
                 {
                     MovementId = mov.PublicId,
                     AssetId = mov.AssetId,
-                    AssetName = assetInfo?.Name ?? "Unknown", 
+                    AssetName = assetInfo?.Name ?? "Unknown",
                     AssetSymbol = assetInfo?.Symbol ?? "???",
                     Quantity = mov.Quantity,
                     Price = price,
@@ -402,6 +420,125 @@ namespace PortfolioService.Services
                 TotalItems = totalItems,
                 Page = page,
                 PageSize = pageSize
+            };
+        }
+
+        public async Task<PaginatedResponseDto<WalletDto>> GetTeamWalletsAsync(Guid teamId, int page, int pageSize)
+        {
+            var memberships = await _courseGateway.GetMembershipsByTeamAsync(teamId);
+
+            var membershipIds = memberships.Select(m => m.MembershipId).ToList();
+
+            if (!membershipIds.Any())
+            {
+                return new PaginatedResponseDto<WalletDto>
+                {
+                    Items = new List<WalletDto>(),
+                    TotalItems = 0,
+                    Page = page,
+                    PageSize = pageSize
+                };
+            }
+
+            var query = _portfolioContext.UserWallets
+                            .Where(w => membershipIds.Contains(w.MembershipId));
+
+            var totalItems = await query.CountAsync();
+
+            var wallets = await query
+                            .OrderByDescending(w => w.CashBalance)
+                            .Skip((page - 1) * pageSize)
+                            .Take(pageSize)
+                            .ToListAsync();
+
+            var walletDtos = wallets.Select(w => new WalletDto
+            {
+                MembershipId = w.MembershipId,
+                CashBalance = (decimal)w.CashBalance
+            });
+
+            return new PaginatedResponseDto<WalletDto>
+            {
+                Items = walletDtos,
+                TotalItems = totalItems,
+                Page = page,
+                PageSize = pageSize
+            };
+        }
+
+        public async Task<PaginatedResponseDto<PortfolioDto>> GetTeamPortfoliosPaginatedAsync(Guid teamId, int page, int pageSize)
+        {
+            var query = _portfolioContext.PortfolioItems
+                            .Where(p => p.TeamId == teamId && p.IsActive);
+
+            var totalItems = await query.CountAsync();
+
+            var items = await query
+                            .OrderBy(p => p.UserId)
+                            .Skip((page - 1) * pageSize)
+                            .Take(pageSize)
+                            .ToListAsync();
+
+            if (!items.Any())
+            {
+                return new PaginatedResponseDto<PortfolioDto>
+                {
+                    Items = new List<PortfolioDto>(),
+                    TotalItems = totalItems,
+                    Page = page,
+                    PageSize = pageSize
+                };
+            }
+
+            var tasks = items.Select(async item =>
+            {
+                var assetInfo = await _assetGateway.GetAssetInfoAsync(item.AssetId);
+
+                double currentTotal = item.Quantity * item.CurrentValue;
+                double investedTotal = item.Quantity * item.AvgPrice;
+                double pnl = currentTotal - investedTotal;
+                double pnlPct = investedTotal != 0 ? (pnl / investedTotal) * 100 : 0;
+
+                return new PortfolioDto
+                {
+                    UserId = item.UserId,
+                    PortfolioId = item.PortfolioId,
+                    AssetId = item.AssetId,
+                    Quantity = item.Quantity,
+                    AvgPrice = item.AvgPrice,
+                    CurrentValue = item.CurrentValue,
+                    AssetName = assetInfo.Name,
+                    AssetSymbol = assetInfo.Symbol,
+                    TotalInvestment = investedTotal,
+                    CurrentTotalValue = currentTotal,
+                    ProfitOrLoss = pnl,
+                    ProfitOrLossPercentage = Math.Round(pnlPct, 2)
+                };
+            });
+
+            var resultItems = await Task.WhenAll(tasks);
+
+            return new PaginatedResponseDto<PortfolioDto>
+            {
+                Items = resultItems,
+                TotalItems = totalItems,
+                Page = page,
+                PageSize = pageSize
+            };
+        }
+
+        public async Task<AssetQuantityDto> GetAssetQuantityAsync(Guid teamId, Guid userId, Guid assetId)
+        {
+            var item = await _portfolioContext.PortfolioItems
+                            .FirstOrDefaultAsync(p => p.TeamId == teamId
+                                                   && p.UserId == userId
+                                                   && p.AssetId == assetId
+                                                   && p.IsActive);
+
+            return new AssetQuantityDto
+            {
+                AssetId = assetId,
+                Quantity = item?.Quantity ?? 0
             };
         }
     }

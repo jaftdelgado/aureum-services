@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace PortfolioService.Dtos
 {
@@ -104,5 +105,50 @@ namespace PortfolioService.Dtos
         /// </summary>
         [JsonPropertyName("assetSymbol")]
         public string Symbol { get; set; } = string.Empty;
+    }
+    /// <summary>
+    /// DTO para mapear la respuesta externa del servicio de Cursos/Equipos (TeamService).
+    /// </summary>
+    public class MembershipExternalDto
+    {
+        /// <summary>
+        /// El ID público de la membresía (GUID).
+        /// Mapea desde "public_id" o "publicid".
+        /// </summary>
+        [JsonPropertyName("public_id")]
+        [JsonProperty("public_id")]
+        public Guid MembershipId { get; set; }
+
+        /// <summary>
+        /// El ID del equipo al que pertenece.
+        /// Mapea desde "team_id".
+        /// </summary>
+        [JsonPropertyName("team_id")]
+        [JsonProperty("team_id")]
+        public Guid TeamId { get; set; }
+
+        /// <summary>
+        /// El ID del usuario estudiante.
+        /// Mapea desde "user_id".
+        /// </summary>
+        [JsonPropertyName("user_id")]
+        [JsonProperty("user_id")]
+        public Guid UserId { get; set; }
+    }
+
+    /// <summary>
+    /// DTO ligero para devolver la cantidad de un activo en posesión.
+    /// </summary>
+    public class AssetQuantityDto
+    {
+        /// <summary>
+        /// Identificador del activo consultado.
+        /// </summary>
+        public Guid AssetId { get; set; }
+
+        /// <summary>
+        /// Cantidad actual disponible en el portafolio.
+        /// </summary>
+        public double Quantity { get; set; }
     }
 }
