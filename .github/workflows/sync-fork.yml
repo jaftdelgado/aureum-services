@@ -1,0 +1,21 @@
+name: Sync Fork (Cesar)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout upstream repo
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Push to Cesar's fork
+      run: |
+        git remote add fork https://github.com/CesarEduardoCeronM/aureum-services.git
+        git push fork main --force
