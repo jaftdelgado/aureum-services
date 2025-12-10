@@ -211,11 +211,11 @@ func (x *MarketResponse) GetAssets() []*MarketAsset {
 
 type BuyAssetRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	TeamPublicId  string                 `protobuf:"bytes,1,opt,name=team_public_id,json=teamPublicId,proto3" json:"team_public_id,omitempty"`    // uuid del team
-	AssetPublicId string                 `protobuf:"bytes,2,opt,name=asset_public_id,json=assetPublicId,proto3" json:"asset_public_id,omitempty"` // uuid del asset
-	UserPublicId  string                 `protobuf:"bytes,3,opt,name=user_public_id,json=userPublicId,proto3" json:"user_public_id,omitempty"`    // uuid del usuario que compra
-	Quantity      float64                `protobuf:"fixed64,4,opt,name=quantity,proto3" json:"quantity,omitempty"`                                // cantidad comprada
-	Price         float64                `protobuf:"fixed64,5,opt,name=price,proto3" json:"price,omitempty"`                                      // precio al que se ejecuta la compra
+	TeamPublicId  string                 `protobuf:"bytes,1,opt,name=team_public_id,json=teamPublicId,proto3" json:"team_public_id,omitempty"`
+	AssetPublicId string                 `protobuf:"bytes,2,opt,name=asset_public_id,json=assetPublicId,proto3" json:"asset_public_id,omitempty"`
+	UserPublicId  string                 `protobuf:"bytes,3,opt,name=user_public_id,json=userPublicId,proto3" json:"user_public_id,omitempty"`
+	Quantity      float64                `protobuf:"fixed64,4,opt,name=quantity,proto3" json:"quantity,omitempty"`
+	Price         float64                `protobuf:"fixed64,5,opt,name=price,proto3" json:"price,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -344,6 +344,7 @@ type BuyAssetResponse struct {
 	TransactionPrice    float64                 `protobuf:"fixed64,3,opt,name=transaction_price,json=transactionPrice,proto3" json:"transaction_price,omitempty"`
 	Quantity            float64                 `protobuf:"fixed64,4,opt,name=quantity,proto3" json:"quantity,omitempty"`
 	Notifications       []*BuyAssetNotification `protobuf:"bytes,5,rep,name=notifications,proto3" json:"notifications,omitempty"`
+	TeamPublicId        string                  `protobuf:"bytes,6,opt,name=team_public_id,json=teamPublicId,proto3" json:"team_public_id,omitempty"`
 	unknownFields       protoimpl.UnknownFields
 	sizeCache           protoimpl.SizeCache
 }
@@ -411,6 +412,13 @@ func (x *BuyAssetResponse) GetNotifications() []*BuyAssetNotification {
 		return x.Notifications
 	}
 	return nil
+}
+
+func (x *BuyAssetResponse) GetTeamPublicId() string {
+	if x != nil {
+		return x.TeamPublicId
+	}
+	return ""
 }
 
 type SellAssetRequest struct {
@@ -496,6 +504,7 @@ type SellAssetResponse struct {
 	TransactionPrice    float64                 `protobuf:"fixed64,3,opt,name=transaction_price,json=transactionPrice,proto3" json:"transaction_price,omitempty"`
 	Quantity            float64                 `protobuf:"fixed64,4,opt,name=quantity,proto3" json:"quantity,omitempty"`
 	Notifications       []*BuyAssetNotification `protobuf:"bytes,5,rep,name=notifications,proto3" json:"notifications,omitempty"`
+	TeamPublicId        string                  `protobuf:"bytes,6,opt,name=team_public_id,json=teamPublicId,proto3" json:"team_public_id,omitempty"`
 	unknownFields       protoimpl.UnknownFields
 	sizeCache           protoimpl.SizeCache
 }
@@ -565,6 +574,13 @@ func (x *SellAssetResponse) GetNotifications() []*BuyAssetNotification {
 	return nil
 }
 
+func (x *SellAssetResponse) GetTeamPublicId() string {
+	if x != nil {
+		return x.TeamPublicId
+	}
+	return ""
+}
+
 var File_proto_market_proto protoreflect.FileDescriptor
 
 const file_proto_market_proto_rawDesc = "" +
@@ -594,25 +610,27 @@ const file_proto_market_proto_rawDesc = "" +
 	"\x05price\x18\x05 \x01(\x01R\x05price\"V\n" +
 	"\x14BuyAssetNotification\x12$\n" +
 	"\x0euser_public_id\x18\x01 \x01(\tR\fuserPublicId\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\"\x81\x02\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\"\xa7\x02\n" +
 	"\x10BuyAssetResponse\x12,\n" +
 	"\x12movement_public_id\x18\x01 \x01(\tR\x10movementPublicId\x122\n" +
 	"\x15transaction_public_id\x18\x02 \x01(\tR\x13transactionPublicId\x12+\n" +
 	"\x11transaction_price\x18\x03 \x01(\x01R\x10transactionPrice\x12\x1a\n" +
 	"\bquantity\x18\x04 \x01(\x01R\bquantity\x12B\n" +
-	"\rnotifications\x18\x05 \x03(\v2\x1c.market.BuyAssetNotificationR\rnotifications\"\xb8\x01\n" +
+	"\rnotifications\x18\x05 \x03(\v2\x1c.market.BuyAssetNotificationR\rnotifications\x12$\n" +
+	"\x0eteam_public_id\x18\x06 \x01(\tR\fteamPublicId\"\xb8\x01\n" +
 	"\x10SellAssetRequest\x12$\n" +
 	"\x0eteam_public_id\x18\x01 \x01(\tR\fteamPublicId\x12&\n" +
 	"\x0fasset_public_id\x18\x02 \x01(\tR\rassetPublicId\x12$\n" +
 	"\x0euser_public_id\x18\x03 \x01(\tR\fuserPublicId\x12\x1a\n" +
 	"\bquantity\x18\x04 \x01(\x01R\bquantity\x12\x14\n" +
-	"\x05price\x18\x05 \x01(\x01R\x05price\"\x82\x02\n" +
+	"\x05price\x18\x05 \x01(\x01R\x05price\"\xa8\x02\n" +
 	"\x11SellAssetResponse\x12,\n" +
 	"\x12movement_public_id\x18\x01 \x01(\tR\x10movementPublicId\x122\n" +
 	"\x15transaction_public_id\x18\x02 \x01(\tR\x13transactionPublicId\x12+\n" +
 	"\x11transaction_price\x18\x03 \x01(\x01R\x10transactionPrice\x12\x1a\n" +
 	"\bquantity\x18\x04 \x01(\x01R\bquantity\x12B\n" +
-	"\rnotifications\x18\x05 \x03(\v2\x1c.market.BuyAssetNotificationR\rnotifications2\xd0\x01\n" +
+	"\rnotifications\x18\x05 \x03(\v2\x1c.market.BuyAssetNotificationR\rnotifications\x12$\n" +
+	"\x0eteam_public_id\x18\x06 \x01(\tR\fteamPublicId2\xd0\x01\n" +
 	"\rMarketService\x12>\n" +
 	"\vCheckMarket\x12\x15.market.MarketRequest\x1a\x16.market.MarketResponse0\x01\x12=\n" +
 	"\bBuyAsset\x12\x17.market.BuyAssetRequest\x1a\x18.market.BuyAssetResponse\x12@\n" +

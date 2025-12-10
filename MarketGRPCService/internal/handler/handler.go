@@ -335,6 +335,10 @@ func (h *MarketHandler) BuyAsset(ctx context.Context, req *pb.BuyAssetRequest) (
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "asset_public_id inválido: %v", err)
 	}
+	teamUUID, err := uuid.Parse(teamIDStr)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "team_public_id inválido: %v", err)
+	}
 
 	tx := h.db.WithContext(ctx).Begin()
 	if tx.Error != nil {
@@ -351,6 +355,7 @@ func (h *MarketHandler) BuyAsset(ctx context.Context, req *pb.BuyAssetRequest) (
 	mov := &db.Movement{
 		UserID:      userID,
 		AssetID:     assetID,
+		TeamID:      teamUUID,
 		Quantity:    qty,
 		CreatedDate: now,
 	}
@@ -400,6 +405,7 @@ func (h *MarketHandler) BuyAsset(ctx context.Context, req *pb.BuyAssetRequest) (
 		TransactionPrice:    -price,
 		Quantity:            qty,
 		Notifications:       notifications,
+		TeamPublicId:        teamIDStr,
 	}
 
 	h.notifyPortfolioService(ctx, userIDStr, assetIDStr, teamIDStr, qty, price, true)
@@ -432,6 +438,10 @@ func (h *MarketHandler) SellAsset(ctx context.Context, req *pb.SellAssetRequest)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "asset_public_id inválido: %v", err)
 	}
+	teamUUID, err := uuid.Parse(teamIDStr)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "team_public_id inválido: %v", err)
+	}
 
 	tx := h.db.WithContext(ctx).Begin()
 	if tx.Error != nil {
@@ -448,6 +458,7 @@ func (h *MarketHandler) SellAsset(ctx context.Context, req *pb.SellAssetRequest)
 	mov := &db.Movement{
 		UserID:      userID,
 		AssetID:     assetID,
+		TeamID:      teamUUID,
 		Quantity:    qty,
 		CreatedDate: now,
 	}
@@ -497,6 +508,7 @@ func (h *MarketHandler) SellAsset(ctx context.Context, req *pb.SellAssetRequest)
 		TransactionPrice:    price,
 		Quantity:            qty,
 		Notifications:       notifications,
+		TeamPublicId:        teamIDStr,
 	}
 
 	h.notifyPortfolioService(ctx, userIDStr, assetIDStr, teamIDStr, qty, price, false)
