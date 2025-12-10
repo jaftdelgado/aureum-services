@@ -24,5 +24,5 @@ jobs:
       run: git remote add fork https://CesarEduardoCeronM:${{ secrets.FORK_SYNC_TOKEN }}@github.com/CesarEduardoCeronM/aureum-services.git
 
     - name: Push to fork
-      run: git push fork master --force
+      run: git push fork master --force 
 
