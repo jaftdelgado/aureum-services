@@ -10,9 +10,12 @@ import { TeamAsset } from '@entities/teamAsset.entity';
 import { Asset } from '@entities/asset.entity';
 import { Movement } from '@entities/movement.entity';
 import { TeamAssetDetailDto } from '@dtos/team-asset-detail.dto';
+import { AssetResponseDto } from '@dtos/asset-response.dto';
 
 @Injectable()
 export class TeamAssetService {
+  private logoKitToken = process.env.LOGOKIT_PUBLISHABLE_TOKEN;
+
   constructor(
     @InjectRepository(TeamAsset, 'marketConnection')
     private readonly teamAssetRepository: Repository<TeamAsset>,
@@ -27,41 +30,63 @@ export class TeamAssetService {
     private readonly marketDataSource: DataSource,
   ) {}
 
+  private getLogoUrl(domain?: string): string | undefined {
+    if (!domain) return undefined;
+    return `https://img.logokit.com/${domain}?token=${this.logoKitToken}`;
+  }
+
+  private mapAssetToResponse(asset: Asset): AssetResponseDto {
+    return {
+      publicId: asset.publicId,
+      assetSymbol: asset.assetSymbol,
+      assetName: asset.assetName,
+      assetType: asset.assetType,
+      basePrice: asset.basePrice,
+      volatility: asset.volatility,
+      drift: asset.drift,
+      maxPrice: asset.maxPrice,
+      minPrice: asset.minPrice,
+      dividendYield: asset.dividendYield,
+      liquidity: asset.liquidity,
+      logoUrl: this.getLogoUrl(asset.assetPicUrl),
+      category: asset.category,
+    };
+  }
+
   async findAllByTeamId(teamId: string): Promise<TeamAssetDetailDto[]> {
     const teamAssets: TeamAsset[] = await this.teamAssetRepository.find({
       where: { teamId },
     });
-
     if (teamAssets.length === 0) return [];
 
     const assetPublicIds: string[] = teamAssets.map((ta) => ta.assetId);
     const assets: Asset[] = await this.assetRepository.find({
       where: { publicId: In(assetPublicIds) },
+      relations: ['category'],
     });
 
     const assetMap: Map<string, Asset> = new Map(
       assets.map((a) => [a.publicId, a]),
     );
 
-    // Obtener todos los movimientos de estos assets en este equipo
     const movements = await this.movementRepository.find({
       where: { teamid: teamId, assetid: In(assetPublicIds) },
-      select: ['assetid'], // solo necesitamos assetId
+      select: ['assetid'],
     });
 
-    // Crear un set de assetIds que tienen movimientos
     const assetsWithMovements = new Set(movements.map((m) => m.assetid));
 
     return teamAssets.map(
       (ta): TeamAssetDetailDto & { hasMovements: boolean } => {
-        const asset = assetMap.get(ta.assetId);
-        if (!asset)
+        const assetEntity = assetMap.get(ta.assetId);
+        if (!assetEntity)
           throw new NotFoundException(
             `Asset con id ${ta.assetId} no encontrado`,
           );
+
         return {
           ...ta,
-          asset,
+          asset: this.mapAssetToResponse(assetEntity),
           hasMovements: assetsWithMovements.has(ta.assetId),
         };
       },
@@ -79,13 +104,14 @@ export class TeamAssetService {
 
     const asset: Asset | null = await this.assetRepository.findOne({
       where: { publicId: teamAsset.assetId },
+      relations: ['category'],
     });
     if (!asset)
       throw new NotFoundException(
         `Asset con id ${teamAsset.assetId} no encontrado`,
       );
 
-    return { ...teamAsset, asset };
+    return { ...teamAsset, asset: this.mapAssetToResponse(asset) };
   }
 
   async syncTeamAssets(
@@ -94,7 +120,6 @@ export class TeamAssetService {
   ): Promise<TeamAssetDetailDto[]> {
     return await this.marketDataSource.transaction(
       async (manager): Promise<TeamAssetDetailDto[]> => {
-        // Obtener asociaciones existentes
         const existingTeamAssets: TeamAsset[] = await manager.find(TeamAsset, {
           where: { teamId },
         });
@@ -109,9 +134,9 @@ export class TeamAssetService {
           (id) => !selectedAssetIds.includes(id),
         );
 
-        // Validar assets a agregar
         const validAssets: Asset[] = await this.assetRepository.find({
           where: { publicId: In(assetsToAdd) },
+          relations: ['category'],
         });
 
         if (validAssets.length !== assetsToAdd.length) {
@@ -123,7 +148,6 @@ export class TeamAssetService {
           );
         }
 
-        // Crear nuevas asociaciones
         const newTeamAssets: TeamAsset[] = validAssets.map((asset) => {
           const currentPrice: number = asset.basePrice ?? asset.maxPrice ?? 0;
           return this.teamAssetRepository.create({
@@ -136,7 +160,6 @@ export class TeamAssetService {
         if (newTeamAssets.length > 0)
           await manager.save(TeamAsset, newTeamAssets);
 
-        // Validar movimientos antes de eliminar asociaciones
         for (const assetId of assetsToRemove) {
           const movementCount = await manager.count(Movement, {
             where: { teamid: teamId, assetid: assetId },
@@ -149,7 +172,6 @@ export class TeamAssetService {
           }
         }
 
-        // Eliminar asociaciones descartadas
         if (assetsToRemove.length > 0) {
           await manager.delete(TeamAsset, {
             teamId,
@@ -157,7 +179,6 @@ export class TeamAssetService {
           });
         }
 
-        // Devolver estado actualizado
         const updatedTeamAssets: TeamAsset[] = await manager.find(TeamAsset, {
           where: { teamId },
         });
@@ -165,7 +186,9 @@ export class TeamAssetService {
         const allAssetIds: string[] = updatedTeamAssets.map((ta) => ta.assetId);
         const allAssets: Asset[] = await this.assetRepository.find({
           where: { publicId: In(allAssetIds) },
+          relations: ['category'],
         });
+
         const assetMap: Map<string, Asset> = new Map(
           allAssets.map((a) => [a.publicId, a]),
         );
@@ -173,7 +196,7 @@ export class TeamAssetService {
         return updatedTeamAssets.map(
           (ta): TeamAssetDetailDto => ({
             ...ta,
-            asset: assetMap.get(ta.assetId)!,
+            asset: this.mapAssetToResponse(assetMap.get(ta.assetId)!),
           }),
         );
       },

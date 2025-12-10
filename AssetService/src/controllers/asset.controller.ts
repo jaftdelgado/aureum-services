@@ -1,7 +1,8 @@
-import { Controller, Get, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { AssetService } from '@services/asset.service';
 import { GetAssetsDto } from '@dtos/get-assets.dto';
-import { Asset } from '@entities/asset.entity';
+import { AssetResponseDto } from '@dtos/asset-response.dto';
+import { PaginatedAssetResponseDto } from '@dtos/paginated-asset-response.dto';
 import { PaginatedResult } from '@utils/pagination.util';
 import {
   ApiTags,
@@ -34,19 +35,24 @@ export class AssetController {
   @ApiResponse({
     status: 200,
     description: 'Lista paginada de assets',
+    type: PaginatedAssetResponseDto, // ⚠ ahora es una clase
   })
   getAssets(
     @Query() getAssetsDto: GetAssetsDto,
-  ): Promise<PaginatedResult<Asset>> {
+  ): Promise<PaginatedResult<AssetResponseDto>> {
     return this.assetService.getAssets(getAssetsDto);
   }
 
   @Get(':publicId')
   @ApiOperation({ summary: 'Obtener un asset por su publicId' })
   @ApiParam({ name: 'publicId', description: 'ID público del asset' })
-  @ApiResponse({ status: 200, description: 'Asset encontrado', type: Asset })
+  @ApiResponse({
+    status: 200,
+    description: 'Asset encontrado',
+    type: AssetResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Asset no encontrado' })
-  findOne(@Param('publicId') publicId: string): Promise<Asset> {
+  findOne(@Param('publicId') publicId: string): Promise<AssetResponseDto> {
     return this.assetService.findOneByPublicId(publicId);
   }
 }

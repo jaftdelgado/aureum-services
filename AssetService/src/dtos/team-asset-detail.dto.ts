@@ -1,5 +1,6 @@
+// src/dtos/team-asset-detail.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
-import { Asset } from '@entities/asset.entity';
+import { AssetResponseDto } from './asset-response.dto';
 
 export class TeamAssetDetailDto {
   @ApiProperty({ description: 'ID interno del TeamAsset', example: 5 })
@@ -28,7 +29,7 @@ export class TeamAssetDetailDto {
 
   @ApiProperty({
     description: 'Información completa del asset',
-    type: () => Asset,
+    type: () => AssetResponseDto,
   })
-  asset: Asset;
+  asset: AssetResponseDto;
 }

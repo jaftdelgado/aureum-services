@@ -118,6 +118,9 @@ export class Asset {
   @Column({ name: 'assetpicurl', type: 'varchar', length: 256, nullable: true })
   assetPicUrl?: string;
 
+  @ApiProperty({ description: 'URL generada del logo', required: false })
+  logoUrl?: string;
+
   @ApiProperty({
     description: 'Categoría del asset',
     type: () => AssetCategory,

@@ -4,10 +4,13 @@ import { Repository } from 'typeorm';
 import { Asset } from '@entities/asset.entity';
 import { AssetCategory } from '@entities/assetCategory.entity';
 import { GetAssetsDto } from '@dtos/get-assets.dto';
+import { AssetResponseDto } from '@dtos/asset-response.dto';
 import { PaginatedResult } from '@utils/pagination.util';
 
 @Injectable()
 export class AssetService {
+  private logoKitToken = process.env.LOGOKIT_PUBLISHABLE_TOKEN;
+
   constructor(
     @InjectRepository(Asset, 'assetsConnection')
     private readonly assetRepository: Repository<Asset>,
@@ -16,9 +19,14 @@ export class AssetService {
     private readonly categoryRepository: Repository<AssetCategory>,
   ) {}
 
+  private getLogoUrl(domain?: string): string | undefined {
+    if (!domain) return undefined;
+    return `https://img.logokit.com/${domain}?token=${this.logoKitToken}`;
+  }
+
   async getAssets(
     dto: GetAssetsDto & { selectedAssetIds?: string[] },
-  ): Promise<PaginatedResult<Asset>> {
+  ): Promise<PaginatedResult<AssetResponseDto>> {
     const {
       page = 1,
       limit = 10,
@@ -92,11 +100,27 @@ export class AssetService {
       .take(limit)
       .getManyAndCount();
 
+    const assetResponseDto: AssetResponseDto[] = data.map((asset) => ({
+      publicId: asset.publicId,
+      assetSymbol: asset.assetSymbol,
+      assetName: asset.assetName,
+      assetType: asset.assetType,
+      basePrice: asset.basePrice,
+      volatility: asset.volatility,
+      drift: asset.drift,
+      maxPrice: asset.maxPrice,
+      minPrice: asset.minPrice,
+      dividendYield: asset.dividendYield,
+      liquidity: asset.liquidity,
+      logoUrl: this.getLogoUrl(asset.assetPicUrl),
+      category: asset.category,
+    }));
+
     return {
-      data,
+      data: assetResponseDto,
       meta: {
         totalItems: total,
-        itemCount: data.length,
+        itemCount: assetResponseDto.length,
         itemsPerPage: limit,
         totalPages: Math.ceil(total / limit),
         currentPage: page,
@@ -104,7 +128,7 @@ export class AssetService {
     };
   }
 
-  async findOneByPublicId(publicId: string): Promise<Asset> {
+  async findOneByPublicId(publicId: string): Promise<AssetResponseDto> {
     const asset = await this.assetRepository.findOne({
       where: { publicId },
       relations: ['category'],
@@ -116,6 +140,22 @@ export class AssetService {
       );
     }
 
-    return asset;
+    const assetResponse: AssetResponseDto = {
+      publicId: asset.publicId,
+      assetSymbol: asset.assetSymbol,
+      assetName: asset.assetName,
+      assetType: asset.assetType,
+      basePrice: asset.basePrice,
+      volatility: asset.volatility,
+      drift: asset.drift,
+      maxPrice: asset.maxPrice,
+      minPrice: asset.minPrice,
+      dividendYield: asset.dividendYield,
+      liquidity: asset.liquidity,
+      logoUrl: this.getLogoUrl(asset.assetPicUrl),
+      category: asset.category,
+    };
+
+    return assetResponse;
   }
 }
