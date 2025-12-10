@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .controllers import profile_controller
+from .routers import profile_router 
 from .database import engine, Base
 
 Base.metadata.create_all(bind=engine)
@@ -15,7 +15,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(profile_controller.router, prefix="/api/v1/profiles")
+app.include_router(profile_router.router, prefix="/api/v1/profiles")
 
 @app.get("/health")
 def health_check():
