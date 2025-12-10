@@ -3,7 +3,7 @@ name: Sync Fork (Cesar)
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   sync:
@@ -18,4 +18,4 @@ jobs:
     - name: Push to Cesar's fork
       run: |
         git remote add fork https://github.com/CesarEduardoCeronM/aureum-services.git
-        git push fork main --force
+        git push fork master --force
