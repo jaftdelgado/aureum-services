@@ -285,7 +285,7 @@ func (h *MarketHandler) CheckMarket(req *pb.MarketRequest, stream pb.MarketServi
 
 func (h *MarketHandler) fetchTeamMemberships(ctx context.Context, teamPublicID string) ([]Membership, error) {
 	base := strings.TrimRight(h.cfg.CourseServiceURL, "/")
-	url := fmt.Sprintf("%s/api/v1/memberships/course/%s", base, teamPublicID)
+	url := fmt.Sprintf("%s/api/courses/%s/students", base, teamPublicID)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
