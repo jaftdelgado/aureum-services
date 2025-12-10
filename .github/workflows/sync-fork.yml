@@ -18,7 +18,7 @@ jobs:
     - name: Set up git
       run: |
         git config --global user.email "actions@github.com"
-        git config --global user.name "GitHub Actions"
+        git config --global user.name "GitHub Actions" 
 
     - name: Add fork remote
       run: git remote add fork https://CesarEduardoCeronM:${{ secrets.FORK_SYNC_TOKEN }}@github.com/CesarEduardoCeronM/aureum-services.git
