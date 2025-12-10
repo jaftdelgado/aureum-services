@@ -13,6 +13,7 @@ type Movement struct {
 	PublicID    uuid.UUID `gorm:"column:publicid;type:uuid;default:uuid_generate_v4()"`
 	UserID      uuid.UUID `gorm:"column:userid;type:uuid;not null"`
 	AssetID     uuid.UUID `gorm:"column:assetid;type:uuid;not null"`
+	TeamID      uuid.UUID `gorm:"column:teamid;type:uuid;not null"`
 	Quantity    float64   `gorm:"column:quantity"`
 	CreatedDate time.Time `gorm:"column:createddate"`
 }
