@@ -4,79 +4,72 @@ package market;
 
 option go_package = "github.com/jaftdelgado/aureum-services/MarketGRPCService/proto;proto";
 
-// ====== Market stream ======
-
 message MarketRequest {
-  int32  interval_seconds = 1; 
-  string team_public_id   = 2;
-  string user_public_id   = 3; 
-}
-
-message MarketNotification {
-  string user_public_id = 1;
-  string message        = 2; 
+  int32 interval_seconds = 1;
+  string team_public_id  = 2;
 }
 
 message MarketAsset {
-  string id          = 1; 
-  string symbol      = 2;
-  string name        = 3;
-  double price       = 4;
-  double base_price  = 5;
-  double volatility  = 6;
+  string id = 1;
+  string symbol = 2;
+  string name = 3;
+  double price = 4;
+  double base_price = 5;
+  double volatility = 6;
 }
 
 message MarketResponse {
   int64 timestamp_unix_millis = 1;
-  repeated MarketAsset       assets        = 2;
-  repeated MarketNotification notifications = 3; 
+  repeated MarketAsset assets = 2;
 }
 
-// ====== Buy / Sell ======
+// ====== NUEVOS MENSAJES PARA BUYASSET ======
 
 message BuyAssetRequest {
-  string team_public_id  = 1; // UUID del team/curso
-  string asset_public_id = 2; // UUID del asset
-  string user_public_id  = 3; // UUID del usuario que compra
-  double quantity        = 4;
-  double price           = 5;
+  string team_public_id  = 1;  
+  string asset_public_id = 2; 
+  string user_public_id  = 3;  
+  double quantity        = 4; 
+  double price           = 5; 
 }
 
 message BuyAssetNotification {
-  string user_public_id = 1;
+  string user_public_id = 1; 
   string message        = 2;
 }
 
 message BuyAssetResponse {
-  string movement_public_id     = 1;
-  string transaction_public_id  = 2;
-  double transaction_price      = 3; 
-  double quantity               = 4;
-  repeated BuyAssetNotification notifications = 5; 
+  string movement_public_id    = 1;
+  string transaction_public_id = 2;
+  double transaction_price     = 3;
+  double quantity              = 4;
+  repeated BuyAssetNotification notifications = 5;
   string team_public_id         = 6;
 }
 
 message SellAssetRequest {
   string team_public_id  = 1;
-  string asset_public_id = 2; 
-  string user_public_id  = 3; 
+  string asset_public_id = 2;
+  string user_public_id  = 3;
   double quantity        = 4;
   double price           = 5;
 }
 
 message SellAssetResponse {
-  string movement_public_id     = 1;
-  string transaction_public_id  = 2;
-  double transaction_price      = 3; 
-  double quantity               = 4;
-  repeated BuyAssetNotification notifications = 5; 
+  string movement_public_id    = 1;
+  string transaction_public_id = 2;
+  double transaction_price     = 3;
+  double quantity              = 4;
+  repeated BuyAssetNotification notifications = 5;
   string team_public_id         = 6;
 }
 
-// ====== Servicio ======
-
+// ====== servicio ======
 service MarketService {
   rpc CheckMarket (MarketRequest) returns (stream MarketResponse);
-  rpc BuyAsset  (BuyAssetRequest)  returns (BuyAssetResponse);
+
+  rpc BuyAsset (BuyAssetRequest) returns (BuyAssetResponse);
+
   rpc SellAsset (SellAssetRequest) returns (SellAssetResponse);
+
 }
