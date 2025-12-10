@@ -170,7 +170,6 @@ namespace PortfolioService.Controllers
                 return StatusCode(500, new GenericResponseDto { Message = result.Message });
             }
 
-            // Retornamos el DTO específico de Wallet
             return Ok(new WalletUpdateResponseDto
             {
                 Message = result.Message,
@@ -198,6 +197,44 @@ namespace PortfolioService.Controllers
             if (pageSize < 1) pageSize = 10;
             if (pageSize > 100) pageSize = 100;
             var result = await _portfolioService.GetTeamHistoryAsync(teamId, page, pageSize);
+            return Ok(result);
+        }
+        /// <summary>
+        /// Obtiene las billeteras de los miembros de un equipo de forma paginada.
+        /// </summary>
+        [HttpGet("wallets/team/{teamId}")]
+        [ProducesResponseType(typeof(PaginatedResponseDto<WalletDto>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<PaginatedResponseDto<WalletDto>>> GetTeamWallets(
+            Guid teamId,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
+        {
+            var result = await _portfolioService.GetTeamWalletsAsync(teamId, page, pageSize);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Obtiene los ítems del portafolio de un equipo de forma paginada.
+        /// </summary>
+        [HttpGet("items/team/{teamId}")]
+        [ProducesResponseType(typeof(PaginatedResponseDto<PortfolioDto>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<PaginatedResponseDto<PortfolioDto>>> GetTeamPortfolioItems(
+            Guid teamId,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
+        {
+            var result = await _portfolioService.GetTeamPortfoliosPaginatedAsync(teamId, page, pageSize);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Obtiene la cantidad de un activo específico que posee un usuario en un equipo.
+        /// </summary>
+        [HttpGet("quantity/team/{teamId}/user/{userId}/asset/{assetId}")]
+        [ProducesResponseType(typeof(AssetQuantityDto), StatusCodes.Status200OK)]
+        public async Task<ActionResult<AssetQuantityDto>> GetAssetQuantity(Guid teamId, Guid userId, Guid assetId)
+        {
+            var result = await _portfolioService.GetAssetQuantityAsync(teamId, userId, assetId);
             return Ok(result);
         }
     }
