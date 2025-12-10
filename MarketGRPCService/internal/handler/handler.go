@@ -68,11 +68,11 @@ type RemoteTeamAsset struct {
 }
 
 type Membership struct {
-	MembershipID int       `json:"membershipid"`
-	PublicID     string    `json:"publicid"`
-	TeamID       string    `json:"teamid"`
-	UserID       string    `json:"userid"`
-	JoinedAt     time.Time `json:"joinedat"`
+	MembershipID int    `json:"membershipid"`
+	PublicID     string `json:"publicid"`
+	TeamID       string `json:"teamid"`
+	UserID       string `json:"userid"`
+	JoinedAt     string `json:"joinedat"`
 }
 
 type PortfolioTransactionRequest struct {
