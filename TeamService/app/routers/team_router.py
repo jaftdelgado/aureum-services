@@ -14,10 +14,15 @@ router = APIRouter(
     tags=["Courses"]
 )
 
-@router.get("/{public_id}", response_model=TeamResponseDTO,
+@router.get(
+    "/{public_id}",
+    response_model=TeamResponseDTO,
     summary="Obtener detalle del curso",
-    description="Devuelve la informacion completa de un curso especifico por su ID publico.",
-    responses={404: {"description": "Curso no encontrado"}}
+    description="Devuelve la informacion completa de un curso especifico buscandolo por su ID publico unico.",
+    responses={
+        200: {"description": "Informacion del curso recuperada exitosamente."},
+        404: {"description": "No se encontro ningun curso con el ID publico proporcionado."}
+    }
 )
 def get_course_detail(public_id: UUID, db: Session = Depends(get_db)):
     course = team_service.get_course_by_public_id(db, public_id)
@@ -25,19 +30,23 @@ def get_course_detail(public_id: UUID, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Course not found")
     return course
 
-@router.post("", response_model=TeamResponseDTO, status_code=status.HTTP_201_CREATED,
+@router.post(
+    "",
+    response_model=TeamResponseDTO,
+    status_code=status.HTTP_201_CREATED,
     summary="Crear nuevo curso",
-    description="Permite a un profesor crear un curso nuevo, incluyendo la subida de una imagen de portada.",
+    description="Permite a un profesor crear un curso nuevo. Recibe los datos del curso y una imagen de portada opcional como multipart/form-data. La imagen se guarda en MongoDB y los metadatos en PostgreSQL.",
     responses={
-        201: {"description": "Curso creado exitosamente"},
-        500: {"description": "Error al procesar la imagen o guardar en BD"}
+        201: {"description": "Curso creado exitosamente con su imagen asociada."},
+        400: {"description": "Datos de entrada invalidos o formato de archivo no soportado."},
+        500: {"description": "Error interno al procesar la imagen o guardar en la base de datos."}
     }
 )
 async def create_new_course(
-    name: str = Form(...),
-    description: str = Form(None),
-    professor_id: str = Form(...),
-    file: UploadFile = File(...),
+    name: str = Form(..., description="Nombre del curso"),
+    description: str = Form(None, description="Descripcion breve del curso"),
+    professor_id: str = Form(..., description="UUID del perfil del profesor creador"),
+    file: UploadFile = File(..., description="Archivo de imagen para la portada del curso"),
     db: Session = Depends(get_db),
 ):
     mongo_id = None
@@ -69,37 +78,58 @@ async def create_new_course(
         return team_service.create_course(db, course_data, team_pic_id=mongo_id)
     except Exception as e:
         db.rollback()
-        mongo_db.mongo_client.get_collection().delete_one({"_id": result.inserted_id})
+        if mongo_id:
+            mongo_db.mongo_client.get_collection().delete_one({"_id": result.inserted_id})
         print(f"Error Postgres: {e}")
         raise HTTPException(status_code=500, detail="Error al crear el curso en base de datos")
 
-@router.get("", response_model=List[TeamResponseDTO],
+@router.get(
+    "",
+    response_model=List[TeamResponseDTO],
     summary="Listar todos los cursos",
-    description="Obtiene un listado de todos los cursos disponibles en la plataforma."
+    description="Obtiene un listado completo de todos los cursos registrados en la plataforma.",
+    responses={
+        200: {"description": "Lista de cursos recuperada correctamente (puede estar vacia)."}
+    }
 )
 def get_all(db: Session = Depends(get_db)):
     return team_service.get_all_courses(db)
 
-@router.get("/professor/{profile_id}", response_model=List[TeamResponseDTO],
+@router.get(
+    "/professor/{profile_id}",
+    response_model=List[TeamResponseDTO],
     summary="Cursos de un profesor",
-    description="Lista todos los cursos creados por un profesor especifico."
+    description="Lista todos los cursos creados y administrados por un profesor especifico.",
+    responses={
+        200: {"description": "Lista de cursos del profesor recuperada."}
+    }
 )
 def get_by_professor(profile_id: UUID, db: Session = Depends(get_db)):
     return team_service.get_professor_courses(db, profile_id)
 
-@router.get("/student/{profile_id}", response_model=List[TeamResponseDTO],
+@router.get(
+    "/student/{profile_id}",
+    response_model=List[TeamResponseDTO],
     summary="Cursos de un estudiante",
-    description="Lista todos los cursos en los que un estudiante esta inscrito."
+    description="Lista todos los cursos en los que un estudiante se encuentra inscrito actualmente.",
+    responses={
+        200: {"description": "Lista de inscripciones del estudiante recuperada."}
+    }
 )
 def get_by_student(profile_id: UUID, db: Session = Depends(get_db)):
     return team_service.get_student_courses(db, profile_id)
 
-@router.get("/{public_id}/image",
+@router.get(
+    "/{public_id}/image",
     summary="Obtener imagen del curso",
-    description="Sirve la imagen de portada del curso directamente desde MongoDB.",
+    description="Devuelve el contenido binario de la imagen de portada del curso almacenada en MongoDB. Retorna el Content-Type adecuado para renderizar directamente en el navegador.",
     responses={
-        200: {"description": "Imagen retornada", "content": {"image/jpeg": {}}},
-        404: {"description": "Curso o imagen no encontrada"}
+        200: {
+            "description": "Imagen retornada exitosamente.",
+            "content": {"image/*": {}}
+        },
+        404: {"description": "El curso no existe o no tiene una imagen asignada."},
+        500: {"description": "Error interno al recuperar la imagen desde MongoDB."}
     }
 )
 def get_course_image(public_id: UUID, db: Session = Depends(get_db)):
