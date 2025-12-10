@@ -90,9 +90,9 @@ namespace PortfolioService.Services
         Task<PaginatedResponseDto<PortfolioDto>> GetTeamPortfoliosPaginatedAsync(Guid teamId, int page, int pageSize);
 
         /// <summary>
-        /// Obtiene la cantidad exacta que un usuario tiene de un activo específico.
+        /// Obtiene una lista con la cantidad de cada activo que posee el usuario.
         /// </summary>
-        Task<AssetQuantityDto> GetAssetQuantityAsync(Guid teamId, Guid userId, Guid assetId);
+        Task<IEnumerable<AssetQuantityDto>> GetUserAssetsAsync(Guid teamId, Guid userId);
     }
 
 
@@ -527,19 +527,21 @@ namespace PortfolioService.Services
             };
         }
 
-        public async Task<AssetQuantityDto> GetAssetQuantityAsync(Guid teamId, Guid userId, Guid assetId)
+        public async Task<IEnumerable<AssetQuantityDto>> GetUserAssetsAsync(Guid teamId, Guid userId)
         {
-            var item = await _portfolioContext.PortfolioItems
-                            .FirstOrDefaultAsync(p => p.TeamId == teamId
-                                                   && p.UserId == userId
-                                                   && p.AssetId == assetId
-                                                   && p.IsActive);
+            var items = await _portfolioContext.PortfolioItems
+                            .Where(p => p.TeamId == teamId
+                                   && p.UserId == userId
+                                   && p.IsActive
+                                   && p.Quantity > 0) 
+                            .Select(p => new AssetQuantityDto
+                            {
+                                AssetId = p.AssetId,
+                                Quantity = p.Quantity
+                            })
+                            .ToListAsync();
 
-            return new AssetQuantityDto
-            {
-                AssetId = assetId,
-                Quantity = item?.Quantity ?? 0
-            };
+            return items;
         }
     }
 }

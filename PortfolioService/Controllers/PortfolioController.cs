@@ -228,13 +228,13 @@ namespace PortfolioService.Controllers
         }
 
         /// <summary>
-        /// Obtiene la cantidad de un activo específico que posee un usuario en un equipo.
+        /// Obtiene la lista de todos los activos que posee un usuario en un equipo con sus cantidades.
         /// </summary>
-        [HttpGet("quantity/team/{teamId}/user/{userId}/asset/{assetId}")]
-        [ProducesResponseType(typeof(AssetQuantityDto), StatusCodes.Status200OK)]
-        public async Task<ActionResult<AssetQuantityDto>> GetAssetQuantity(Guid teamId, Guid userId, Guid assetId)
+        [HttpGet("assets/team/{teamId}/user/{userId}")]
+        [ProducesResponseType(typeof(IEnumerable<AssetQuantityDto>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<IEnumerable<AssetQuantityDto>>> GetUserAssets(Guid teamId, Guid userId)
         {
-            var result = await _portfolioService.GetAssetQuantityAsync(teamId, userId, assetId);
+            var result = await _portfolioService.GetUserAssetsAsync(teamId, userId);
             return Ok(result);
         }
     }
