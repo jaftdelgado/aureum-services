@@ -25,7 +25,6 @@ type MarketRequest struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	IntervalSeconds int32                  `protobuf:"varint,1,opt,name=interval_seconds,json=intervalSeconds,proto3" json:"interval_seconds,omitempty"`
 	TeamPublicId    string                 `protobuf:"bytes,2,opt,name=team_public_id,json=teamPublicId,proto3" json:"team_public_id,omitempty"`
-	UserPublicId    string                 `protobuf:"bytes,3,opt,name=user_public_id,json=userPublicId,proto3" json:"user_public_id,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -74,65 +73,6 @@ func (x *MarketRequest) GetTeamPublicId() string {
 	return ""
 }
 
-func (x *MarketRequest) GetUserPublicId() string {
-	if x != nil {
-		return x.UserPublicId
-	}
-	return ""
-}
-
-type MarketNotification struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserPublicId  string                 `protobuf:"bytes,1,opt,name=user_public_id,json=userPublicId,proto3" json:"user_public_id,omitempty"`
-	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *MarketNotification) Reset() {
-	*x = MarketNotification{}
-	mi := &file_proto_market_proto_msgTypes[1]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *MarketNotification) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*MarketNotification) ProtoMessage() {}
-
-func (x *MarketNotification) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_market_proto_msgTypes[1]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use MarketNotification.ProtoReflect.Descriptor instead.
-func (*MarketNotification) Descriptor() ([]byte, []int) {
-	return file_proto_market_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *MarketNotification) GetUserPublicId() string {
-	if x != nil {
-		return x.UserPublicId
-	}
-	return ""
-}
-
-func (x *MarketNotification) GetMessage() string {
-	if x != nil {
-		return x.Message
-	}
-	return ""
-}
-
 type MarketAsset struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -147,7 +87,7 @@ type MarketAsset struct {
 
 func (x *MarketAsset) Reset() {
 	*x = MarketAsset{}
-	mi := &file_proto_market_proto_msgTypes[2]
+	mi := &file_proto_market_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -159,7 +99,7 @@ func (x *MarketAsset) String() string {
 func (*MarketAsset) ProtoMessage() {}
 
 func (x *MarketAsset) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_market_proto_msgTypes[2]
+	mi := &file_proto_market_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -172,7 +112,7 @@ func (x *MarketAsset) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MarketAsset.ProtoReflect.Descriptor instead.
 func (*MarketAsset) Descriptor() ([]byte, []int) {
-	return file_proto_market_proto_rawDescGZIP(), []int{2}
+	return file_proto_market_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *MarketAsset) GetId() string {
@@ -221,14 +161,13 @@ type MarketResponse struct {
 	state               protoimpl.MessageState `protogen:"open.v1"`
 	TimestampUnixMillis int64                  `protobuf:"varint,1,opt,name=timestamp_unix_millis,json=timestampUnixMillis,proto3" json:"timestamp_unix_millis,omitempty"`
 	Assets              []*MarketAsset         `protobuf:"bytes,2,rep,name=assets,proto3" json:"assets,omitempty"`
-	Notifications       []*MarketNotification  `protobuf:"bytes,3,rep,name=notifications,proto3" json:"notifications,omitempty"`
 	unknownFields       protoimpl.UnknownFields
 	sizeCache           protoimpl.SizeCache
 }
 
 func (x *MarketResponse) Reset() {
 	*x = MarketResponse{}
-	mi := &file_proto_market_proto_msgTypes[3]
+	mi := &file_proto_market_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -240,7 +179,7 @@ func (x *MarketResponse) String() string {
 func (*MarketResponse) ProtoMessage() {}
 
 func (x *MarketResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_market_proto_msgTypes[3]
+	mi := &file_proto_market_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -253,7 +192,7 @@ func (x *MarketResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MarketResponse.ProtoReflect.Descriptor instead.
 func (*MarketResponse) Descriptor() ([]byte, []int) {
-	return file_proto_market_proto_rawDescGZIP(), []int{3}
+	return file_proto_market_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *MarketResponse) GetTimestampUnixMillis() int64 {
@@ -270,18 +209,11 @@ func (x *MarketResponse) GetAssets() []*MarketAsset {
 	return nil
 }
 
-func (x *MarketResponse) GetNotifications() []*MarketNotification {
-	if x != nil {
-		return x.Notifications
-	}
-	return nil
-}
-
 type BuyAssetRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	TeamPublicId  string                 `protobuf:"bytes,1,opt,name=team_public_id,json=teamPublicId,proto3" json:"team_public_id,omitempty"`    // UUID del team/curso
-	AssetPublicId string                 `protobuf:"bytes,2,opt,name=asset_public_id,json=assetPublicId,proto3" json:"asset_public_id,omitempty"` // UUID del asset
-	UserPublicId  string                 `protobuf:"bytes,3,opt,name=user_public_id,json=userPublicId,proto3" json:"user_public_id,omitempty"`    // UUID del usuario que compra
+	TeamPublicId  string                 `protobuf:"bytes,1,opt,name=team_public_id,json=teamPublicId,proto3" json:"team_public_id,omitempty"`
+	AssetPublicId string                 `protobuf:"bytes,2,opt,name=asset_public_id,json=assetPublicId,proto3" json:"asset_public_id,omitempty"`
+	UserPublicId  string                 `protobuf:"bytes,3,opt,name=user_public_id,json=userPublicId,proto3" json:"user_public_id,omitempty"`
 	Quantity      float64                `protobuf:"fixed64,4,opt,name=quantity,proto3" json:"quantity,omitempty"`
 	Price         float64                `protobuf:"fixed64,5,opt,name=price,proto3" json:"price,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -290,7 +222,7 @@ type BuyAssetRequest struct {
 
 func (x *BuyAssetRequest) Reset() {
 	*x = BuyAssetRequest{}
-	mi := &file_proto_market_proto_msgTypes[4]
+	mi := &file_proto_market_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -302,7 +234,7 @@ func (x *BuyAssetRequest) String() string {
 func (*BuyAssetRequest) ProtoMessage() {}
 
 func (x *BuyAssetRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_market_proto_msgTypes[4]
+	mi := &file_proto_market_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -315,7 +247,7 @@ func (x *BuyAssetRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BuyAssetRequest.ProtoReflect.Descriptor instead.
 func (*BuyAssetRequest) Descriptor() ([]byte, []int) {
-	return file_proto_market_proto_rawDescGZIP(), []int{4}
+	return file_proto_market_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *BuyAssetRequest) GetTeamPublicId() string {
@@ -363,7 +295,7 @@ type BuyAssetNotification struct {
 
 func (x *BuyAssetNotification) Reset() {
 	*x = BuyAssetNotification{}
-	mi := &file_proto_market_proto_msgTypes[5]
+	mi := &file_proto_market_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -375,7 +307,7 @@ func (x *BuyAssetNotification) String() string {
 func (*BuyAssetNotification) ProtoMessage() {}
 
 func (x *BuyAssetNotification) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_market_proto_msgTypes[5]
+	mi := &file_proto_market_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -388,7 +320,7 @@ func (x *BuyAssetNotification) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BuyAssetNotification.ProtoReflect.Descriptor instead.
 func (*BuyAssetNotification) Descriptor() ([]byte, []int) {
-	return file_proto_market_proto_rawDescGZIP(), []int{5}
+	return file_proto_market_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *BuyAssetNotification) GetUserPublicId() string {
@@ -419,7 +351,7 @@ type BuyAssetResponse struct {
 
 func (x *BuyAssetResponse) Reset() {
 	*x = BuyAssetResponse{}
-	mi := &file_proto_market_proto_msgTypes[6]
+	mi := &file_proto_market_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -431,7 +363,7 @@ func (x *BuyAssetResponse) String() string {
 func (*BuyAssetResponse) ProtoMessage() {}
 
 func (x *BuyAssetResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_market_proto_msgTypes[6]
+	mi := &file_proto_market_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -444,7 +376,7 @@ func (x *BuyAssetResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BuyAssetResponse.ProtoReflect.Descriptor instead.
 func (*BuyAssetResponse) Descriptor() ([]byte, []int) {
-	return file_proto_market_proto_rawDescGZIP(), []int{6}
+	return file_proto_market_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *BuyAssetResponse) GetMovementPublicId() string {
@@ -502,7 +434,7 @@ type SellAssetRequest struct {
 
 func (x *SellAssetRequest) Reset() {
 	*x = SellAssetRequest{}
-	mi := &file_proto_market_proto_msgTypes[7]
+	mi := &file_proto_market_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -514,7 +446,7 @@ func (x *SellAssetRequest) String() string {
 func (*SellAssetRequest) ProtoMessage() {}
 
 func (x *SellAssetRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_market_proto_msgTypes[7]
+	mi := &file_proto_market_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -527,7 +459,7 @@ func (x *SellAssetRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SellAssetRequest.ProtoReflect.Descriptor instead.
 func (*SellAssetRequest) Descriptor() ([]byte, []int) {
-	return file_proto_market_proto_rawDescGZIP(), []int{7}
+	return file_proto_market_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *SellAssetRequest) GetTeamPublicId() string {
@@ -579,7 +511,7 @@ type SellAssetResponse struct {
 
 func (x *SellAssetResponse) Reset() {
 	*x = SellAssetResponse{}
-	mi := &file_proto_market_proto_msgTypes[8]
+	mi := &file_proto_market_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -591,7 +523,7 @@ func (x *SellAssetResponse) String() string {
 func (*SellAssetResponse) ProtoMessage() {}
 
 func (x *SellAssetResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_market_proto_msgTypes[8]
+	mi := &file_proto_market_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -604,7 +536,7 @@ func (x *SellAssetResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SellAssetResponse.ProtoReflect.Descriptor instead.
 func (*SellAssetResponse) Descriptor() ([]byte, []int) {
-	return file_proto_market_proto_rawDescGZIP(), []int{8}
+	return file_proto_market_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *SellAssetResponse) GetMovementPublicId() string {
@@ -653,14 +585,10 @@ var File_proto_market_proto protoreflect.FileDescriptor
 
 const file_proto_market_proto_rawDesc = "" +
 	"\n" +
-	"\x12proto/market.proto\x12\x06market\"\x86\x01\n" +
+	"\x12proto/market.proto\x12\x06market\"`\n" +
 	"\rMarketRequest\x12)\n" +
 	"\x10interval_seconds\x18\x01 \x01(\x05R\x0fintervalSeconds\x12$\n" +
-	"\x0eteam_public_id\x18\x02 \x01(\tR\fteamPublicId\x12$\n" +
-	"\x0euser_public_id\x18\x03 \x01(\tR\fuserPublicId\"T\n" +
-	"\x12MarketNotification\x12$\n" +
-	"\x0euser_public_id\x18\x01 \x01(\tR\fuserPublicId\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\"\x9e\x01\n" +
+	"\x0eteam_public_id\x18\x02 \x01(\tR\fteamPublicId\"\x9e\x01\n" +
 	"\vMarketAsset\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x16\n" +
 	"\x06symbol\x18\x02 \x01(\tR\x06symbol\x12\x12\n" +
@@ -670,11 +598,10 @@ const file_proto_market_proto_rawDesc = "" +
 	"base_price\x18\x05 \x01(\x01R\tbasePrice\x12\x1e\n" +
 	"\n" +
 	"volatility\x18\x06 \x01(\x01R\n" +
-	"volatility\"\xb3\x01\n" +
+	"volatility\"q\n" +
 	"\x0eMarketResponse\x122\n" +
 	"\x15timestamp_unix_millis\x18\x01 \x01(\x03R\x13timestampUnixMillis\x12+\n" +
-	"\x06assets\x18\x02 \x03(\v2\x13.market.MarketAssetR\x06assets\x12@\n" +
-	"\rnotifications\x18\x03 \x03(\v2\x1a.market.MarketNotificationR\rnotifications\"\xb7\x01\n" +
+	"\x06assets\x18\x02 \x03(\v2\x13.market.MarketAssetR\x06assets\"\xb7\x01\n" +
 	"\x0fBuyAssetRequest\x12$\n" +
 	"\x0eteam_public_id\x18\x01 \x01(\tR\fteamPublicId\x12&\n" +
 	"\x0fasset_public_id\x18\x02 \x01(\tR\rassetPublicId\x12$\n" +
@@ -721,34 +648,32 @@ func file_proto_market_proto_rawDescGZIP() []byte {
 	return file_proto_market_proto_rawDescData
 }
 
-var file_proto_market_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_proto_market_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_proto_market_proto_goTypes = []any{
 	(*MarketRequest)(nil),        // 0: market.MarketRequest
-	(*MarketNotification)(nil),   // 1: market.MarketNotification
-	(*MarketAsset)(nil),          // 2: market.MarketAsset
-	(*MarketResponse)(nil),       // 3: market.MarketResponse
-	(*BuyAssetRequest)(nil),      // 4: market.BuyAssetRequest
-	(*BuyAssetNotification)(nil), // 5: market.BuyAssetNotification
-	(*BuyAssetResponse)(nil),     // 6: market.BuyAssetResponse
-	(*SellAssetRequest)(nil),     // 7: market.SellAssetRequest
-	(*SellAssetResponse)(nil),    // 8: market.SellAssetResponse
+	(*MarketAsset)(nil),          // 1: market.MarketAsset
+	(*MarketResponse)(nil),       // 2: market.MarketResponse
+	(*BuyAssetRequest)(nil),      // 3: market.BuyAssetRequest
+	(*BuyAssetNotification)(nil), // 4: market.BuyAssetNotification
+	(*BuyAssetResponse)(nil),     // 5: market.BuyAssetResponse
+	(*SellAssetRequest)(nil),     // 6: market.SellAssetRequest
+	(*SellAssetResponse)(nil),    // 7: market.SellAssetResponse
 }
 var file_proto_market_proto_depIdxs = []int32{
-	2, // 0: market.MarketResponse.assets:type_name -> market.MarketAsset
-	1, // 1: market.MarketResponse.notifications:type_name -> market.MarketNotification
-	5, // 2: market.BuyAssetResponse.notifications:type_name -> market.BuyAssetNotification
-	5, // 3: market.SellAssetResponse.notifications:type_name -> market.BuyAssetNotification
-	0, // 4: market.MarketService.CheckMarket:input_type -> market.MarketRequest
-	4, // 5: market.MarketService.BuyAsset:input_type -> market.BuyAssetRequest
-	7, // 6: market.MarketService.SellAsset:input_type -> market.SellAssetRequest
-	3, // 7: market.MarketService.CheckMarket:output_type -> market.MarketResponse
-	6, // 8: market.MarketService.BuyAsset:output_type -> market.BuyAssetResponse
-	8, // 9: market.MarketService.SellAsset:output_type -> market.SellAssetResponse
-	7, // [7:10] is the sub-list for method output_type
-	4, // [4:7] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	1, // 0: market.MarketResponse.assets:type_name -> market.MarketAsset
+	4, // 1: market.BuyAssetResponse.notifications:type_name -> market.BuyAssetNotification
+	4, // 2: market.SellAssetResponse.notifications:type_name -> market.BuyAssetNotification
+	0, // 3: market.MarketService.CheckMarket:input_type -> market.MarketRequest
+	3, // 4: market.MarketService.BuyAsset:input_type -> market.BuyAssetRequest
+	6, // 5: market.MarketService.SellAsset:input_type -> market.SellAssetRequest
+	2, // 6: market.MarketService.CheckMarket:output_type -> market.MarketResponse
+	5, // 7: market.MarketService.BuyAsset:output_type -> market.BuyAssetResponse
+	7, // 8: market.MarketService.SellAsset:output_type -> market.SellAssetResponse
+	6, // [6:9] is the sub-list for method output_type
+	3, // [3:6] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_proto_market_proto_init() }
@@ -762,7 +687,7 @@ func file_proto_market_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_market_proto_rawDesc), len(file_proto_market_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   9,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
