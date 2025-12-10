@@ -67,14 +67,6 @@ type RemoteTeamAsset struct {
 	Asset        Asset   `json:"asset"`
 }
 
-type Membership struct {
-	MembershipID int    `json:"membershipid"`
-	PublicID     string `json:"publicid"`
-	TeamID       string `json:"teamid"`
-	UserID       string `json:"userid"`
-	JoinedAt     string `json:"joinedat"`
-}
-
 type PortfolioTransactionRequest struct {
 	UserId   string  `json:"userId"`
 	AssetId  string  `json:"assetId"`
@@ -84,6 +76,11 @@ type PortfolioTransactionRequest struct {
 	IsBuy    bool    `json:"isBuy"`
 }
 
+type PendingNotification struct {
+	UserPublicID string
+	Message      string
+}
+
 var (
 	teamStreams = make(map[string]*TeamStream)
 	mu          sync.Mutex
@@ -91,13 +88,13 @@ var (
 
 type TeamStream struct {
 	States      []*assetState
-	Subscribers map[pb.MarketService_CheckMarketServer]bool
+	Subscribers map[pb.MarketService_CheckMarketServer]string // stream -> userPublicId
 	Ticker      *time.Ticker
 	Cancel      context.CancelFunc
+	Pending     []PendingNotification
 }
 
 func NewMarketHandler(cfg *config.Config, dbConn *gorm.DB) *MarketHandler {
-
 	return &MarketHandler{
 		cfg: cfg,
 		db:  dbConn,
@@ -108,12 +105,13 @@ func NewMarketHandler(cfg *config.Config, dbConn *gorm.DB) *MarketHandler {
 	}
 }
 
+// ================== ASSETS & PRICES ==================
+
 func (h *MarketHandler) fetchAssets(ctx context.Context, teamPublicID string) ([]RemoteTeamAsset, error) {
 	base := strings.TrimRight(h.cfg.AssetServiceURL, "/")
 	url := fmt.Sprintf("%s/team-assets/team/%s", base, teamPublicID)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
-
 	if err != nil {
 		return nil, fmt.Errorf("crear request a AssetService: %w", err)
 	}
@@ -137,12 +135,11 @@ func (h *MarketHandler) fetchAssets(ctx context.Context, teamPublicID string) ([
 }
 
 // Calcula el siguiente precio usando la volatilidad
-// Regla simple: nuevoPrecio = precioActual * (1 + cambio),
-// donde cambio ∈ [-volatility, +volatility]
+// nuevoPrecio = precioActual * (1 + cambio)  donde cambio ∈ [-volatility, +volatility]
 func nextPrice(prev float64, a Asset) float64 {
 	vol := a.Volatility
 	if vol <= 0 {
-		vol = 0.01 // por si viene 0, que se mueva un poco
+		vol = 0.01
 	}
 
 	r := (rand.Float64() * 2) - 1
@@ -157,7 +154,7 @@ func nextPrice(prev float64, a Asset) float64 {
 		newPrice = a.MinPrice
 	}
 	if newPrice <= 0 {
-		newPrice = prev // nunca dejarlo en cero o negativo
+		newPrice = prev
 	}
 
 	return newPrice
@@ -184,6 +181,8 @@ func (h *MarketHandler) persistPrice(ctx context.Context, teamAssetID int, price
 	return nil
 }
 
+// ================== STREAM GLOBAL POR TEAM ==================
+
 func (h *MarketHandler) runGlobalTicker(ts *TeamStream, ctx context.Context) {
 	for {
 		select {
@@ -191,18 +190,16 @@ func (h *MarketHandler) runGlobalTicker(ts *TeamStream, ctx context.Context) {
 			return
 
 		case t := <-ts.Ticker.C:
+			// 1. Actualizar precios
 			for _, s := range ts.States {
 				s.currentPrice = nextPrice(s.currentPrice, s.asset)
 				_ = h.persistPrice(context.Background(), s.teamAssetID, s.currentPrice)
 			}
 
-			resp := &pb.MarketResponse{
-				TimestampUnixMillis: t.UnixMilli(),
-				Assets:              make([]*pb.MarketAsset, 0, len(ts.States)),
-			}
-
+			// 2. Snapshot base de assets (común para todos)
+			baseAssets := make([]*pb.MarketAsset, 0, len(ts.States))
 			for _, s := range ts.States {
-				resp.Assets = append(resp.Assets, &pb.MarketAsset{
+				baseAssets = append(baseAssets, &pb.MarketAsset{
 					Id:         s.assetPublicID,
 					Symbol:     s.asset.AssetSymbol,
 					Name:       s.asset.AssetName,
@@ -212,10 +209,33 @@ func (h *MarketHandler) runGlobalTicker(ts *TeamStream, ctx context.Context) {
 				})
 			}
 
+			// 3. Tomar notificaciones pendientes
 			mu.Lock()
-			for subscriber := range ts.Subscribers {
-				_ = subscriber.Send(resp)
+			pending := ts.Pending
+			ts.Pending = nil
+
+			// 4. Enviar a cada suscriptor solo sus notificaciones
+			for stream, userID := range ts.Subscribers {
+				userNotifs := make([]*pb.MarketNotification, 0)
+
+				for _, p := range pending {
+					if p.UserPublicID == userID {
+						userNotifs = append(userNotifs, &pb.MarketNotification{
+							UserPublicId: p.UserPublicID,
+							Message:      p.Message,
+						})
+					}
+				}
+
+				resp := &pb.MarketResponse{
+					TimestampUnixMillis: t.UnixMilli(),
+					Assets:              baseAssets,
+					Notifications:       userNotifs,
+				}
+
+				_ = stream.Send(resp)
 			}
+
 			mu.Unlock()
 		}
 	}
@@ -224,6 +244,7 @@ func (h *MarketHandler) runGlobalTicker(ts *TeamStream, ctx context.Context) {
 func (h *MarketHandler) CheckMarket(req *pb.MarketRequest, stream pb.MarketService_CheckMarketServer) error {
 	ctx := stream.Context()
 	teamID := req.GetTeamPublicId()
+	userID := req.GetUserPublicId()
 
 	mu.Lock()
 	ts, exists := teamStreams[teamID]
@@ -255,9 +276,10 @@ func (h *MarketHandler) CheckMarket(req *pb.MarketRequest, stream pb.MarketServi
 
 		ts = &TeamStream{
 			States:      states,
-			Subscribers: make(map[pb.MarketService_CheckMarketServer]bool),
+			Subscribers: make(map[pb.MarketService_CheckMarketServer]string),
 			Ticker:      ticker,
 			Cancel:      cancel,
+			Pending:     make([]PendingNotification, 0),
 		}
 
 		teamStreams[teamID] = ts
@@ -265,7 +287,8 @@ func (h *MarketHandler) CheckMarket(req *pb.MarketRequest, stream pb.MarketServi
 		go h.runGlobalTicker(ts, ctx2)
 	}
 
-	ts.Subscribers[stream] = true
+	// asociar stream -> userId
+	ts.Subscribers[stream] = userID
 	mu.Unlock()
 
 	<-ctx.Done()
@@ -283,33 +306,50 @@ func (h *MarketHandler) CheckMarket(req *pb.MarketRequest, stream pb.MarketServi
 	return nil
 }
 
-func (h *MarketHandler) fetchTeamMemberships(ctx context.Context, teamPublicID string) ([]Membership, error) {
-	base := strings.TrimRight(h.cfg.CourseServiceURL, "/")
+// ================== NOTIFICACIONES POR TEAM (SOLO SUSCRIPTORES) ==================
 
-	url := fmt.Sprintf("%s/api/v1/memberships/course/%s", base, teamPublicID)
+func buildTeamNotifications(teamID, actorUserID, message string) []*pb.BuyAssetNotification {
+	mu.Lock()
+	defer mu.Unlock()
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
-	if err != nil {
-		return nil, fmt.Errorf("crear request a CourseService: %w", err)
+	ts, ok := teamStreams[teamID]
+	if !ok {
+		return nil
 	}
 
-	resp, err := h.httpClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("llamar a CourseService: %w", err)
-	}
-	defer resp.Body.Close()
+	notifs := make([]*pb.BuyAssetNotification, 0, len(ts.Subscribers))
+	for _, userID := range ts.Subscribers {
+		if userID == actorUserID {
+			continue
+		}
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("CourseService devolvió status %d", resp.StatusCode)
-	}
-
-	var memberships []Membership
-	if err := json.NewDecoder(resp.Body).Decode(&memberships); err != nil {
-		return nil, fmt.Errorf("decodificar respuesta CourseService: %w", err)
+		notifs = append(notifs, &pb.BuyAssetNotification{
+			UserPublicId: userID,
+			Message:      message,
+		})
 	}
 
-	return memberships, nil
+	return notifs
 }
+
+func enqueueTeamNotifications(teamID string, notifs []*pb.BuyAssetNotification) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	ts, ok := teamStreams[teamID]
+	if !ok {
+		return
+	}
+
+	for _, n := range notifs {
+		ts.Pending = append(ts.Pending, PendingNotification{
+			UserPublicID: n.UserPublicId,
+			Message:      n.Message,
+		})
+	}
+}
+
+// ================== BUY / SELL ==================
 
 func (h *MarketHandler) BuyAsset(ctx context.Context, req *pb.BuyAssetRequest) (*pb.BuyAssetResponse, error) {
 	teamIDStr := req.GetTeamPublicId()
@@ -367,7 +407,7 @@ func (h *MarketHandler) BuyAsset(ctx context.Context, req *pb.BuyAssetRequest) (
 
 	trx := &db.Transaction{
 		MovementID:       mov.MovementID,
-		TransactionPrice: -price,
+		TransactionPrice: -price, // BUY => negativo
 		IsBuy:            true,
 		CreatedDate:      now,
 	}
@@ -380,25 +420,10 @@ func (h *MarketHandler) BuyAsset(ctx context.Context, req *pb.BuyAssetRequest) (
 		return nil, status.Errorf(codes.Internal, "no se pudo confirmar transacción: %v", err)
 	}
 
-	memberships, err := h.fetchTeamMemberships(ctx, teamIDStr)
-	if err != nil {
-		h.logger.Printf("error obteniendo memberships para team %s: %v", teamIDStr, err)
-		memberships = nil
-	}
-
 	alertMsg := fmt.Sprintf("El usuario %s compró el activo %s", userIDStr, assetIDStr)
 
-	notifications := make([]*pb.BuyAssetNotification, 0, len(memberships))
-	for _, m := range memberships {
-		if m.UserID == userIDStr {
-			continue
-		}
-
-		notifications = append(notifications, &pb.BuyAssetNotification{
-			UserPublicId: m.UserID,
-			Message:      alertMsg,
-		})
-	}
+	// Notificaciones solo para suscriptores del stream (excepto el actor)
+	notifications := buildTeamNotifications(teamIDStr, userIDStr, alertMsg)
 
 	resp := &pb.BuyAssetResponse{
 		MovementPublicId:    mov.PublicID.String(),
@@ -408,6 +433,8 @@ func (h *MarketHandler) BuyAsset(ctx context.Context, req *pb.BuyAssetRequest) (
 		Notifications:       notifications,
 		TeamPublicId:        teamIDStr,
 	}
+
+	enqueueTeamNotifications(teamIDStr, notifications)
 
 	h.notifyPortfolioService(ctx, userIDStr, assetIDStr, teamIDStr, qty, price, true)
 
@@ -470,7 +497,7 @@ func (h *MarketHandler) SellAsset(ctx context.Context, req *pb.SellAssetRequest)
 
 	trx := &db.Transaction{
 		MovementID:       mov.MovementID,
-		TransactionPrice: price,
+		TransactionPrice: price, // SELL => positivo
 		IsBuy:            false,
 		CreatedDate:      now,
 	}
@@ -483,25 +510,9 @@ func (h *MarketHandler) SellAsset(ctx context.Context, req *pb.SellAssetRequest)
 		return nil, status.Errorf(codes.Internal, "no se pudo confirmar transacción: %v", err)
 	}
 
-	memberships, err := h.fetchTeamMemberships(ctx, teamIDStr)
-	if err != nil {
-		h.logger.Printf("error obteniendo memberships para team %s: %v", teamIDStr, err)
-		memberships = nil
-	}
-
 	alertMsg := fmt.Sprintf("El usuario %s vendió el activo %s", userIDStr, assetIDStr)
 
-	notifications := make([]*pb.BuyAssetNotification, 0, len(memberships))
-	for _, m := range memberships {
-		if m.UserID == userIDStr {
-			continue
-		}
-
-		notifications = append(notifications, &pb.BuyAssetNotification{
-			UserPublicId: m.UserID,
-			Message:      alertMsg,
-		})
-	}
+	notifications := buildTeamNotifications(teamIDStr, userIDStr, alertMsg)
 
 	resp := &pb.SellAssetResponse{
 		MovementPublicId:    mov.PublicID.String(),
@@ -512,13 +523,15 @@ func (h *MarketHandler) SellAsset(ctx context.Context, req *pb.SellAssetRequest)
 		TeamPublicId:        teamIDStr,
 	}
 
+	enqueueTeamNotifications(teamIDStr, notifications)
+
 	h.notifyPortfolioService(ctx, userIDStr, assetIDStr, teamIDStr, qty, price, false)
 	return resp, nil
-
 }
 
-func (h *MarketHandler) notifyPortfolioService(ctx context.Context, userID, assetID, teamID string, qty, price float64, isBuy bool) {
+// ================== PORTFOLIO SERVICE ==================
 
+func (h *MarketHandler) notifyPortfolioService(ctx context.Context, userID, assetID, teamID string, qty, price float64, isBuy bool) {
 	payload := PortfolioTransactionRequest{
 		UserId:   userID,
 		AssetId:  assetID,
