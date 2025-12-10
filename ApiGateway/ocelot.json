@@ -504,6 +504,30 @@
         "user_role": "professor"
       }
     },
+//--- 4.f PORTFOLIO: Recuperar todos los wallets de un curso ---
+{
+  "DownstreamPathTemplate": "/api/portfolio/wallets/team/{teamId}",
+  "DownstreamScheme": "http",
+  "DownstreamHostAndPorts": [{ "Host": "portfolioservice", "Port": 8080 }],
+  "UpstreamPathTemplate": "/api/portfolio/wallets/team/{teamId}",
+  "UpstreamHttpMethod": [ "GET" ]
+},
+//--- 4.g PORTFOLIO: Recuperar todos los portafolios de un curso ---
+{
+  "DownstreamPathTemplate": "/api/portfolio/items/team/{teamId}",
+  "DownstreamScheme": "http",
+  "DownstreamHostAndPorts": [{ "Host": "portfolioservice", "Port": 8080 }],
+  "UpstreamPathTemplate": "/api/portfolio/items/team/{teamId}",
+  "UpstreamHttpMethod": [ "GET" ]
+},
+//--- 4.h PORTFOLIO: Recuperar cantidad de un activo ---
+{
+  "DownstreamPathTemplate": "/api/portfolio/quantity/team/{teamId}/user/{userId}/asset/{assetId}",
+  "DownstreamScheme": "http",
+  "DownstreamHostAndPorts": [{ "Host": "portfolioservice", "Port": 8080 }],
+  "UpstreamPathTemplate": "/api/portfolio/quantity/team/{teamId}/user/{userId}/asset/{assetId}",
+  "UpstreamHttpMethod": [ "GET" ]
+},
     // --- 5.e OBTENER IMAGEN DEL CURSO ---
     {
       "DownstreamPathTemplate": "/api/v1/courses/{publicId}/image",
