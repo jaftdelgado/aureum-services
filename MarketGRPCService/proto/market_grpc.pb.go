@@ -27,8 +27,6 @@ const (
 // MarketServiceClient is the client API for MarketService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-//
-// ====== servicio ======
 type MarketServiceClient interface {
 	CheckMarket(ctx context.Context, in *MarketRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[MarketResponse], error)
 	BuyAsset(ctx context.Context, in *BuyAssetRequest, opts ...grpc.CallOption) (*BuyAssetResponse, error)
@@ -85,8 +83,6 @@ func (c *marketServiceClient) SellAsset(ctx context.Context, in *SellAssetReques
 // MarketServiceServer is the server API for MarketService service.
 // All implementations must embed UnimplementedMarketServiceServer
 // for forward compatibility.
-//
-// ====== servicio ======
 type MarketServiceServer interface {
 	CheckMarket(*MarketRequest, grpc.ServerStreamingServer[MarketResponse]) error
 	BuyAsset(context.Context, *BuyAssetRequest) (*BuyAssetResponse, error)
