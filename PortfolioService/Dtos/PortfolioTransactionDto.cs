@@ -12,25 +12,25 @@ namespace PortfolioService.Dtos
         /// <summary>
         /// Identificador único del usuario que realiza la transacción.
         /// </summary>
-        [Required(ErrorMessage = "El UserPublicId es obligatorio.")]
-        [JsonPropertyName("userPublicId")]
-        [JsonProperty("userPublicId")]
+        [Required(ErrorMessage = "El userId es obligatorio.")]
+        [JsonPropertyName("userId")]       
+        [JsonProperty("userId")]          
         public Guid UserId { get; set; }
 
         /// <summary>
         /// Identificador del equipo o curso donde se realiza la operación.
         /// </summary>
-        [Required(ErrorMessage = "El TeamPublicId es obligatorio.")]
-        [JsonPropertyName("teamPublicId")]
-        [JsonProperty("teamPublicId")]
+        [Required(ErrorMessage = "El teamId es obligatorio.")]
+        [JsonPropertyName("teamId")]      
+        [JsonProperty("teamId")]           
         public Guid TeamId { get; set; }
 
         /// <summary>
         /// Identificador del activo financiero a transaccionar.
         /// </summary>
-        [Required(ErrorMessage = "El AssetPublicId es obligatorio.")]
-        [JsonPropertyName("assetPublicId")]
-        [JsonProperty("assetPublicId")]
+        [Required(ErrorMessage = "El assetId es obligatorio.")]
+        [JsonPropertyName("assetId")]      
+        [JsonProperty("assetId")]         
         public Guid AssetId { get; set; }
 
         /// <summary>
