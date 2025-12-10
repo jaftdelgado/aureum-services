@@ -23,8 +23,6 @@ message MarketResponse {
   repeated MarketAsset assets = 2;
 }
 
-// ====== NUEVOS MENSAJES PARA BUYASSET ======
-
 message BuyAssetRequest {
   string team_public_id  = 1;  
   string asset_public_id = 2; 

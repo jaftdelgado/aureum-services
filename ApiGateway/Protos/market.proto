@@ -23,14 +23,12 @@ message MarketResponse {
   repeated MarketAsset assets = 2;
 }
 
-// ====== NUEVOS MENSAJES PARA BUYASSET ======
-
 message BuyAssetRequest {
-  string team_public_id  = 1;  // uuid del team
-  string asset_public_id = 2;  // uuid del asset
-  string user_public_id  = 3;  // uuid del usuario que compra
-  double quantity        = 4;  // cantidad comprada
-  double price           = 5;  // precio al que se ejecuta la compra
+  string team_public_id  = 1;  
+  string asset_public_id = 2; 
+  string user_public_id  = 3;  
+  double quantity        = 4; 
+  double price           = 5; 
 }
 
 message BuyAssetNotification {
@@ -44,6 +42,7 @@ message BuyAssetResponse {
   double transaction_price     = 3;
   double quantity              = 4;
   repeated BuyAssetNotification notifications = 5;
+  string team_public_id         = 6;
 }
 
 message SellAssetRequest {
@@ -60,6 +59,7 @@ message SellAssetResponse {
   double transaction_price     = 3;
   double quantity              = 4;
   repeated BuyAssetNotification notifications = 5;
+  string team_public_id         = 6;
 }
 
 // ====== servicio ======
