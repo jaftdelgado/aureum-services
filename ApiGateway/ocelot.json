@@ -538,22 +538,22 @@
         "AllowedScopes": []
       }
 },
-//--- 4.h PORTFOLIO: Recuperar cantidad de un activo ---
+//--- 4.h PORTFOLIO: Recuperar activos del usuario (USER ASSETS)---
 {
-  "DownstreamPathTemplate": "/api/portfolio/quantity/team/{teamId}/user/{userId}/asset/{assetId}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "portfolioservice.railway.internal",
-          "Port": 8080
-        }
-      ],
-      "UpstreamPathTemplate": "/api/portfolio/quantity/team/{teamId}/user/{userId}/asset/{assetId}",
-      "UpstreamHttpMethod": [ "GET" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "SupabaseAuth",
-        "AllowedScopes": []
-      }
+ "DownstreamPathTemplate": "/api/portfolio/assets/team/{teamId}/user/{userId}",
+  "DownstreamScheme": "http",
+  "DownstreamHostAndPorts": [
+    {
+      "Host": "portfolioservice.railway.internal",
+      "Port": 8080
+    }
+  ],
+  "UpstreamPathTemplate": "/api/portfolio/assets/team/{teamId}/user/{userId}",
+  "UpstreamHttpMethod": [ "GET" ],
+  "AuthenticationOptions": {
+    "AuthenticationProviderKey": "SupabaseAuth",
+    "AllowedScopes": []
+  }
 },
     // --- 5.e OBTENER IMAGEN DEL CURSO ---
     {
