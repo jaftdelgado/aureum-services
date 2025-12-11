@@ -20,8 +20,8 @@ namespace PortfolioService.Tests
         public async Task GetByCourse_ShouldReturnEmptyList_WhenNoAssetsForThatCourse()
         {
             var courseId = Guid.NewGuid();
-            var response = await _client.GetAsync($"/api/portfolio/course/{courseId}");
-
+            var userId = Guid.NewGuid();
+            var response = await _client.GetAsync($"/api/portfolio/course/{courseId}?userId={userId}");
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             var content = await response.Content.ReadAsStringAsync();
             content.Should().Be("[]");
@@ -65,7 +65,7 @@ namespace PortfolioService.Tests
             var postResponse = await _client.PostAsJsonAsync("/api/portfolio", newItemDto);
             postResponse.StatusCode.Should().Be(HttpStatusCode.Created);
 
-            var getResponse = await _client.GetAsync($"/api/portfolio/course/{courseId}");
+            var getResponse = await _client.GetAsync($"/api/portfolio/course/{courseId}?userId={userId}");
 
             getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
