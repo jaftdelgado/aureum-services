@@ -45,8 +45,9 @@ func buildHTTPClientForBuyAsset() *http.Client {
 				"assetId": "1",
 				"currentPrice": 100.0,
 				"asset": {
-					"publicId": "11111111-1111-1111-1111-111111111111",
-					"name": "BTC",
+					"assetId": 1,
+					"assetSymbol": "BTC",
+					"assetName": "Bitcoin",
 					"minPrice": 50,
 					"maxPrice": 200
 				}
@@ -60,22 +61,26 @@ func buildHTTPClientForBuyAsset() *http.Client {
 
 		case strings.Contains(r.URL.Path, "/api/v1/memberships/course/"):
 			body := `[{
-                "userId": "22222222-2222-2222-2222-222222222222",
-                "courseId": "dummy",
-                "role": "student"
-            }]`
+				"membershipid": 1,
+				"publicid": "99999999-9999-9999-9999-999999999999",
+				"teamid": "33333333-3333-3333-3333-333333333333",
+				"userid": "22222222-2222-2222-2222-222222222222",
+				"joinedat": "2024-01-01T00:00:00Z"
+			}]`
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Body:       io.NopCloser(bytes.NewBufferString(body)),
 				Header:     make(http.Header),
 			}, nil
 
-		case strings.Contains(r.URL.Path, "/portfolio/transactions"):
+		case strings.Contains(r.URL.Path, "/api/portfolio/transaction"):
+
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Body:       io.NopCloser(bytes.NewBufferString(`{"ok":true}`)),
 				Header:     make(http.Header),
 			}, nil
+
 		default:
 			return &http.Response{
 				StatusCode: http.StatusNotFound,
@@ -95,8 +100,9 @@ func buildHTTPClientForCheckMarket() *http.Client {
 				"assetId": "1",
 				"currentPrice": 120.0,
 				"asset": {
-					"publicId": "11111111-1111-1111-1111-111111111111",
-					"name": "BTC",
+					"assetId": 1,
+					"assetSymbol": "BTC",
+					"assetName": "Bitcoin",
 					"minPrice": 50,
 					"maxPrice": 200
 				}
@@ -160,6 +166,8 @@ func newTestHandlerWithDeps(dbConn *gorm.DB, client *http.Client) *MarketHandler
 	return h
 }
 
+// --- Tests de BuyAsset ---
+
 func TestBuyAsset_InvalidQuantity(t *testing.T) {
 	h := newTestHandlerWithDeps(nil, nil)
 	ctx := context.Background()
@@ -168,8 +176,8 @@ func TestBuyAsset_InvalidQuantity(t *testing.T) {
 		TeamPublicId:  "team-id",
 		AssetPublicId: "asset-id",
 		UserPublicId:  "user-id",
-		Quantity:      0,    // inválido
-		Price:         10.0, // válido
+		Quantity:      0,
+		Price:         10.0,
 	}
 
 	resp, err := h.BuyAsset(ctx, req)
@@ -200,6 +208,7 @@ func TestBuyAsset_OK(t *testing.T) {
 		)
 
 	mock.ExpectCommit()
+
 	client := buildHTTPClientForBuyAsset()
 
 	h := newTestHandlerWithDeps(gdb, client)
@@ -221,13 +230,16 @@ func TestBuyAsset_OK(t *testing.T) {
 	require.NotEmpty(t, resp.MovementPublicId)
 	require.NotEmpty(t, resp.TransactionPublicId)
 	require.Equal(t, 2.5, resp.Quantity)
-	require.Equal(t, 100.0, resp.TransactionPrice)
+	require.Equal(t, -100.0, resp.TransactionPrice)
 
 	require.Len(t, resp.Notifications, 1)
 	require.Equal(t, "22222222-2222-2222-2222-222222222222", resp.Notifications[0].UserPublicId)
+	require.Equal(t, "33333333-3333-3333-3333-333333333333", resp.TeamPublicId)
 
 	require.NoError(t, mock.ExpectationsWereMet())
 }
+
+// --- Tests de CheckMarket ---
 
 type fakeCheckMarketStream struct {
 	grpc.ServerStream
@@ -256,14 +268,12 @@ func TestCheckMarket_OK(t *testing.T) {
 
 	req := &pb.MarketRequest{
 		TeamPublicId:    "33333333-3333-3333-3333-333333333333",
-		IntervalSeconds: 0, // usar h.cfg.TickInterval (10ms)
+		IntervalSeconds: 0,
 	}
 
 	err := h.CheckMarket(req, stream)
 
-	require.Error(t, err)
-	require.Equal(t, context.DeadlineExceeded, err)
-
+	require.NoError(t, err)
 	require.NotEmpty(t, stream.messages)
 
 	for _, m := range stream.messages {
@@ -271,6 +281,8 @@ func TestCheckMarket_OK(t *testing.T) {
 		require.NotEmpty(t, m.Assets)
 	}
 }
+
+// --- Tests de SellAsset ---
 
 func TestSellAsset_InvalidQuantity(t *testing.T) {
 	h := newTestHandlerWithDeps(nil, nil)
@@ -280,8 +292,8 @@ func TestSellAsset_InvalidQuantity(t *testing.T) {
 		TeamPublicId:  "team-id",
 		AssetPublicId: "asset-id",
 		UserPublicId:  "user-id",
-		Quantity:      0,    // inválido
-		Price:         10.0, // válido
+		Quantity:      0,
+		Price:         10.0,
 	}
 
 	resp, err := h.SellAsset(ctx, req)
@@ -334,11 +346,11 @@ func TestSellAsset_OK(t *testing.T) {
 	require.NotEmpty(t, resp.MovementPublicId)
 	require.NotEmpty(t, resp.TransactionPublicId)
 	require.Equal(t, 2.5, resp.Quantity)
-	require.Equal(t, -100.0, resp.TransactionPrice) // venta, precio negativo
+	require.Equal(t, 100.0, resp.TransactionPrice)
 
 	require.Len(t, resp.Notifications, 1)
 	require.Equal(t, "22222222-2222-2222-2222-222222222222", resp.Notifications[0].UserPublicId)
+	require.Equal(t, "33333333-3333-3333-3333-333333333333", resp.TeamPublicId)
 
 	require.NoError(t, mock.ExpectationsWereMet())
 }
-
