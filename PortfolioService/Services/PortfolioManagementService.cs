@@ -12,20 +12,21 @@ namespace PortfolioService.Services
     public interface IPortfolioManagementService
     {
         /// <summary>
-        /// Obtiene el listado de activos que conforman el portafolio de un curso o equipo.
+        /// Obtiene el listado de activos que conforman el portafolio de un usuario específico en un curso o equipo.
         /// Incluye cálculos de valor actual y PnL (Ganancia/Pérdida) en tiempo real.
         /// </summary>
         /// <param name="courseId">Identificador único del curso o equipo (TeamId).</param>
+        /// <param name="userId">Identificador del usuario propietario de los activos.</param>
         /// <returns>Una colección de DTOs con el estado actual de cada activo en el portafolio.</returns>
-        Task<IEnumerable<PortfolioDto>> GetPortfolioByCourseAsync(Guid courseId);
+        Task<IEnumerable<PortfolioDto>> GetPortfolioByCourseAsync(Guid courseId, Guid userId);
 
         /// <summary>
         /// Recupera el historial de movimientos (compras/ventas) de un estudiante específico en un curso.
         /// </summary>
         /// <param name="courseId">Identificador del curso.</param>
-        /// <param name="studentId">Identificador del estudiante.</param>
+        /// <param name="UserId">Identificador del estudiante.</param>
         /// <returns>Lista cronológica de las transacciones realizadas.</returns>
-        Task<IEnumerable<HistoryDto>> GetHistoryAsync(Guid courseId, Guid studentId);
+        Task<IEnumerable<HistoryDto>> GetHistoryAsync(Guid courseId, Guid UserId);
 
         /// <summary>
         /// Obtiene los detalles profundos de un ítem específico del portafolio por su ID interno.
@@ -114,10 +115,12 @@ namespace PortfolioService.Services
             _assetGateway = assetGateway;
             _courseGateway = courseGateway;
         }
-        public async Task<IEnumerable<PortfolioDto>> GetPortfolioByCourseAsync(Guid courseId)
+        public async Task<IEnumerable<PortfolioDto>> GetPortfolioByCourseAsync(Guid courseId, Guid UserId)
         {
             var items = await _portfolioContext.PortfolioItems
-                                     .Where(p => p.TeamId == courseId && p.IsActive)
+                                     .Where(p => p.TeamId == courseId
+                                              && p.UserId == UserId
+                                              && p.IsActive)
                                      .ToListAsync();
 
             if (!items.Any()) return new List<PortfolioDto>();

@@ -21,16 +21,17 @@ namespace PortfolioService.Controllers
         }
 
         /// <summary>
-        /// Obtiene el portafolio completo asociado a un curso o equipo específico.
+        /// Obtiene el portafolio completo asociado a un curso o equipo para un usuario específico.
         /// </summary>
         /// <param name="courseId">El identificador único (GUID) del curso o equipo.</param>
-        /// <returns>Una lista de objetos <see cref="PortfolioDto"/> con los activos actuales.</returns>
-        /// <response code="200">Retorna la lista de activos del portafolio.</response>
+        /// <param name="userId">El identificador único (GUID) del usuario (estudiante) a consultar.</param>
+        /// <returns>Una lista de objetos <see cref="PortfolioDto"/> con los activos actuales del usuario.</returns>
+        /// <response code="200">Retorna la lista de activos del portafolio filtrada por usuario.</response>
         [HttpGet("course/{courseId}")]
         [ProducesResponseType(typeof(IEnumerable<PortfolioDto>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<PortfolioDto>>> GetByCourse(Guid courseId)
+        public async Task<ActionResult<IEnumerable<PortfolioDto>>> GetByCourse(Guid courseId, [FromQuery] Guid userId)
         {
-            var result = await _portfolioService.GetPortfolioByCourseAsync(courseId);
+            var result = await _portfolioService.GetPortfolioByCourseAsync(courseId, userId);
             return Ok(result);
         }
 
