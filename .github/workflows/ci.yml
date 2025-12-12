@@ -179,3 +179,44 @@ jobs:
       - name: Run Tests
         working-directory: ./MarketGRPCService
         run: go test -v ./...
+        # ------------------------------------------------------------------
+  # TEST ASSET SERVICE (NestJS + Postgres)
+  # ------------------------------------------------------------------
+  test-asset-service:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_pass
+          POSTGRES_DB: test_assets_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18' 
+          cache: 'npm'
+          cache-dependency-path: AssetService/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: ./AssetService
+        run: npm ci
+
+      - name: Run Integration Tests
+        working-directory: ./AssetService
+        env:
+          ASSETS_DB_URL: postgres://test_user:test_pass@localhost:5432/test_assets_db
+          MARKET_DB_URL: postgres://test_user:test_pass@localhost:5432/test_assets_db
+        run: npm run test:integration

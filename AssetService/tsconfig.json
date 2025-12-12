@@ -9,7 +9,7 @@
     "target": "ES2023",
     "sourceMap": true,
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": ".",
     "baseUrl": "./",
     "declaration": true,
     "removeComments": true,
@@ -28,8 +28,9 @@
       "@dtos/*": ["src/dtos/*"],
       "@modules/*": ["src/modules/*"],
       "@utils/*": ["src/utils/*"]
-    }
+    },
+    "types": ["node", "jest"]
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "test/**/*"],
   "exclude": ["node_modules", "dist"]
 }
