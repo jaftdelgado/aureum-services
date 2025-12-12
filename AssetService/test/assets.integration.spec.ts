@@ -1,23 +1,19 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { TypeOrmModule, getDataSourceToken } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+import { DataSource } from 'typeorm';
 import { AssetService } from '../src/services/asset.service';
 import { Asset } from '../src/entities/asset.entity';
 import { AssetCategory } from '../src/entities/assetCategory.entity';
-import { TeamAsset } from '../src/entities/teamAsset.entity'; 
-import { Movement } from '../src/entities/movement.entity';   
+import { TeamAsset } from '../src/entities/teamAsset.entity';
+import { Movement } from '../src/entities/movement.entity';
 
-const mockMarketDbParams = {
-  type: 'postgres' as const,
-  database: 'test_market_db', 
-  entities: [TeamAsset, Movement],
-  synchronize: true,
-  dropSchema: true,  
-};
+jest.setTimeout(30000);
 
 describe('AssetService - Integration Tests', () => {
   let service: AssetService;
   let moduleRef: TestingModule;
+  let assetsDataSource: DataSource;
 
   beforeAll(async () => {
     moduleRef = await Test.createTestingModule({
@@ -28,16 +24,16 @@ describe('AssetService - Integration Tests', () => {
           type: 'postgres',
           url: process.env.ASSETS_DB_URL || 'postgres://test_user:test_pass@localhost:5432/test_assets_db',
           entities: [Asset, AssetCategory],
-          synchronize: true,
+          synchronize: false, 
           dropSchema: true,
           ssl: false,
         }),
         TypeOrmModule.forRoot({
           name: 'marketConnection',
           type: 'postgres',
-          url: process.env.MARKET_DB_URL || 'postgres://test_user:test_pass@localhost:5432/test_assets_db', // Reutilizamos la misma DB para el test
+          url: process.env.MARKET_DB_URL || 'postgres://test_user:test_pass@localhost:5432/test_assets_db',
           entities: [TeamAsset, Movement],
-          synchronize: true, 
+          synchronize: false,
           ssl: false,
         }),
         TypeOrmModule.forFeature([Asset, AssetCategory], 'assetsConnection'),
@@ -46,10 +42,23 @@ describe('AssetService - Integration Tests', () => {
     }).compile();
 
     service = moduleRef.get<AssetService>(AssetService);
+
+    assetsDataSource = moduleRef.get<DataSource>(getDataSourceToken('assetsConnection'));
+
+    await assetsDataSource.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";');
+
+    await assetsDataSource.synchronize();
+    
+    const marketDataSource = moduleRef.get<DataSource>(getDataSourceToken('marketConnection'));
+    if (marketDataSource && marketDataSource !== assetsDataSource) {
+        await marketDataSource.synchronize();
+    }
   });
 
   afterAll(async () => {
-    await moduleRef.close();
+    if (moduleRef) {
+      await moduleRef.close();
+    }
   });
 
   test('Debe estar definido', () => {
@@ -57,12 +66,8 @@ describe('AssetService - Integration Tests', () => {
   });
 
   test('Debe crear datos semilla y recuperar assets paginados', async () => {
-    const categoryRepo = moduleRef.get('AssetCategoryRepository');
-    const connection = moduleRef.get('TypeOrmModuleOptions_assetsConnection_Connection'); 
-    
-    const dataSource = moduleRef.get('DataSource_assetsConnection');
-    const catRepo = dataSource.getRepository(AssetCategory);
-    const assetRepo = dataSource.getRepository(Asset);
+    const catRepo = assetsDataSource.getRepository(AssetCategory);
+    const assetRepo = assetsDataSource.getRepository(Asset);
 
     const category = await catRepo.save({
         categoryKey: 'stocks',
@@ -84,8 +89,7 @@ describe('AssetService - Integration Tests', () => {
   });
 
   test('Debe encontrar un asset por su Public ID', async () => {
-     const dataSource = moduleRef.get('DataSource_assetsConnection');
-     const assetRepo = dataSource.getRepository(Asset);
+     const assetRepo = assetsDataSource.getRepository(Asset);
 
      const asset = await assetRepo.save({
         assetSymbol: 'GOOGL',
