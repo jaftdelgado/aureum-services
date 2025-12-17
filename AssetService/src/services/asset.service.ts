@@ -9,7 +9,8 @@ import { PaginatedResult } from '@utils/pagination.util';
 
 @Injectable()
 export class AssetService {
-  private logoKitToken = process.env.LOGOKIT_PUBLISHABLE_TOKEN;
+  private baseUrl = process.env.ASSET_ICONS_CDN_URL;
+  private version = process.env.ASSET_ICONS_VERSION;
 
   constructor(
     @InjectRepository(Asset, 'assetsConnection')
@@ -21,8 +22,9 @@ export class AssetService {
 
   private getLogoUrl(domain?: string): string | undefined {
     if (!domain) return undefined;
+    if (!this.baseUrl || !this.version) return undefined;
 
-    return `https://asset-icons-cdn.jaftdelgado.workers.dev/${domain}.png`;
+    return `${this.baseUrl}/icons/${domain}.png?v=${this.version}`;
   }
 
   async getAssets(

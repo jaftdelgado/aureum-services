@@ -14,7 +14,8 @@ import { AssetResponseDto } from '@dtos/asset-response.dto';
 
 @Injectable()
 export class TeamAssetService {
-  private logoKitToken = process.env.LOGOKIT_PUBLISHABLE_TOKEN;
+  private baseUrl = process.env.ASSET_ICONS_CDN_URL;
+  private version = process.env.ASSET_ICONS_VERSION;
 
   constructor(
     @InjectRepository(TeamAsset, 'marketConnection')
@@ -32,7 +33,9 @@ export class TeamAssetService {
 
   private getLogoUrl(domain?: string): string | undefined {
     if (!domain) return undefined;
-    return `https://img.logokit.com/${domain}?token=${this.logoKitToken}`;
+    if (!this.baseUrl || !this.version) return undefined;
+
+    return `${this.baseUrl}/icons/${domain}.png?v=${this.version}`;
   }
 
   private mapAssetToResponse(asset: Asset): AssetResponseDto {
