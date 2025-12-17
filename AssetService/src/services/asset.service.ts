@@ -21,7 +21,8 @@ export class AssetService {
 
   private getLogoUrl(domain?: string): string | undefined {
     if (!domain) return undefined;
-    return `https://img.logokit.com/${domain}?token=${this.logoKitToken}`;
+
+    return `https://asset-icons-cdn.jaftdelgado.workers.dev/${domain}.png`;
   }
 
   async getAssets(
@@ -134,11 +135,10 @@ export class AssetService {
       relations: ['category'],
     });
 
-    if (!asset) {
+    if (!asset)
       throw new NotFoundException(
         `El activo con publicId ${publicId} no existe`,
       );
-    }
 
     const assetResponse: AssetResponseDto = {
       publicId: asset.publicId,
