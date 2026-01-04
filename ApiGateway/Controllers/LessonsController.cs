@@ -76,23 +76,29 @@ namespace ApiGateway.Controllers
                 var rangeHeader = Request.Headers.Range.ToString();
                 var videoData = await _lessonsService.PrepareVideoStreamAsync(id, rangeHeader);
 
-                Response.StatusCode = 206; 
+               bool isRange = !string.IsNullOrEmpty(rangeHeader);
+        Response.StatusCode = isRange ? 206 : 200;
                 Response.ContentType = "video/mp4";
-                Response.Headers.Append("Content-Range", $"bytes {videoData.Start}-{videoData.End}/{videoData.TotalLength}");
                 Response.Headers.Append("Accept-Ranges", "bytes");
+
+        if (isRange)
+        {
+            Response.Headers.Append("Content-Range", $"bytes {videoData.Start}-{videoData.End}/{videoData.TotalLength}");
+        }
                 Response.ContentLength = videoData.ContentLength;
 
                 using var call = videoData.StreamCall;
 
                 await foreach (var chunk in call.ResponseStream.ReadAllAsync(cts.Token))
                 {
-                    if (chunk.Contenido.Length > 0)
+                    if (chunk.Contenido != null && !chunk.Contenido.IsEmpty)
                     {
-                        var bytesToWrite = chunk.Contenido.ToByteArray();
-                        await Response.Body.WriteAsync(bytesToWrite, 0, bytesToWrite.Length);
+                       
+                        await Response.Body.WriteAsync(chunk.Contenido.Memory, cts.Token);
+                         await Response.Body.FlushAsync(cts.Token);
                     }
                 }
-                await Response.Body.FlushAsync();
+                
             }
             catch (Exception ex)
             {
