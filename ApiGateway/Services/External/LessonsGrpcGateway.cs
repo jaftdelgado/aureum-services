@@ -30,15 +30,18 @@ namespace ApiGateway.Services.External
             return await _client.ObtenerTodasAsync(new Empty());
         }
 
-        public AsyncServerStreamingCall<VideoChunk> DownloadVideoStream(string id, long start, long end)
+       public AsyncServerStreamingCall<VideoChunk> DownloadVideoStream(string id, long start, long end)
         {
+            var cts = new CancellationTokenSource(TimeSpan.FromMinutes(30));
+
             var request = new DescargaRequest
             {
                 IdLeccion = id,
                 StartByte = start,
                 EndByte = end
-            };
-            return _client.DescargarVideo(request);
+              };
+
+    return _client.DescargarVideo(request, cancellationToken: cts.Token);
         }
     }
 }
