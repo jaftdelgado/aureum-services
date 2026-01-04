@@ -69,6 +69,7 @@ namespace ApiGateway.Controllers
                 await Response.Body.FlushAsync();
                 return;
             }
+            using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(30));
 
             try
             {
@@ -83,7 +84,7 @@ namespace ApiGateway.Controllers
 
                 using var call = videoData.StreamCall;
 
-                await foreach (var chunk in call.ResponseStream.ReadAllAsync(HttpContext.RequestAborted))
+                await foreach (var chunk in call.ResponseStream.ReadAllAsync(cts.Token))
                 {
                     if (chunk.Contenido.Length > 0)
                     {
