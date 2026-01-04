@@ -87,18 +87,37 @@ export const GrpcController = {
                 return call.end();
             }
 
+         return new Promise((resolve, reject) => {
             const stream = lessonService.getDownloadStream(
                 leccion.videoFileId as any, 
                 Number(start_byte) || 0, 
                 Number(end_byte)
             );
-            
-            stream.on('data', (chunk) => call.write({ contenido: chunk }));
-            stream.on('end', () => call.end());
-            stream.on('error', (err) => {
-                console.error("GridFS Error:", err);
-                call.end();
+           stream.on('data', (chunk) => {
+                if (!call.cancelled) {
+                    call.write({ contenido: chunk });
+                } else {
+                    stream.destroy();
+                }
             });
+
+            stream.on('end', () => {
+                call.end();
+                resolve(true); 
+            });
+
+            stream.on('error', (err) => {
+                console.error("Error en el stream de GridFS:", err);
+                call.end();
+                resolve(false); 
+            });
+
+            call.on('cancelled', () => {
+                console.log("Streaming cancelado por el cliente");
+                stream.destroy();
+                resolve(true);
+            });
+        });
 
         } catch (error) {
             console.error("Stream Error:", error);
