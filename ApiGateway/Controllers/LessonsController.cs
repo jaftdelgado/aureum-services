@@ -79,7 +79,7 @@ namespace ApiGateway.Controllers
                 }
                 else
                 {
-                    Response.StatusCode = 206; /
+                    Response.StatusCode = 206; 
                     Response.Headers.Append("Content-Range", $"bytes {videoData.Start}-{videoData.End}/{videoData.TotalLength}");
                     Response.ContentLength = videoData.ContentLength;
                 }
