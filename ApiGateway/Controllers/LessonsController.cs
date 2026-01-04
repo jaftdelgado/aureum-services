@@ -94,6 +94,7 @@ namespace ApiGateway.Controllers
                     if (chunk.Contenido.Length > 0)
                     {
                         await Response.Body.WriteAsync(chunk.Contenido.ToByteArray());
+                        await Response.Body.FlushAsync();
                     }
                 }
             }
