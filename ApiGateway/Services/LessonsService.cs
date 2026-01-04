@@ -15,6 +15,7 @@ namespace ApiGateway.Services
     public class LessonsService : ILessonsService
     {
         private readonly ILessonsGateway _gateway;
+        private static readonly Dictionary<string, long> _videoSizeCache = new();
 
         public LessonsService(ILessonsGateway gateway)
         {
@@ -35,8 +36,13 @@ namespace ApiGateway.Services
 
         public async Task<VideoStreamDto> PrepareVideoStreamAsync(string id, string? rangeHeader)
         {
-            var info = await _gateway.GetLessonDetailsAsync(id);
-            long totalLength = info.TotalBytes;
+            if (!_videoSizeCache.TryGetValue(id, out long totalLength))
+            {
+                var info = await _gateway.GetLessonDetailsAsync(id);
+                totalLength = info.TotalBytes;
+                
+                _videoSizeCache[id] = totalLength;
+            }
 
             long start = 0;
             long end = totalLength - 1;
