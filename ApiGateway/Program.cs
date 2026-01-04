@@ -159,8 +159,20 @@ builder.Services.AddGrpcClient<Trading.LeccionesService.LeccionesServiceClient>(
 {
     o.Address = new Uri(lessonsUrl);
 })
-.ConfigurePrimaryHttpMessageHandler(CreateGrpcHandler)
-.ConfigureChannel(options => options.MaxReceiveMessageSize = null);
+.ConfigurePrimaryHttpMessageHandler(() => {
+    var handler = new SocketsHttpHandler
+    {
+        PooledConnectionIdleTimeout = Timeout.InfiniteTimeSpan, 
+        KeepAlivePingDelay = TimeSpan.FromSeconds(60),          
+        KeepAlivePingTimeout = TimeSpan.FromSeconds(30),
+        EnableMultipleHttp2Connections = true
+    };
+    return handler;
+})
+.ConfigureChannel(options => 
+{
+    options.MaxReceiveMessageSize = 500 * 1024 * 1024; 
+});
 builder.Services.AddScoped<ILessonsGateway, LessonsGrpcGateway>();
 builder.Services.AddScoped<ILessonsService, LessonsService>();
 
