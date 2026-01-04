@@ -2,6 +2,9 @@ using ApiGateway.Dtos;
 using ApiGateway.Services.External;
 using Grpc.Core;
 using Trading;
+using System.Collections.Generic; 
+using System.Linq; 
+using System.Threading.Tasks;
 
 namespace ApiGateway.Services
 {
