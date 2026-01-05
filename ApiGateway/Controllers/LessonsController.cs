@@ -2,8 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ApiGateway.Services; 
 using Grpc.Core;
-using System.Linq;
-using Microsoft.AspNetCore.Http;
 
 namespace ApiGateway.Controllers
 {
