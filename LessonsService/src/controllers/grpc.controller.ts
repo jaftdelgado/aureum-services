@@ -1,6 +1,5 @@
 import * as grpc from '@grpc/grpc-js';
 import { LessonService } from '../services/lesson.service';
-import mongoose from 'mongoose';
 
 const lessonService = new LessonService();
 
@@ -25,7 +24,7 @@ export const GrpcController = {
             if (!leccion || !leccion.videoFileId) {
                 return callback({ code: grpc.status.NOT_FOUND, details: 'Lección no encontrada' });
             }
-            const videoId = new mongoose.Types.ObjectId(leccion.videoFileId.toString());
+
             const fileSize = await lessonService.getLessonFileSize(leccion.videoFileId as any);
             
             callback(null, {
@@ -85,16 +84,14 @@ export const GrpcController = {
             const leccion = await lessonService.getLessonById(id_leccion);
 
             if (!leccion || !leccion.videoFileId) {
-               console.error("Video no encontrado");
                 return call.end();
             }
-            const videoObjectId = new mongoose.Types.ObjectId(leccion.videoFileId.toString());
 
          return new Promise((resolve, reject) => {
             const stream = lessonService.getDownloadStream(
-    new mongoose.Types.ObjectId(leccion.videoFileId.toString()), 
-    Number(start_byte) || 0, 
-    Number(end_byte)
+                leccion.videoFileId as any, 
+                Number(start_byte) || 0, 
+                Number(end_byte)
             );
            stream.on('data', (chunk) => {
                 if (!call.cancelled) {
