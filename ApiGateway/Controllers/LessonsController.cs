@@ -91,7 +91,7 @@ namespace ApiGateway.Controllers
 
                 await foreach (var chunk in call.ResponseStream.ReadAllAsync(HttpContext.RequestAborted))
                 {
-                    if (chunk.Contenido != null && chunk.Contenido.Length > 0)
+                    if (chunk.Contenido.Length > 0)
                     {
                         await Response.Body.WriteAsync(chunk.Contenido.ToByteArray());
                         await Response.Body.FlushAsync();
