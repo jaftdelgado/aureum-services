@@ -66,15 +66,6 @@ builder.Services.AddAuthentication(options =>
 
     options.Events = new JwtBearerEvents
     {
-        OnMessageReceived = context =>
-    {
-        var accessToken = context.Request.Query["token"];
-        if (!string.IsNullOrEmpty(accessToken))
-        {
-            context.Token = accessToken;
-        }
-        return Task.CompletedTask;
-    },
         OnAuthenticationFailed = context =>
         {
             return Task.CompletedTask;
