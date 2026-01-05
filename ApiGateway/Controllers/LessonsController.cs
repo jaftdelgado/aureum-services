@@ -63,45 +63,49 @@ namespace ApiGateway.Controllers
         [Authorize(AuthenticationSchemes = "SupabaseAuth")]
         public async Task GetVideo(string id)
         {
-          if (!IsStudent()) { Response.StatusCode = 403; return; }
+           if (!IsStudent())
+    {
+        Response.StatusCode = 403;
+        return;
+    }
 
-   try
+    try
+    {
+        var rangeHeader = Request.Headers.Range.ToString();
+        var videoData = await _lessonsService.PrepareVideoStreamAsync(id, rangeHeader);
+
+        if (string.IsNullOrEmpty(rangeHeader))
+        {
+            Response.StatusCode = 200;
+            Response.ContentLength = videoData.TotalLength;
+        }
+        else
+        {
+            Response.StatusCode = 206;
+            Response.Headers.Append("Content-Range", $"bytes {videoData.Start}-{videoData.End}/{videoData.TotalLength}");
+            Response.ContentLength = videoData.ContentLength;
+        }
+
+        Response.ContentType = "video/mp4";
+        Response.Headers.Append("Accept-Ranges", "bytes");
+
+        using var call = videoData.StreamCall;
+
+        await foreach (var chunk in call.ResponseStream.ReadAllAsync(HttpContext.RequestAborted))
+        {
+            if (chunk.Contenido.Length > 0)
             {
-                var rangeHeader = Request.Headers.Range.ToString();
-                var videoData = await _lessonsService.PrepareVideoStreamAsync(id, rangeHeader);
-
-                if (string.IsNullOrEmpty(rangeHeader))
-                {
-                    Response.StatusCode = 200; 
-                    Response.ContentLength = videoData.TotalLength;
-                }
-                else
-                {
-                    Response.StatusCode = 206; /
-                    Response.Headers.Append("Content-Range", $"bytes {videoData.Start}-{videoData.End}/{videoData.TotalLength}");
-                    Response.ContentLength = videoData.ContentLength;
-                }
-
-                Response.ContentType = "video/mp4";
-                Response.Headers.Append("Accept-Ranges", "bytes");
-
-                using var call = videoData.StreamCall;
-
-                await foreach (var chunk in call.ResponseStream.ReadAllAsync(HttpContext.RequestAborted))
-                {
-                    if (chunk.Contenido.Length > 0)
-                    {
-                        await Response.Body.WriteAsync(chunk.Contenido.ToByteArray());
-                    }
-                }
+                await Response.Body.WriteAsync(chunk.Contenido.ToByteArray());
             }
-            catch (OperationCanceledException)
-            {
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error de Streaming: {ex.Message}");
-            }
+        }
+    }
+    catch (OperationCanceledException)
+    {
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error real en streaming: {ex.Message}");
+    }
 
         }
     }
