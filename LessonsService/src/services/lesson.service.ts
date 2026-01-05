@@ -29,7 +29,7 @@ export class LessonService {
 
     getDownloadStream(videoFileId: mongoose.Types.ObjectId, start: number, end?: number) {
         const options: any = { start };
-        if (end && end > 0) options.end = end + 1;
+        if (end && end > 0) options.end = end;
         
         return gridFSBucket.openDownloadStream(videoFileId, options);
     }
