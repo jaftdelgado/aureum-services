@@ -86,10 +86,11 @@ namespace ApiGateway.Services
 
             if (end >= totalLength) end = totalLength - 1;
             if (start > end) start = end;
+                  long contentLength = end - start + 1;
+              long grpcEnd = end + 1;
 
-            long contentLength = end - start + 1;
+            var streamCall = _gateway.DownloadVideoStream(id, start, grpcEnd);
 
-            var streamCall = _gateway.DownloadVideoStream(id, start, end);
 
             return new VideoStreamDto
             {
