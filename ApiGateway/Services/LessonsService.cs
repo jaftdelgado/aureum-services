@@ -2,6 +2,7 @@ using ApiGateway.Dtos;
 using ApiGateway.Services.External;
 using Grpc.Core;
 using Trading;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace ApiGateway.Services
 {
@@ -15,27 +16,51 @@ namespace ApiGateway.Services
     public class LessonsService : ILessonsService
     {
         private readonly ILessonsGateway _gateway;
+        private readonly IMemoryCache _cache; 
 
-        public LessonsService(ILessonsGateway gateway)
+        public LessonsService(ILessonsGateway gateway, IMemoryCache cache)
         {
             _gateway = gateway;
+            _cache = cache;
         }
 
         public async Task<LessonDto> GetLessonByIdAsync(string id)
         {
-            var response = await _gateway.GetLessonDetailsAsync(id);
-            return MapToDto(response);
+            string cacheKey = $"lesson_details_{id}";
+            
+            if (!_cache.TryGetValue(cacheKey, out LeccionDetalles detalles))
+            {
+                detalles = await _gateway.GetLessonDetailsAsync(id);
+                
+                var cacheOptions = new MemoryCacheEntryOptions()
+                    .SetAbsoluteExpiration(TimeSpan.FromMinutes(30));
+                
+                _cache.Set(cacheKey, detalles, cacheOptions);
+            }
+            
+            return MapToDto(detalles);
         }
 
         public async Task<IEnumerable<LessonDto>> GetAllLessonsAsync()
         {
-            var response = await _gateway.GetAllLessonsAsync();
-            return response.Lecciones.Select(MapToDto);
+            return await _cache.GetOrCreateAsync("all_lessons_list", async entry =>
+            {
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+                var response = await _gateway.GetAllLessonsAsync();
+                return response.Lecciones.Select(MapToDto);
+            });
         }
 
         public async Task<VideoStreamDto> PrepareVideoStreamAsync(string id, string? rangeHeader)
         {
-            var info = await _gateway.GetLessonDetailsAsync(id);
+            string cacheKey = $"lesson_details_{id}";
+            
+            if (!_cache.TryGetValue(cacheKey, out LeccionDetalles info))
+            {
+                info = await _gateway.GetLessonDetailsAsync(id);
+                _cache.Set(cacheKey, info, TimeSpan.FromMinutes(30));
+            }
+
             long totalLength = info.TotalBytes;
 
             long start = 0;
@@ -65,6 +90,7 @@ namespace ApiGateway.Services
                 ContentLength = contentLength
             };
         }
+
         private static LessonDto MapToDto(LeccionDetalles l)
         {
             return new LessonDto
