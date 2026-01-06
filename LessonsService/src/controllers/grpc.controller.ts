@@ -96,7 +96,7 @@ export const GrpcController = {
                  streamOptions.start, 
             streamOptions.end
             );
-            const BATCH_SIZE = 64 * 1024; 
+            const BATCH_SIZE = 512 * 1024; 
         let buffer: Buffer = Buffer.alloc(0);
             stream.on('data', (chunk: Buffer) => {
             buffer = Buffer.concat([buffer, chunk]);
