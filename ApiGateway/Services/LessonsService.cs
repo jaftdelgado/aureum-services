@@ -49,67 +49,56 @@ namespace ApiGateway.Services
             });
         }
 
-        public async Task<VideoStreamDto> PrepareVideoStreamAsync(string id, string? rangeHeader)
+      public async Task<VideoStreamDto> PrepareVideoStreamAsync(string id, string? rangeHeader)
+{
+    string cacheKey = $"lesson_details_{id}";
+    if (!_cache.TryGetValue(cacheKey, out LeccionDetalles info))
+    {
+        info = await _gateway.GetLessonDetailsAsync(id);
+        _cache.Set(cacheKey, info, TimeSpan.FromMinutes(30));
+    }
+
+    long totalLength = info.TotalBytes > 0 ? info.TotalBytes - 1 : 0;
+
+    long start = 0;
+    long end = totalLength - 1;
+
+    if (!string.IsNullOrEmpty(rangeHeader))
+    {
+        var rangeValue = rangeHeader.Replace("bytes=", "").Trim();
+        var parts = rangeValue.Split('-');
+
+        if (!string.IsNullOrEmpty(parts[0]))
         {
-            string cacheKey = $"lesson_details_{id}";
-            if (!_cache.TryGetValue(cacheKey, out LeccionDetalles info))
+            start = long.Parse(parts[0]);
+            if (parts.Length > 1 && !string.IsNullOrEmpty(parts[1]))
             {
-                info = await _gateway.GetLessonDetailsAsync(id);
-                _cache.Set(cacheKey, info, TimeSpan.FromMinutes(30));
+                end = long.Parse(parts[1]);
             }
-
-            long totalLength = info.TotalBytes;
-
-            long start = 0;
-            long end = totalLength - 1;
-
-            if (!string.IsNullOrEmpty(rangeHeader))
-            {
-                var rangeValue = rangeHeader.Replace("bytes=", "").Trim();
-                var parts = rangeValue.Split('-');
-
-                if (!string.IsNullOrEmpty(parts[0]))
-                {
-                    start = long.Parse(parts[0]);
-                    if (parts.Length > 1 && !string.IsNullOrEmpty(parts[1]))
-                    {
-                        end = long.Parse(parts[1]);
-                    }
-                }
-                else if (parts.Length > 1 && !string.IsNullOrEmpty(parts[1]))
-                {
-                    long suffixLength = long.Parse(parts[1]);
-                    start = totalLength - suffixLength;
-                    if (start < 0) start = 0;
-                }
-            }
-
-            if (end >= totalLength) end = totalLength - 1;
-            if (start > end) start = end;
-
-            long contentLength = end - start + 1;
-
-            var streamCall = _gateway.DownloadVideoStream(id, start, end);
-
-            return new VideoStreamDto
-            {
-                StreamCall = streamCall,
-                Start = start,
-                End = end,
-                TotalLength = totalLength,
-                ContentLength = contentLength
-            };
         }
-
-        private static LessonDto MapToDto(LeccionDetalles l)
+        else if (parts.Length > 1 && !string.IsNullOrEmpty(parts[1]))
         {
-            return new LessonDto
-            {
-                Id = l.Id,
-                Title = l.Titulo,
-                Description = l.Descripcion,
-                Thumbnail = l.Miniatura.IsEmpty ? null : Convert.ToBase64String(l.Miniatura.ToByteArray())
-            };
+            long suffixLength = long.Parse(parts[1]);
+            start = totalLength - suffixLength;
+            if (start < 0) start = 0;
         }
+    }
+
+    if (end >= totalLength) end = totalLength - 1;
+    if (start > end) start = end;
+
+    long contentLength = end - start + 1;
+
+    var streamCall = _gateway.DownloadVideoStream(id, start, end);
+
+    return new VideoStreamDto
+    {
+        StreamCall = streamCall,
+        Start = start,
+        End = end,
+        TotalLength = totalLength,
+        ContentLength = contentLength
+    };
+}
     }
 }
