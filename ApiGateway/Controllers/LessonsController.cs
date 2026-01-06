@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ApiGateway.Services; 
 using Grpc.Core;
+using Microsoft.AspNetCore.Http.Features;
 
 namespace ApiGateway.Controllers
 {
@@ -72,6 +73,8 @@ namespace ApiGateway.Controllers
 
             try
             {
+                 var bufferingFeature = HttpContext.Features.Get<IHttpResponseBodyFeature>();
+        bufferingFeature?.DisableBuffering();
                 var rangeHeader = Request.Headers.Range.ToString();
                 var videoData = await _lessonsService.PrepareVideoStreamAsync(id, rangeHeader);
 
