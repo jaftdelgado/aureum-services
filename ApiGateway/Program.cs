@@ -157,6 +157,8 @@ builder.Services.AddScoped<ILessonsService, LessonsService>();
 
 builder.Services.AddOcelot();
 
+builder.Services.AddMemoryCache();
+
 var app = builder.Build();
 
 app.UseCors("PermitirTodo");
