@@ -86,19 +86,44 @@ export const GrpcController = {
             if (!leccion || !leccion.videoFileId) {
                 return call.end();
             }
-
+            const streamOptions = {
+            start: Number(start_byte) || 0,
+            end: Number(end_byte) || undefined,
+            revision: 0 
+        };
             const stream = lessonService.getDownloadStream(
                 leccion.videoFileId as any, 
-                Number(start_byte) || 0, 
-                Number(end_byte)
+                 streamOptions.start, 
+            streamOptions.end
             );
-            
-            stream.on('data', (chunk) => call.write({ contenido: chunk }));
-            stream.on('end', () => call.end());
-            stream.on('error', (err) => {
-                console.error("GridFS Error:", err);
-                call.end();
-            });
+            const BATCH_SIZE = 64 * 1024; 
+        let buffer: Buffer = Buffer.alloc(0);
+            stream.on('data', (chunk: Buffer) => {
+            buffer = Buffer.concat([buffer, chunk]);
+
+            if (buffer.length >= BATCH_SIZE) {
+                const keepGoing = call.write({ contenido: buffer });
+
+                  if (!keepGoing) {
+                    stream.pause();
+                    call.once('drain', () => stream.resume());
+                }
+                
+                buffer = Buffer.alloc(0);
+            }
+        });
+             stream.on('end', () => {
+            if (buffer.length > 0) {
+                call.write({ contenido: buffer });
+            }
+            call.end();
+        });
+
+        stream.on('error', (err) => {
+            console.error("GridFS Error:", err);
+            call.end();
+        });
+
 
         } catch (error) {
             console.error("Stream Error:", error);
