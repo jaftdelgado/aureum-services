@@ -1,6 +1,8 @@
 using ApiGateway.Dtos;
 using ApiGateway.Services.External;
 using Microsoft.Extensions.Caching.Memory;
+using Grpc.Core;
+using Trading;
 
 namespace ApiGateway.Services
 {
