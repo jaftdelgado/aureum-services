@@ -89,7 +89,7 @@ namespace ApiGateway.Controllers
                     {
                         var bytesToWrite = chunk.Contenido.ToByteArray();
                         await Response.Body.WriteAsync(bytesToWrite, 0, bytesToWrite.Length);
-                        await Response.Body.FlushAsync();
+                        
                     }
                 }
             }
