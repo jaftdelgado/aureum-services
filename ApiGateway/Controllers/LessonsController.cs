@@ -82,6 +82,8 @@ namespace ApiGateway.Controllers
                 Response.ContentLength = videoData.ContentLength;
 
                 using var call = videoData.StreamCall;
+                        var outputStream = Response.Body;
+        bool isFirstChunk = true; 
 
                 await foreach (var chunk in call.ResponseStream.ReadAllAsync(HttpContext.RequestAborted))
                 {
@@ -89,7 +91,11 @@ namespace ApiGateway.Controllers
                     {
                         var bytesToWrite = chunk.Contenido.ToByteArray();
                         await Response.Body.WriteAsync(bytesToWrite, 0, bytesToWrite.Length);
-                        
+                         if (isFirstChunk)
+                        {
+                    await outputStream.FlushAsync();
+                    isFirstChunk = false;
+                        }
                     }
                 }
             }
