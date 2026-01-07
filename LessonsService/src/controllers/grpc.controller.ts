@@ -96,22 +96,16 @@ export const GrpcController = {
                  streamOptions.start, 
             streamOptions.end
             );
-            const BATCH_SIZE = 512 * 1024; 
+            const BATCH_SIZE = 64 * 1024; 
         let buffer: Buffer = Buffer.alloc(0);
+          
             stream.on('data', (chunk: Buffer) => {
-            buffer = Buffer.concat([buffer, chunk]);
-
-            if (buffer.length >= BATCH_SIZE) {
-                const keepGoing = call.write({ contenido: buffer });
-
-                  if (!keepGoing) {
-                    stream.pause();
-                    call.once('drain', () => stream.resume());
-                }
-                
-                buffer = Buffer.alloc(0);
+            const keepGoing = call.write({ contenido: chunk });
+            if (!keepGoing) {
+                stream.pause();
+                call.once('drain', () => stream.resume());
             }
-        });
+            });
              stream.on('end', () => {
             if (buffer.length > 0) {
                 call.write({ contenido: buffer });
