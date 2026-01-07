@@ -58,10 +58,11 @@ namespace ApiGateway.Services
                 _cache.Set(cacheKey, info, TimeSpan.FromMinutes(30));
             }
 
-            long fileSize = info.TotalBytes; 
+            long totalLength = info.TotalBytes > 0 ? info.TotalBytes - 1 : 0;
+
             long start = 0;
-            long end = fileSize - 1;
-           
+            long end = totalLength - 1;
+
             if (!string.IsNullOrEmpty(rangeHeader))
             {
                 var rangeValue = rangeHeader.Replace("bytes=", "").Trim();
@@ -83,9 +84,9 @@ namespace ApiGateway.Services
                 }
             }
 
-            Response.Headers.Append("Content-Range", $"bytes {start}-{end}/{fileSize}");
-            Response.ContentLength = end - start + 1;
-             
+            if (end >= totalLength) end = totalLength - 1;
+            if (start > end) start = end;
+                  long contentLength = end - start + 1;
               long grpcEnd = end;
 
             var streamCall = _gateway.DownloadVideoStream(id, start, grpcEnd);
